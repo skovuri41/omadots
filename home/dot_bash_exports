@@ -35,30 +35,4 @@ if [ -d "$HOME/node_modules" ]; then
   export PATH="$HOME/node_modules/.bin:$PATH"
 fi
 
-# XDG base dirs - harmless explicit defaults, systemd already sets these
-# correctly on Omarchy, but apps that check the env var directly (rather
-# than falling back themselves) are covered either way.
-export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
-export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
-export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share/:/usr/share/}"
-export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-/etc/xdg}"
-# XDG_RUNTIME_DIR deliberately NOT defaulted here - systemd-logind always
-# sets it correctly (/run/user/$UID); a hardcoded fallback would be wrong
-# and could send apps looking for user-specific sockets into /var/run.
 
-# gpg-agent / pinentry need to know which terminal to prompt on
-export GPG_TTY
-GPG_TTY=$(tty)
-
-# --- nnn file manager - only relevant if you still use it over yazi/nautilus.
-# Safe to delete this whole block if not; nothing else depends on it.
-export NNN_OPTS='dRFHoex'
-export NNN_FIFO='/tmp/nnn.fifo'
-export NNN_SEL='/tmp/.sel'
-export NNN_FCOLORS='c1e2272e006033f7c6d6abc4'
-export NNN_TRASH=1  # trash (needs trash-cli) instead of delete
-export NNN_ARCHIVE="\\.(7z|a|ace|alz|arc|arj|bz|bz2|cab|cpio|deb|gz|jar|lha|lz|lzh|lzma|lzo|rar|rpm|rz|t7z|tar|tbz|tbz2|tgz|tlz|txz|tZ|tzo|war|xpi|xz|Z|zip)$"
-export NNN_BMS='b:~/bin;c:~/.config;d:~/Downloads;h:~/;m:~/Music;p:~/Projects;v:~/Videos;T:/tmp;'
-export NNN_PLUG='c:fzcd;h:fzhist;o:fzopen;z:fzz;u:getplugs;O:launch;s:suedit;t:tree;'
