@@ -1,0 +1,10 @@
+# Only used for actual login shells (TTY login, some SSH sessions) - Omarchy's
+# Hyprland/uwsm session doesn't go through this. Kept minimal: just fall
+# through to .bashrc, which is where everything actually lives.
+shopt -s nocaseglob
+shopt -s histappend
+shopt -s cdspell
+
+if [ -f ~/.bashrc ]; then
+  . ~/.bashrc
+fi

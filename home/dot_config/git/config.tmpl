@@ -1,0 +1,117 @@
+[color]
+  ui = true
+[color "branch"]
+  current = yellow reverse
+  local = yellow
+  remote = green
+[color "diff"]
+  meta = yellow bold
+  frag = magenta bold
+  old = red
+  new = green
+[alias]
+  # add
+  a = add                           # add
+  chunkyadd = add --patch           # stage commits chunk by chunk
+
+  # via http://blog.apiaxle.com/post/handy-git-tips-to-stop-you-getting-fired/
+  snapshot = !git stash save "snapshot: $(date)" && git stash apply "stash@{0}"
+  snapshots = !git stash list --grep snapshot
+
+  #via http://stackoverflow.com/questions/5188320/how-can-i-get-a-list-of-git-branches-ordered-by-most-recent-commit
+  recent-branches = !git for-each-ref --count=15 --sort=-committerdate refs/heads/ --format='%(refname:short)'
+
+  # branch
+  b = branch -v                     # branch (verbose)
+
+  # commit
+  c = commit -m                     # commit with message
+  ca = commit -am                   # commit all with message
+  ci = commit                       # commit
+  amend = commit --amend            # amend your last commit
+  ammend = commit --amend           # amend your last commit (typo kept for muscle memory)
+
+  # checkout
+  co = checkout                     # checkout
+  nb = checkout -b                  # create and switch to a new branch
+
+  # cherry-pick
+  cp = cherry-pick -x               # grab a change from a branch
+
+  # diff
+  d = diff                          # diff unstaged changes
+  dc = diff --cached                # diff staged changes
+  last = diff HEAD^                 # diff last committed change
+
+  # log
+  l = log --graph --date=short
+  changes = log --pretty=format:\"%h %cr %cn %Cgreen%s%Creset\" --name-status
+  short = log --pretty=format:\"%h %cr %cn %Cgreen%s%Creset\"
+  simple = log --pretty=format:\" * %s\"
+  shortnocolor = log --pretty=format:\"%h %cr %cn %s\"
+  graph = log --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%ci) %C(bold blue)<%an>%Creset'
+
+  # pull / push
+  pl = pull
+  ps = push
+
+  # rebase
+  rc = rebase --continue
+  rs = rebase --skip
+
+  # remote
+  r = remote -v
+
+  # reset
+  unstage = reset HEAD
+  uncommit = reset --soft HEAD^
+  filelog = log -u
+  mt = mergetool
+
+  # stash
+  ss = stash
+  sl = stash list
+  sa = stash apply
+  sd = stash drop
+
+  # status
+  s = status
+  st = status
+  stat = status
+
+  # tag
+  t = tag -n
+[format]
+  pretty = format:%C(blue)%ad%Creset %C(yellow)%h%C(green)%d%Creset %C(blue)%s %C(magenta) [%an]%Creset
+[merge]
+  summary = true
+  verbosity = 1
+  # No mergetool configured on purpose - the old default (mvimdiff/MacVim)
+  # was Mac-only. `git mergetool` will ask you to pick one interactively
+  # the first time; `meld` or `vimdiff` are both easy AUR/pacman installs
+  # if you want a default set instead.
+[apply]
+  whitespace = nowarn
+[branch]
+  autosetupmerge = true
+[push]
+  # 'git push' pushes the current branch to its configured upstream only
+  default = upstream
+[core]
+  autocrlf = false
+  editor = emacs -Q -nw
+  # No excludesfile set on purpose - git already reads
+  # $XDG_CONFIG_HOME/git/ignore (~/.config/git/ignore) as the global
+  # ignore file by default, so this repo's dot_config/git/ignore just
+  # works without pointing at it explicitly.
+[advice]
+  statusHints = false
+[diff]
+  # (i)ndex, (w)ork tree, (c)ommit, (o)bject instead of a/b/c/d as patch prefixes
+  mnemonicprefix = true
+  algorithm = myers
+[rerere]
+  enabled = true
+[user]
+  name = {{ .name }}
+  email = {{ .email }}

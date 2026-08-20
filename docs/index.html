@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>omadots docs</title>
+<style>
+*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.19 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.prose{color:var(--tw-prose-body);max-width:65ch}.prose :where(p):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:1.25em;margin-bottom:1.25em}.prose :where([class~=lead]):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-lead);font-size:1.25em;line-height:1.6;margin-top:1.2em;margin-bottom:1.2em}.prose :where(a):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-links);text-decoration:underline;font-weight:500}.prose :where(strong):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-bold);font-weight:600}.prose :where(a strong):not(:where([class~=not-prose],[class~=not-prose] *)){color:inherit}.prose :where(blockquote strong):not(:where([class~=not-prose],[class~=not-prose] *)){color:inherit}.prose :where(thead th strong):not(:where([class~=not-prose],[class~=not-prose] *)){color:inherit}.prose :where(ol):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:decimal;margin-top:1.25em;margin-bottom:1.25em;padding-inline-start:1.625em}.prose :where(ol[type=A]):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:upper-alpha}.prose :where(ol[type=a]):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:lower-alpha}.prose :where(ol[type=A s]):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:upper-alpha}.prose :where(ol[type=a s]):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:lower-alpha}.prose :where(ol[type=I]):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:upper-roman}.prose :where(ol[type=i]):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:lower-roman}.prose :where(ol[type=I s]):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:upper-roman}.prose :where(ol[type=i s]):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:lower-roman}.prose :where(ol[type="1"]):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:decimal}.prose :where(ul):not(:where([class~=not-prose],[class~=not-prose] *)){list-style-type:disc;margin-top:1.25em;margin-bottom:1.25em;padding-inline-start:1.625em}.prose :where(ol>li):not(:where([class~=not-prose],[class~=not-prose] *))::marker{font-weight:400;color:var(--tw-prose-counters)}.prose :where(ul>li):not(:where([class~=not-prose],[class~=not-prose] *))::marker{color:var(--tw-prose-bullets)}.prose :where(dt):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-headings);font-weight:600;margin-top:1.25em}.prose :where(hr):not(:where([class~=not-prose],[class~=not-prose] *)){border-color:var(--tw-prose-hr);border-top-width:1px;margin-top:3em;margin-bottom:3em}.prose :where(blockquote):not(:where([class~=not-prose],[class~=not-prose] *)){font-weight:500;font-style:italic;color:var(--tw-prose-quotes);border-inline-start-width:.25rem;border-inline-start-color:var(--tw-prose-quote-borders);quotes:"\201C""\201D""\2018""\2019";margin-top:1.6em;margin-bottom:1.6em;padding-inline-start:1em}.prose :where(blockquote p:first-of-type):not(:where([class~=not-prose],[class~=not-prose] *)):before{content:open-quote}.prose :where(blockquote p:last-of-type):not(:where([class~=not-prose],[class~=not-prose] *)):after{content:close-quote}.prose :where(h1):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-headings);font-weight:800;font-size:2.25em;margin-top:0;margin-bottom:.8888889em;line-height:1.1111111}.prose :where(h1 strong):not(:where([class~=not-prose],[class~=not-prose] *)){font-weight:900;color:inherit}.prose :where(h2):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-headings);font-weight:700;font-size:1.5em;margin-top:2em;margin-bottom:1em;line-height:1.3333333}.prose :where(h2 strong):not(:where([class~=not-prose],[class~=not-prose] *)){font-weight:800;color:inherit}.prose :where(h3):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-headings);font-weight:600;font-size:1.25em;margin-top:1.6em;margin-bottom:.6em;line-height:1.6}.prose :where(h3 strong):not(:where([class~=not-prose],[class~=not-prose] *)){font-weight:700;color:inherit}.prose :where(h4):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-headings);font-weight:600;margin-top:1.5em;margin-bottom:.5em;line-height:1.5}.prose :where(h4 strong):not(:where([class~=not-prose],[class~=not-prose] *)){font-weight:700;color:inherit}.prose :where(img):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:2em;margin-bottom:2em}.prose :where(picture):not(:where([class~=not-prose],[class~=not-prose] *)){display:block;margin-top:2em;margin-bottom:2em}.prose :where(video):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:2em;margin-bottom:2em}.prose :where(kbd):not(:where([class~=not-prose],[class~=not-prose] *)){font-weight:500;font-family:inherit;color:var(--tw-prose-kbd);box-shadow:0 0 0 1px var(--tw-prose-kbd-shadows),0 3px 0 var(--tw-prose-kbd-shadows);font-size:.875em;border-radius:.3125rem;padding-top:.1875em;padding-inline-end:.375em;padding-bottom:.1875em;padding-inline-start:.375em}.prose :where(code):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-code);font-weight:600;font-size:.875em}.prose :where(code):not(:where([class~=not-prose],[class~=not-prose] *)):before{content:"`"}.prose :where(code):not(:where([class~=not-prose],[class~=not-prose] *)):after{content:"`"}.prose :where(a code):not(:where([class~=not-prose],[class~=not-prose] *)){color:inherit}.prose :where(h1 code):not(:where([class~=not-prose],[class~=not-prose] *)){color:inherit}.prose :where(h2 code):not(:where([class~=not-prose],[class~=not-prose] *)){color:inherit;font-size:.875em}.prose :where(h3 code):not(:where([class~=not-prose],[class~=not-prose] *)){color:inherit;font-size:.9em}.prose :where(h4 code):not(:where([class~=not-prose],[class~=not-prose] *)){color:inherit}.prose :where(blockquote code):not(:where([class~=not-prose],[class~=not-prose] *)){color:inherit}.prose :where(thead th code):not(:where([class~=not-prose],[class~=not-prose] *)){color:inherit}.prose :where(pre):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-pre-code);background-color:var(--tw-prose-pre-bg);overflow-x:auto;font-weight:400;font-size:.875em;line-height:1.7142857;margin-top:1.7142857em;margin-bottom:1.7142857em;border-radius:.375rem;padding-top:.8571429em;padding-inline-end:1.1428571em;padding-bottom:.8571429em;padding-inline-start:1.1428571em}.prose :where(pre code):not(:where([class~=not-prose],[class~=not-prose] *)){background-color:transparent;border-width:0;border-radius:0;padding:0;font-weight:inherit;color:inherit;font-size:inherit;font-family:inherit;line-height:inherit}.prose :where(pre code):not(:where([class~=not-prose],[class~=not-prose] *)):before{content:none}.prose :where(pre code):not(:where([class~=not-prose],[class~=not-prose] *)):after{content:none}.prose :where(table):not(:where([class~=not-prose],[class~=not-prose] *)){width:100%;table-layout:auto;margin-top:2em;margin-bottom:2em;font-size:.875em;line-height:1.7142857}.prose :where(thead):not(:where([class~=not-prose],[class~=not-prose] *)){border-bottom-width:1px;border-bottom-color:var(--tw-prose-th-borders)}.prose :where(thead th):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-headings);font-weight:600;vertical-align:bottom;padding-inline-end:.5714286em;padding-bottom:.5714286em;padding-inline-start:.5714286em}.prose :where(tbody tr):not(:where([class~=not-prose],[class~=not-prose] *)){border-bottom-width:1px;border-bottom-color:var(--tw-prose-td-borders)}.prose :where(tbody tr:last-child):not(:where([class~=not-prose],[class~=not-prose] *)){border-bottom-width:0}.prose :where(tbody td):not(:where([class~=not-prose],[class~=not-prose] *)){vertical-align:baseline}.prose :where(tfoot):not(:where([class~=not-prose],[class~=not-prose] *)){border-top-width:1px;border-top-color:var(--tw-prose-th-borders)}.prose :where(tfoot td):not(:where([class~=not-prose],[class~=not-prose] *)){vertical-align:top}.prose :where(th,td):not(:where([class~=not-prose],[class~=not-prose] *)){text-align:start}.prose :where(figure>*):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:0;margin-bottom:0}.prose :where(figcaption):not(:where([class~=not-prose],[class~=not-prose] *)){color:var(--tw-prose-captions);font-size:.875em;line-height:1.4285714;margin-top:.8571429em}.prose{--tw-prose-body:#374151;--tw-prose-headings:#111827;--tw-prose-lead:#4b5563;--tw-prose-links:#111827;--tw-prose-bold:#111827;--tw-prose-counters:#6b7280;--tw-prose-bullets:#d1d5db;--tw-prose-hr:#e5e7eb;--tw-prose-quotes:#111827;--tw-prose-quote-borders:#e5e7eb;--tw-prose-captions:#6b7280;--tw-prose-kbd:#111827;--tw-prose-kbd-shadows:rgba(17,24,39,.1);--tw-prose-code:#111827;--tw-prose-pre-code:#e5e7eb;--tw-prose-pre-bg:#1f2937;--tw-prose-th-borders:#d1d5db;--tw-prose-td-borders:#e5e7eb;--tw-prose-invert-body:#d1d5db;--tw-prose-invert-headings:#fff;--tw-prose-invert-lead:#9ca3af;--tw-prose-invert-links:#fff;--tw-prose-invert-bold:#fff;--tw-prose-invert-counters:#9ca3af;--tw-prose-invert-bullets:#4b5563;--tw-prose-invert-hr:#374151;--tw-prose-invert-quotes:#f3f4f6;--tw-prose-invert-quote-borders:#374151;--tw-prose-invert-captions:#9ca3af;--tw-prose-invert-kbd:#fff;--tw-prose-invert-kbd-shadows:hsla(0,0%,100%,.1);--tw-prose-invert-code:#fff;--tw-prose-invert-pre-code:#d1d5db;--tw-prose-invert-pre-bg:rgba(0,0,0,.5);--tw-prose-invert-th-borders:#4b5563;--tw-prose-invert-td-borders:#374151;font-size:1rem;line-height:1.75}.prose :where(picture>img):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:0;margin-bottom:0}.prose :where(li):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:.5em;margin-bottom:.5em}.prose :where(ol>li):not(:where([class~=not-prose],[class~=not-prose] *)){padding-inline-start:.375em}.prose :where(ul>li):not(:where([class~=not-prose],[class~=not-prose] *)){padding-inline-start:.375em}.prose :where(.prose>ul>li p):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:.75em;margin-bottom:.75em}.prose :where(.prose>ul>li>p:first-child):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:1.25em}.prose :where(.prose>ul>li>p:last-child):not(:where([class~=not-prose],[class~=not-prose] *)){margin-bottom:1.25em}.prose :where(.prose>ol>li>p:first-child):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:1.25em}.prose :where(.prose>ol>li>p:last-child):not(:where([class~=not-prose],[class~=not-prose] *)){margin-bottom:1.25em}.prose :where(ul ul,ul ol,ol ul,ol ol):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:.75em;margin-bottom:.75em}.prose :where(dl):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:1.25em;margin-bottom:1.25em}.prose :where(dd):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:.5em;padding-inline-start:1.625em}.prose :where(hr+*):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:0}.prose :where(h2+*):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:0}.prose :where(h3+*):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:0}.prose :where(h4+*):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:0}.prose :where(thead th:first-child):not(:where([class~=not-prose],[class~=not-prose] *)){padding-inline-start:0}.prose :where(thead th:last-child):not(:where([class~=not-prose],[class~=not-prose] *)){padding-inline-end:0}.prose :where(tbody td,tfoot td):not(:where([class~=not-prose],[class~=not-prose] *)){padding-top:.5714286em;padding-inline-end:.5714286em;padding-bottom:.5714286em;padding-inline-start:.5714286em}.prose :where(tbody td:first-child,tfoot td:first-child):not(:where([class~=not-prose],[class~=not-prose] *)){padding-inline-start:0}.prose :where(tbody td:last-child,tfoot td:last-child):not(:where([class~=not-prose],[class~=not-prose] *)){padding-inline-end:0}.prose :where(figure):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:2em;margin-bottom:2em}.prose :where(.prose>:first-child):not(:where([class~=not-prose],[class~=not-prose] *)){margin-top:0}.prose :where(.prose>:last-child):not(:where([class~=not-prose],[class~=not-prose] *)){margin-bottom:0}.prose-slate{--tw-prose-body:#334155;--tw-prose-headings:#0f172a;--tw-prose-lead:#475569;--tw-prose-links:#0f172a;--tw-prose-bold:#0f172a;--tw-prose-counters:#64748b;--tw-prose-bullets:#cbd5e1;--tw-prose-hr:#e2e8f0;--tw-prose-quotes:#0f172a;--tw-prose-quote-borders:#e2e8f0;--tw-prose-captions:#64748b;--tw-prose-kbd:#0f172a;--tw-prose-kbd-shadows:rgba(15,23,42,.1);--tw-prose-code:#0f172a;--tw-prose-pre-code:#e2e8f0;--tw-prose-pre-bg:#1e293b;--tw-prose-th-borders:#cbd5e1;--tw-prose-td-borders:#e2e8f0;--tw-prose-invert-body:#cbd5e1;--tw-prose-invert-headings:#fff;--tw-prose-invert-lead:#94a3b8;--tw-prose-invert-links:#fff;--tw-prose-invert-bold:#fff;--tw-prose-invert-counters:#94a3b8;--tw-prose-invert-bullets:#475569;--tw-prose-invert-hr:#334155;--tw-prose-invert-quotes:#f1f5f9;--tw-prose-invert-quote-borders:#334155;--tw-prose-invert-captions:#94a3b8;--tw-prose-invert-kbd:#fff;--tw-prose-invert-kbd-shadows:hsla(0,0%,100%,.1);--tw-prose-invert-code:#fff;--tw-prose-invert-pre-code:#cbd5e1;--tw-prose-invert-pre-bg:rgba(0,0,0,.5);--tw-prose-invert-th-borders:#475569;--tw-prose-invert-td-borders:#334155}.invisible{visibility:hidden}.fixed{position:fixed}.sticky{position:sticky}.top-0{top:0}.z-10{z-index:10}.mx-auto{margin-left:auto;margin-right:auto}.mb-0\.5{margin-bottom:.125rem}.mb-1{margin-bottom:.25rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.ml-auto{margin-left:auto}.mt-auto{margin-top:auto}.block{display:block}.inline{display:inline}.flex{display:flex}.table{display:table}.contents{display:contents}.hidden{display:none}.h-4{height:1rem}.h-6{height:1.5rem}.h-7{height:1.75rem}.h-screen{height:100vh}.min-h-screen{min-height:100vh}.w-4{width:1rem}.w-6{width:1.5rem}.w-7{width:1.75rem}.w-full{width:100%}.min-w-0{min-width:0}.max-w-3xl{max-width:48rem}.max-w-none{max-width:none}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.items-center{align-items:center}.justify-center{justify-content:center}.gap-2{gap:.5rem}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rounded{border-radius:.25rem}.rounded-lg{border-radius:.5rem}.rounded-md{border-radius:.375rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240/var(--tw-border-opacity,1))}.bg-teal-50{--tw-bg-opacity:1;background-color:rgb(240 253 250/var(--tw-bg-opacity,1))}.bg-teal-500{--tw-bg-opacity:1;background-color:rgb(20 184 166/var(--tw-bg-opacity,1))}.bg-transparent{background-color:transparent}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.bg-white\/90{background-color:hsla(0,0%,100%,.9)}.px-2{padding-left:.5rem;padding-right:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-10{padding-top:2.5rem;padding-bottom:2.5rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.pl-3{padding-left:.75rem}.pt-3{padding-top:.75rem}.pt-4{padding-top:1rem}.text-left{text-align:left}.text-\[11px\]{font-size:11px}.text-\[13px\]{font-size:13px}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-tight{line-height:1.25}.tracking-wide{letter-spacing:.025em}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184/var(--tw-text-opacity,1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105/var(--tw-text-opacity,1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59/var(--tw-text-opacity,1))}.text-teal-700{--tw-text-opacity:1;color:rgb(15 118 110/var(--tw-text-opacity,1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.shadow{--tw-shadow:0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px -1px rgba(0,0,0,.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color),0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.outline{outline-style:solid}.blur{--tw-blur:blur(8px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur{--tw-backdrop-blur:blur(8px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-colors{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.dark\:prose-invert:is(.dark *){--tw-prose-body:var(--tw-prose-invert-body);--tw-prose-headings:var(--tw-prose-invert-headings);--tw-prose-lead:var(--tw-prose-invert-lead);--tw-prose-links:var(--tw-prose-invert-links);--tw-prose-bold:var(--tw-prose-invert-bold);--tw-prose-counters:var(--tw-prose-invert-counters);--tw-prose-bullets:var(--tw-prose-invert-bullets);--tw-prose-hr:var(--tw-prose-invert-hr);--tw-prose-quotes:var(--tw-prose-invert-quotes);--tw-prose-quote-borders:var(--tw-prose-invert-quote-borders);--tw-prose-captions:var(--tw-prose-invert-captions);--tw-prose-kbd:var(--tw-prose-invert-kbd);--tw-prose-kbd-shadows:var(--tw-prose-invert-kbd-shadows);--tw-prose-code:var(--tw-prose-invert-code);--tw-prose-pre-code:var(--tw-prose-invert-pre-code);--tw-prose-pre-bg:var(--tw-prose-invert-pre-bg);--tw-prose-th-borders:var(--tw-prose-invert-th-borders);--tw-prose-td-borders:var(--tw-prose-invert-td-borders)}.hover\:bg-teal-50:hover{--tw-bg-opacity:1;background-color:rgb(240 253 250/var(--tw-bg-opacity,1))}.hover\:text-slate-700:hover{--tw-text-opacity:1;color:rgb(51 65 85/var(--tw-text-opacity,1))}.hover\:text-teal-600:hover{--tw-text-opacity:1;color:rgb(13 148 136/var(--tw-text-opacity,1))}.hover\:text-teal-700:hover{--tw-text-opacity:1;color:rgb(15 118 110/var(--tw-text-opacity,1))}.prose-headings\:scroll-mt-20 :is(:where(h1,h2,h3,h4,h5,h6,th):not(:where([class~=not-prose],[class~=not-prose] *))){scroll-margin-top:5rem}.prose-a\:text-teal-600 :is(:where(a):not(:where([class~=not-prose],[class~=not-prose] *))){--tw-text-opacity:1;color:rgb(13 148 136/var(--tw-text-opacity,1))}.dark\:border-slate-700:is(.dark *){--tw-border-opacity:1;border-color:rgb(51 65 85/var(--tw-border-opacity,1))}.dark\:border-slate-800:is(.dark *){--tw-border-opacity:1;border-color:rgb(30 41 59/var(--tw-border-opacity,1))}.dark\:bg-slate-800:is(.dark *){--tw-bg-opacity:1;background-color:rgb(30 41 59/var(--tw-bg-opacity,1))}.dark\:bg-slate-950:is(.dark *){--tw-bg-opacity:1;background-color:rgb(2 6 23/var(--tw-bg-opacity,1))}.dark\:bg-slate-950\/90:is(.dark *){background-color:rgba(2,6,23,.9)}.dark\:text-slate-200:is(.dark *){--tw-text-opacity:1;color:rgb(226 232 240/var(--tw-text-opacity,1))}.dark\:text-slate-300:is(.dark *){--tw-text-opacity:1;color:rgb(203 213 225/var(--tw-text-opacity,1))}.dark\:text-slate-400:is(.dark *){--tw-text-opacity:1;color:rgb(148 163 184/var(--tw-text-opacity,1))}.dark\:text-slate-500:is(.dark *){--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.dark\:text-teal-400:is(.dark *){--tw-text-opacity:1;color:rgb(45 212 191/var(--tw-text-opacity,1))}.dark\:hover\:bg-slate-800:hover:is(.dark *){--tw-bg-opacity:1;background-color:rgb(30 41 59/var(--tw-bg-opacity,1))}.dark\:hover\:text-slate-100:hover:is(.dark *){--tw-text-opacity:1;color:rgb(241 245 249/var(--tw-text-opacity,1))}.dark\:hover\:text-teal-400:hover:is(.dark *){--tw-text-opacity:1;color:rgb(45 212 191/var(--tw-text-opacity,1))}.dark\:prose-a\:text-teal-400 :is(:where(a):not(:where([class~=not-prose],[class~=not-prose] *))):is(.dark *){--tw-text-opacity:1;color:rgb(45 212 191/var(--tw-text-opacity,1))}@media (min-width:768px){.md\:flex{display:flex}.md\:hidden{display:none}.md\:w-72{width:18rem}.md\:flex-col{flex-direction:column}.md\:py-14{padding-top:3.5rem;padding-bottom:3.5rem}}
+html { scroll-behavior: smooth; }
+::selection { background: #99f6e4; }
+.dark ::selection { background: #115e59; }
+
+/* Code block / inline code contrast, kept as plain CSS (not Tailwind's
+   prose-code:/prose-pre: modifiers) on purpose: those modifiers apply to
+   every <code>, including the ones nested inside <pre>, and silently won
+   the cascade over Typography's own pre-code reset - background went
+   light while the text color stayed the light shade meant for a dark
+   background, making fenced code blocks unreadable in light mode. Same
+   fixed dark background/light text for code blocks in both page modes;
+   inline code flips for contrast against its surrounding text. */
+.prose pre {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  border: 1px solid #1e293b;
+}
+.prose pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  font-weight: 400;
+}
+.prose :not(pre) > code {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-weight: 400;
+}
+.dark .prose :not(pre) > code {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+.prose code::before,
+.prose code::after {
+  content: none;
+}
+</style>
+</head>
+<body class="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="hidden md:flex md:w-72 md:flex-col border-r border-slate-200 dark:border-slate-800
+                 sticky top-0 h-screen overflow-y-auto shrink-0 px-4 py-6">
+    <div class="flex items-center gap-2 px-2 mb-6">
+      <div class="h-7 w-7 rounded-md bg-teal-500 flex items-center justify-center text-white font-bold text-sm">o</div>
+      <div>
+        <div class="font-semibold text-sm leading-tight">omadots</div>
+        <div class="text-[11px] text-slate-400">docs</div>
+      </div>
+      <button id="theme-toggle" class="ml-auto text-slate-400 hover:text-slate-700 dark:hover:text-slate-100" title="Toggle theme">
+        <svg id="icon-sun" class="h-4 w-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1.5m0 15V21m9-9h-1.5M4.5 12H3m15.36 6.36-1.06-1.06M6.7 6.7 5.64 5.64m12.72 0-1.06 1.06M6.7 17.3l-1.06 1.06M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"/></svg>
+        <svg id="icon-moon" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+    </div>
+
+    <nav class="mb-4">
+      
+          <button data-doc-target="overview"
+                  class="doc-nav-btn w-full text-left rounded-lg px-3 py-2 mb-0.5 bg-teal-50 text-teal-700 dark:bg-slate-800 dark:text-teal-400
+                         hover:bg-teal-50 hover:text-teal-700 dark:hover:bg-slate-800 dark:hover:text-teal-400
+                         transition-colors">
+            <div class="text-sm font-semibold">Overview</div>
+            <div class="text-xs text-slate-400 dark:text-slate-500">Repo layout &amp; brand-new-laptop setup</div>
+          </button>
+
+          <button data-doc-target="dev-stack"
+                  class="doc-nav-btn w-full text-left rounded-lg px-3 py-2 mb-0.5 text-slate-600 dark:text-slate-300
+                         hover:bg-teal-50 hover:text-teal-700 dark:hover:bg-slate-800 dark:hover:text-teal-400
+                         transition-colors">
+            <div class="text-sm font-semibold">Dev Stack Guide</div>
+            <div class="text-xs text-slate-400 dark:text-slate-500">install-dev-stack.sh, tool by tool</div>
+          </button>
+
+          <button data-doc-target="chezmoi"
+                  class="doc-nav-btn w-full text-left rounded-lg px-3 py-2 mb-0.5 text-slate-600 dark:text-slate-300
+                         hover:bg-teal-50 hover:text-teal-700 dark:hover:bg-slate-800 dark:hover:text-teal-400
+                         transition-colors">
+            <div class="text-sm font-semibold">Chezmoi Guide</div>
+            <div class="text-xs text-slate-400 dark:text-slate-500">Day-to-day dotfiles workflow</div>
+          </button>
+    </nav>
+
+    <div class="border-t border-slate-200 dark:border-slate-800 pt-3">
+      <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-2 mb-1">On this page</div>
+      
+          <div data-outline-for="overview" class="doc-outline block mb-4">
+            <a href="#overview/omadots" class="doc-outline-link pl-3 block truncate rounded px-2 py-1 text-[13px] text-slate-500 hover:text-teal-600 hover:bg-teal-50 dark:text-slate-400 dark:hover:text-teal-400 dark:hover:bg-slate-800" data-doc="overview">omadots</a>
+          </div>
+
+          <div data-outline-for="dev-stack" class="doc-outline hidden mb-4">
+            <a href="#dev-stack/omarchy-dev-stack" class="doc-outline-link pl-3 block truncate rounded px-2 py-1 text-[13px] text-slate-500 hover:text-teal-600 hover:bg-teal-50 dark:text-slate-400 dark:hover:text-teal-400 dark:hover:bg-slate-800" data-doc="dev-stack">Omarchy dev stack</a>
+          </div>
+
+          <div data-outline-for="chezmoi" class="doc-outline hidden mb-4">
+            <a href="#chezmoi/using-chezmoi-with-omadots" class="doc-outline-link pl-3 block truncate rounded px-2 py-1 text-[13px] text-slate-500 hover:text-teal-600 hover:bg-teal-50 dark:text-slate-400 dark:hover:text-teal-400 dark:hover:bg-slate-800" data-doc="chezmoi">Using chezmoi with omadots</a>
+          </div>
+    </div>
+
+    <div class="mt-auto pt-4 text-[11px] text-slate-400 px-2">
+      Generated from README.md / README-dev-stack.md / CHEZMOI-GUIDE.md
+    </div>
+  </aside>
+
+  <!-- Mobile nav -->
+  <div class="md:hidden sticky top-0 z-10 bg-white/90 dark:bg-slate-950/90 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center gap-2">
+    <div class="h-6 w-6 rounded bg-teal-500 flex items-center justify-center text-white font-bold text-xs">o</div>
+    <select id="mobile-doc-select" class="flex-1 text-sm bg-transparent border border-slate-200 dark:border-slate-700 rounded px-2 py-1"></select>
+    <button id="theme-toggle-mobile" class="text-slate-400">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <main class="flex-1 min-w-0">
+    <div class="max-w-3xl mx-auto px-6 py-10 md:py-14">
+      
+        <section id="doc-overview" data-doc="overview" class="doc-section block">
+          <article class="prose prose-slate dark:prose-invert max-w-none
+                           prose-headings:scroll-mt-20 prose-a:text-teal-600 dark:prose-a:text-teal-400">
+            <h1 id="omadots">omadots</h1>
+<p><em>(renamed from <code>archdots</code> on 2026-08-20 - same repo, same content, new name. If you have an old clone lying around, <code>git remote -v</code> still points at whatever URL you cloned; nothing here depends on the local folder being named any particular thing.)</em></p>
+<p>Personal Omarchy Linux (Arch-based) setup, split into two independent, composable pieces:</p>
+<table>
+<thead>
+<tr>
+<th>Piece</th>
+<th>What it manages</th>
+<th>Tool</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>home/</code> (chezmoi source state)</td>
+<td>dotfiles: shell, git, tmux, readline, zathura, doom.d, the Emacs daemon's systemd unit + launcher entry</td>
+<td><a href="https://www.chezmoi.io/">chezmoi</a> + <a href="https://bitwarden.com/help/cli/">Bitwarden CLI</a></td>
+</tr>
+<tr>
+<td><code>install-dev-stack.sh</code> + <code>dev-stack-software.txt</code></td>
+<td>dev tools: Java, Clojure, Maven, Node, Emacs, Doom Emacs (as a systemd --user daemon), Polylith, uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace, chezmoi, Bitwarden CLI, GitHub CLI</td>
+<td><code>mise</code>, pacman, AUR, self-updating hook</td>
+</tr>
+</tbody>
+</table>
+<p>They're deliberately decoupled: chezmoi never installs software, and <code>install-dev-stack.sh</code> never touches your dotfiles.</p>
+<p><strong>Browsable docs.</strong> <code>docs/index.html</code> is this README, <code>README-dev-stack.md</code>, and <code>CHEZMOI-GUIDE.md</code> rendered as one Tailwind-styled page (sidebar nav, per-doc outline, dark mode) - open it directly in a browser, no server needed. It's fully self-contained (no CDN calls at load time). Regenerate it after editing any of the three source <code>.md</code> files:</p>
+<pre><code class="language-sh">npm install        # one-time, installs the local Tailwind CLI
+npm run docs:build  # or: python3 docs/build_docs.py
+</code></pre>
+<h2 id="setting-up-a-brand-new-laptop">Setting up a brand new laptop</h2>
+<p>This is the full sequence for a laptop that already has <strong>Omarchy 4</strong> installed and booted, and nothing else done yet. Follow it in order - later steps depend on earlier ones.</p>
+<p><strong>0. Prerequisites.</strong> You're logged into a normal (non-root) user account, connected to the internet, and have a terminal open. That's it - everything else below is installed as part of the sequence.</p>
+<p><strong>1. Install chezmoi and the Bitwarden CLI.</strong></p>
+<pre><code class="language-sh">sudo pacman -S chezmoi bitwarden-cli
+</code></pre>
+<p>These two have to exist <em>before</em> anything else, since step 3 uses chezmoi to lay down every other dotfile. (<code>install-dev-stack.sh</code> also installs both later, as part of its normal registry-driven pass - that's fine, <code>pacman -S</code> on an already-installed package is a no-op. This manual step just breaks the chicken-and-egg problem of needing chezmoi to bootstrap, before the script that chezmoi's own tree points you at can run.)</p>
+<p><strong>2. Log into Bitwarden.</strong></p>
+<pre><code class="language-sh">bw login
+bw unlock
+</code></pre>
+<p>Needed so chezmoi's <code>bitwarden</code>/<code>bitwardenAttachmentByRef</code> template functions can fetch secrets during <code>apply</code> (<code>bitwarden.unlock = "auto"</code> in <code>.chezmoi.toml.tmpl</code> means chezmoi calls <code>bw unlock</code> itself from then on - you only do this by hand once, right after <code>bw login</code>). Nothing in this repo currently templates a live secret (see "Secrets" below), so this step is skippable <em>today</em> - but do it anyway, since the first time you add one (an SSH key, per <code>CHEZMOI-GUIDE.md</code>) is exactly when you don't want to be debugging an unauthenticated <code>bw</code> mid-<code>apply</code>.</p>
+<p><strong>3. Bootstrap dotfiles from this repo.</strong></p>
+<pre><code class="language-sh">chezmoi init --apply git@github.com:skovuri41/omadots.git
+</code></pre>
+<p>(Swap in your actual repo URL if it's not that one.) This one command: clones the full repo into <code>~/.local/share/chezmoi</code>, prompts once for your git name/email (<code>promptStringOnce</code> - cached after this, never asked again on this machine), applies every <code>dot_*</code>/<code>dot_config/*</code> file to your real <code>$HOME</code>, and - via <code>.chezmoiexternal.toml</code> - clones your actual <code>doom.d</code> config into <code>~/.config/doom</code>, so it's already in place before Doom Emacs itself is installed in step 5.</p>
+<p>Confirm it landed cleanly:</p>
+<pre><code class="language-sh">chezmoi diff        # should print nothing - a fresh apply has nothing left to change
+ls ~/.config/doom    # your real Doom config, not a placeholder
+</code></pre>
+<p><strong>4. Find the dev-stack installer.</strong> <code>chezmoi init</code> cloned the <em>entire</em> repo, not just the <code>home/</code> subtree it applies to <code>$HOME</code> - <code>install-dev-stack.sh</code>, <code>dev-stack-software.txt</code>, and this README all live at the top of that same clone, one level up from where <code>chezmoi cd</code> drops you:</p>
+<pre><code class="language-sh">cd ~/.local/share/chezmoi
+./install-dev-stack.sh
+</code></pre>
+<p><strong>5. Install the dev stack.</strong> (This is that same command, run from that directory.) Idempotent and safe to re-run. It registers itself as an <code>omarchy update</code> post-update hook, so Java/Clojure/Maven/Node stay current via <code>mise</code>, and Doom Emacs/Polylith stay current via the same script, on every future <code>omarchy update</code> - no separate maintenance step from here on.</p>
+<p>Check what's installed and what's upgradable any time:</p>
+<pre><code class="language-sh">./install-dev-stack.sh --status
+</code></pre>
+<p>The actual software list lives in <code>dev-stack-software.txt</code>, not in the script - add/remove/change a tool there and the script never needs to change for it. Not sure how a new tool should be installed? <code>./install-dev-stack.sh --check &lt;name&gt;</code> probes pacman/AUR/mise for it and suggests a line to add. See <code>README-dev-stack.md</code> for the full tool-by-tool rationale, the file format, and verification steps.</p>
+<p><strong>6. Pick up new PATH entries.</strong> Open a new terminal, or <code>source ~/.bashrc</code> in your current one - this loads anything the dev-stack script's custom installs added (currently Doom Emacs's <code>bin/</code>) via its idempotent PATH mechanism (see <code>README-dev-stack.md</code>).</p>
+<p><strong>7. Authenticate the GitHub CLI.</strong> <code>gh auth login</code> once - the package installs the <code>gh</code> binary, but interactive OAuth login is deliberately not automated by the script.</p>
+<p><strong>8. Spot-check the pieces that talk to each other.</strong></p>
+<pre><code class="language-sh">./install-dev-stack.sh --status      # everything should read OK (or NOT ENABLED for
+                                      # the Emacs daemon if step 3 didn't apply first)
+doom doctor                          # Doom's own health check
+systemctl --user status emacs        # daemon should be &quot;active (running)&quot;
+emacsclient -e '(+ 1 2)'             # =&gt; 3, confirms a client can actually reach it
+gh auth status                       # confirms step 7 took
+</code></pre>
+<p>That's the whole sequence. From here on, day-to-day maintenance is just <code>omarchy update</code> (covers both the dev stack and, if you <code>chezmoi update</code> alongside it, your dotfiles) - see "Ongoing maintenance" in <code>README-dev-stack.md</code> and the "Everyday commands" table in <code>CHEZMOI-GUIDE.md</code>.</p>
+<h2 id="day-to-day-chezmoi-commands">Day-to-day chezmoi commands</h2>
+<pre><code class="language-sh">chezmoi diff      # preview what would change
+chezmoi apply     # apply local edits under ~/.local/share/chezmoi
+chezmoi update    # git pull + apply, picks up changes pushed from another machine
+chezmoi cd        # cd into the source directory's home/ subtree (see step 4 above for
+                   # the repo-root-level files, like install-dev-stack.sh, that chezmoi
+                   # cd doesn't take you to)
+</code></pre>
+<p>Per-host differences (multiple machines): use chezmoi's built-in
+<code>.chezmoi.hostname</code> / <code>.chezmoi.os</code> template variables directly in any
+<code>.tmpl</code> file, or add host-specific data under <code>[data]</code> in
+<code>home/.chezmoi.toml.tmpl</code> and branch on it. Nothing extra to install.
+Full day-to-day reference (worked examples, merge conflicts, etc.) is in
+<code>CHEZMOI-GUIDE.md</code>.</p>
+<h2 id="why-this-order-matters">Why this order matters</h2>
+<p><code>install_doom()</code> in <code>install-dev-stack.sh</code> runs <code>doom install</code>. If chezmoi
+already placed your real config at <code>~/.config/doom</code> (step 3, above), Doom
+finds it there and leaves it alone. If you skip step 3 and run the dev-stack
+script first, Doom will generate its own default <code>~/.config/doom</code> from its
+example template - then chezmoi's git-repo external in step 3 will just
+overwrite that directory with your real config on the next <code>chezmoi apply</code>,
+so nothing breaks either way, but doing it in the documented order avoids a
+throwaway Doom config existing on disk even briefly.</p>
+<p>Same reasoning applies to the Emacs daemon: <code>install-dev-stack.sh</code> enables
+<code>~/.config/systemd/user/emacs.service</code> right after installing Doom, but that
+unit file (and the <code>~/.local/share/applications/emacs.desktop</code> launcher
+entry) comes from chezmoi, not the script. Skip step 3 and the daemon step
+just logs "unit file not present, skipped" and moves on (failsafe, not
+fatal) - run <code>chezmoi apply</code> and re-run the script to pick it up.</p>
+<p>Once it's running: <code>ec</code> opens a new graphical frame, <code>emax</code> a terminal-mode
+frame, <code>ekill</code> cleanly shuts the daemon (and every frame attached to it)
+down. Details and the full alias list are in <code>CHEZMOI-GUIDE.md</code>.</p>
+<h2 id="secrets">Secrets</h2>
+<p>All secrets (SSH keys, GPG keys, API tokens) are intended to live in
+Bitwarden and be templated in via chezmoi's <code>bitwarden</code> / <code>bitwardenFields</code>
+/ <code>bitwardenAttachment</code> template functions - never committed in plaintext.
+None of the current dotfiles in this repo reference a live secret yet
+(the original repo had none in scope either); this is the pattern to follow
+when you add the first one, e.g. an SSH <code>config</code> or private key template.</p>
+<h2 id="what-changed-from-the-old-dotfiles-repo">What changed from the old dotfiles repo</h2>
+<p>See the migration notes below (or ask - this was a deliberate cleanup, not
+a blind copy). Highlights:</p>
+<ul>
+<li>Dropped everything macOS-only (this setup is Omarchy/Arch-only).</li>
+<li>Dropped the <code>scripts/</code> folder (Mac/X1-era, doesn't apply to Omarchy).</li>
+<li>Removed <code>git config http.sslverify = false</code> (was silently disabling TLS
+  verification for all git remotes - a real security issue, not stylistic).</li>
+<li>Fixed two alias/function collisions with tools this setup now installs:
+  <code>gh</code> (your old alias) renamed to <code>ghist</code> so it doesn't shadow the real
+  GitHub CLI; the old <code>tre()</code> shell function dropped so it doesn't shadow
+  the new AUR <code>tre</code> binary.</li>
+<li>Modernized <code>tmux.conf</code> (<code>mouse on</code> replaces removed <code>mode-mouse</code>),
+  <code>fix-wifi</code>/<code>wifi-restart</code> (now <code>systemctl</code>), and <code>urlencode</code> (<code>python3</code>).</li>
+<li><code>youtube-dl</code> alias renamed to <code>yt-dlp</code> (the maintained fork).</li>
+<li>Fixed a case-sensitivity bug in the <code>p</code>/<code>projects</code> alias and a smart-quote
+  bug in <code>gch()</code>.</li>
+<li><code>EDITOR</code> now points at <code>emacsclient</code> to match the Doom Emacs setup.</li>
+<li>Six git submodules replaced by <code>.chezmoiexternal.toml</code> <code>git-repo</code> entries
+  (currently just <code>doom.d</code>) - same effect, no submodule commands to remember.</li>
+</ul>
+<p>6 git submodules -&gt; <code>.chezmoiexternal.toml</code>; 230 files in the old repo
+pruned down to the files actually relevant to an Omarchy setup.</p>
+          </article>
+        </section>
+
+        <section id="doc-dev-stack" data-doc="dev-stack" class="doc-section hidden">
+          <article class="prose prose-slate dark:prose-invert max-w-none
+                           prose-headings:scroll-mt-20 prose-a:text-teal-600 dark:prose-a:text-teal-400">
+            <h1 id="omarchy-dev-stack">Omarchy dev stack</h1>
+<p><code>install-dev-stack.sh</code> installs and then keeps current: Java, Maven, Clojure CLI, Polylith, Node/npm (LTS), Emacs + Doom Emacs (as a systemd --user daemon), uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace (icaclient), chezmoi, the Bitwarden CLI, and the GitHub CLI (<code>gh</code>).</p>
+<p><strong>Run it with no arguments to install/upgrade everything. Run it with <code>--status</code> to see a table of what's installed and what's newer upstream, with no changes made.</strong> After the first run, <strong><code>omarchy update</code> is the only maintenance command you need</strong> — the script wires itself into Omarchy's own update pipeline (see "Ongoing maintenance" below).</p>
+<p><strong>Verified against Omarchy 4.0.0 "Quattro"</strong> (tagged 2026-08-14, checked directly against the <code>basecamp/omarchy</code> <code>v4.0.0</code> tag). Quattro's headline changes — Quickshell replacing Waybar/Mako/hyprlock/etc., Lua-based Hyprland config, Limine snapshot rollback, the new pacman-upgrade guard — don't touch anything this script relies on. One thing did change and has been fixed here: <strong>the base package is now named <code>mise</code>, not <code>mise-bin</code></strong> (only matters on the rare box where mise isn't already present, since Omarchy ships it in the base install either way). Everything else — <code>omarchy-pkg-add</code>, the <code>dev-env</code> installer's <code>java</code>/<code>clojure</code> commands, the <code>omarchy-emacs</code>/Doom conflict, and the <code>~/.config/omarchy/hooks/post-update.d/</code> mechanism — is byte-for-byte the same on Quattro as it was going in. The new pacman-upgrade guard (<code>00-omarchy-update-guard.hook</code>, blocks direct <code>pacman -Syu</code>) only fires on a combined sync+sysupgrade transaction — <code>omarchy-pkg-add</code>'s plain <code>pacman -S &lt;pkg&gt;</code> calls (used throughout this script) don't trigger it.</p>
+<h2 id="design-principles">Design principles</h2>
+<ul>
+<li><strong>Same method Arch/Omarchy would use.</strong> Official pacman package first, AUR (via <code>yay</code>, through Omarchy's own <code>omarchy-pkg-aur-add</code>) second, and a raw GitHub-release download only when nothing else exists (that's just Polylith — see below).</li>
+<li><strong>Skip what's already standard.</strong> Every install step checks before it acts (<code>omarchy-pkg-add</code> itself is idempotent; <code>mise use</code> is a no-op if already current; Polylith/Doom compare versions before touching anything). Of everything on this list, only <code>jq</code> ships in Omarchy's base packages already — the script still "installs" it, which is just a no-op confirming that.</li>
+<li><strong>Failsafe.</strong> No single tool failing can stop the rest. Every step is wrapped so a failure is logged into a summary at the end instead of aborting the script. Citrix Workspace is the one item that's genuinely likely to fail unattended (see below), and it's handled explicitly rather than generically.</li>
+<li><strong>One script, both jobs.</strong> The script copies itself to <code>~/.local/share/dev-stack/install-dev-stack.sh</code> on first run and registers <em>that</em> copy as an Omarchy post-update hook. <code>omarchy update</code> re-runs the exact same script — since every step is idempotent, a re-run just is the upgrade path. There's no second hand-rolled updater to keep in sync with this one.</li>
+</ul>
+<h2 id="adding-software-without-touching-the-script">Adding software without touching the script</h2>
+<p>The software list isn't in <code>install-dev-stack.sh</code> - it's in <strong><code>dev-stack-software.txt</code></strong>, a plain pipe-delimited text file next to it: one line per tool, <code>name|method|spec|status_pkg|note</code>. To add, remove, or change anything pacman/AUR/mise can install, edit that file. The script re-reads it on every run (including via the <code>omarchy update</code> hook - <code>install_hook()</code> copies both files together, so the hook always re-runs against the same list it was set up with) and never needs a code change for it. A plain-text format was chosen deliberately over YAML: the schema is flat (five fields, no nesting), so YAML would only add a new dependency (<code>yq</code>) with no structural benefit.</p>
+<p>Not sure how a new tool should be installed? Ask the script:</p>
+<pre><code class="language-bash">./install-dev-stack.sh --check &lt;name&gt;
+</code></pre>
+<p>This probes pacman/Omarchy repos, the AUR (via <code>yay</code>), and mise's registry for that name (exact match first, fuzzy suggestions if there isn't one) and prints a suggested <code>dev-stack-software.txt</code> line, using this precedence: <strong>pacman &gt; mise &gt; AUR &gt; custom</strong>. It's read-only - it never installs anything or edits the file for you; you paste the suggested line in yourself. Example:</p>
+<pre><code>$ ./install-dev-stack.sh --check ripgrep
+...
+-- Suggestion --
+Add to dev-stack-software.txt:
+  &lt;Display Name&gt;|pacman|ripgrep|ripgrep|
+</code></pre>
+<p>The script itself never lists individual tools - <code>run_install()</code> just loops over the registry loaded from <code>dev-stack-software.txt</code> and dispatches each line on its <code>method</code> field (<code>pacman</code>/<code>aur</code>/<code>aur-fragile</code>/<code>mise</code> are handled fully generically; an unrecognized <code>method</code> is skipped with a warning, never silently ignored).</p>
+<p><strong>One thing genuinely still needs a script edit: a truly bespoke ("custom") install</strong> - something with no pacman/AUR/mise package at all, like Doom Emacs or Polylith. <code>custom</code> entries in the text file are wired to one of a small, fixed set of functions in the script by their <code>status_pkg</code> value, via a <code>dispatch_custom()</code> lookup; adding a new one means adding a <code>case</code> + function there. A <code>custom</code> entry whose <code>status_pkg</code> has no matching case fails loudly in the run summary rather than doing nothing, so a typo or a genuinely new bespoke tool is impossible to miss. This was a deliberate choice over a fully pluggable "point at an external installer script" mechanism - bespoke installs are rare (2 of the 20 tools on this list, plus the Emacs daemon step) and a fixed function is simpler to read, debug, and trust than a plugin contract with no real payoff at this scale.</p>
+<p><strong>Idempotent PATH handling for custom installs.</strong> Any custom install that needs a PATH addition (Doom Emacs's <code>~/.config/emacs/bin</code>, so far) writes it through a shared helper, <code>dev_stack_path_add</code>, into <code>~/.config/dev-stack/env.sh</code> - never directly into <code>~/.bashrc</code> or any other file chezmoi manages. That matters because chezmoi overwrites every file it manages from its own source state on every <code>chezmoi apply</code> - anything appended directly to a chezmoi-managed file by this script would silently vanish on the next apply. Instead, <code>home/dot_bash_exports</code> (chezmoi-managed) sources <code>env.sh</code> once, unconditionally; this script only ever writes inside <code>env.sh</code> after that, and only appends a line if it isn't already there.</p>
+<h2 id="what-gets-installed-and-why-this-shape">What gets installed, and why this shape</h2>
+<p><strong>Java, Maven, Clojure CLI, Node.js — via <code>mise</code>.</strong> Omarchy already ships <code>mise</code> in its base packages and already wires <code>eval "$(mise activate bash)"</code> into the default shell rc. <code>omarchy update</code> already runs <code>mise up</code> (as <code>omarchy-update-mise</code>) for every mise-managed tool, so these get free ongoing maintenance.</p>
+<ul>
+<li><code>mise use --global java@latest</code> — tracks the newest OpenJDK build. Pin to an LTS instead with e.g. <code>mise use --global java@21</code>.</li>
+<li><code>mise use --global maven@latest</code></li>
+<li><code>mise use --global clojure@latest</code>, plus <code>rlwrap</code> (a system package) for a usable REPL — same as Omarchy's own <code>omarchy install dev-env clojure</code> does.</li>
+<li><code>mise use --global node@lts</code> — <strong>deliberately <code>@lts</code>, not <code>@latest</code>/<code>@current</code></strong>, per your ask for stable-only. mise resolves <code>lts</code> to whatever the current Node LTS major is (24 at the time of writing) and re-resolves it on every <code>mise up</code>, so it tracks the LTS line rather than the bleeding-edge release train. npm comes bundled with Node, no separate install needed.</li>
+</ul>
+<p><strong>Polylith (<code>poly</code>) — the one genuinely GitHub-only tool.</strong> There's no Arch or AUR package. Polylith's own docs specify a stand-alone install for Linux: download the release jar, drop it somewhere, and write a tiny wrapper shell script that execs <code>java -jar</code>. The script does exactly that, and additionally:</p>
+<ul>
+<li>Resolves "latest" by following the redirect from <code>github.com/polyfy/polylith/releases/latest</code> to its tag (no GitHub API call, so no rate-limit risk).</li>
+<li>Stores the jar at <code>~/.local/share/dev-stack/polylith/poly-&lt;version&gt;.jar</code> and writes <code>~/.local/bin/poly</code>.</li>
+<li>On every run (including via the <code>omarchy update</code> hook), re-checks the latest tag and only re-downloads if it's newer than what's on disk — so re-running is the upgrade mechanism, same as everything else here.</li>
+</ul>
+<p><strong>uv — the official Arch package, not AUR.</strong> <code>uv</code> (Astral's Python package/project manager) has its own official package in Arch's <code>extra</code> repo now (separate from <code>python-uv</code>, which is the Python bindings library — not what you want). Plain <code>omarchy-pkg-add uv</code>.</p>
+<p><strong>Emacs — the official Arch package, not AUR.</strong> Arch's <code>emacs-wayland</code> package is currently 30.2, built with native compilation and PGTK (pure-GTK, native Wayland rendering — the right choice under Hyprland instead of the X11-only <code>emacs</code> package). 30.2 is also Doom's own recommended max version. It's a normal <code>pacman</code> package, so it updates with every <code>omarchy update</code>.</p>
+<p>There's a separate AUR package, <code>omarchy-emacs</code>, that gives Emacs theme/font syncing with Omarchy's theme switcher. It's deliberately <strong>not</strong> used here: it manages <code>~/.config/emacs/init.el</code> itself, the same file Doom Emacs owns, and the two conflict.</p>
+<p><strong>Doom Emacs — git clone, hooked into Omarchy's update system.</strong> Doom isn't tracked by Arch or Omarchy, so it needs its own updater (<code>doom upgrade &amp;&amp; doom sync</code>). The script's re-run behavior handles this directly now: if <code>~/.config/emacs</code> already exists, it runs <code>doom upgrade --force &amp;&amp; doom sync --force</code> instead of cloning again. Doom's language/feature modules (including <code>clojure</code> and <code>java</code>) live in a separate <code>doomemacs/modules</code> repo pulled in as a git submodule; <code>doom install</code>/<code>doom upgrade</code> fetch/update that on their own.</p>
+<p>The script enables <code>:lang java</code> and <code>:lang clojure</code> in <code>~/.config/doom/init.el</code> (uncommenting the relevant lines in Doom's generated template — only on first install, since after that it's your file to edit), then runs <code>doom sync</code> to pull in CIDER, clojure-mode, clj-refactor, etc.</p>
+<p><strong>Emacs daemon — systemd --user service, launcher-integrated.</strong> Right after Doom is installed/upgraded, the script enables <code>~/.config/systemd/user/emacs.service</code> (<code>systemctl --user daemon-reload &amp;&amp; systemctl --user enable --now emacs.service</code>) — a unit file that comes from chezmoi (<code>omadots/home/dot_config/systemd/user/emacs.service</code>), not from this script, per the project's "chezmoi owns config, this script owns software" split. That means <code>chezmoi apply</code> has to run before this script on a fresh box, same as it already does for Doom's config — see <code>README.md</code>'s run order.</p>
+<p>With the daemon running persistently from login onward:</p>
+<ul>
+<li><code>emacsclient -c</code> (the <code>ec</code> alias) opens a <strong>new graphical frame</strong> against the always-on daemon instead of cold-starting Emacs every time.</li>
+<li><code>emacsclient -t</code> (the <code>emax</code> alias) opens a <strong>terminal text-mode frame</strong> in the current terminal, same daemon.</li>
+<li><code>emacsclient --eval '(kill-emacs)'</code> (the <code>ekill</code> alias) <strong>cleanly shuts down the daemon and every attached frame/client at once</strong> — since they're all just connections to one process, there's nothing to individually close.</li>
+<li>A <code>.desktop</code> entry at <code>~/.local/share/applications/emacs.desktop</code> (also from chezmoi) points Omarchy's app launcher at <code>emacsclient -c -a "" %F</code> instead of a plain <code>emacs</code> binary launch, so opening Emacs from the launcher reuses the daemon too. <code>~/.local/share/applications</code> is searched before <code>/usr/share/applications</code> per the XDG spec, so this overrides whatever entry the <code>emacs-wayland</code> package itself may ship — worth a quick look in the launcher after first setup in case both show up (rename or remove the extra one if so; hasn't been confirmed either way against the exact package contents).</li>
+</ul>
+<p>Full alias list and the daemon's systemd design (why <code>-c</code>/<code>-t</code> don't need any Wayland-display-forwarding tricks to work) are in <code>CHEZMOI-GUIDE.md</code>.</p>
+<p><strong>curl, sqlite, tree, jq, zathura — plain pacman packages</strong>, none of which ship in Omarchy's base install except <code>jq</code>. <code>zathura</code> is installed together with <code>zathura-pdf-mupdf</code>, since zathura has no file-type support at all without a backend plugin — mupdf is the commonly recommended one.</p>
+<p><strong>tre — AUR only (<code>tre-command</code>).</strong> This is the Rust rewrite of <code>tree(1)</code> (respects <code>.gitignore</code>, colorized by default), not a typo of <code>tree</code> — both are installed since you asked for both. Built via <code>yay</code>/<code>makepkg</code> like any other AUR package, no manual steps needed.</p>
+<p><strong>Citrix Workspace (<code>icaclient</code>) — AUR, but flagged as fragile on purpose.</strong> This is the one package on the list that commonly can't finish unattended: Citrix gates the Linux Workspace app tarball behind a login/EULA wall on their own site, so <code>makepkg</code>'s automatic download frequently fails with no way around it from a script. The script tries <code>omarchy-pkg-aur-add icaclient</code> first — if your AUR mirror/cache already has the tarball cached, or the AUR package changes to no longer need it, it'll just work. If it fails, the script prints exactly what to do (download the tarball from citrix.com yourself, then re-run <code>yay -S icaclient</code>), marks it in the status table as "ACTION NEEDED," and moves on to finish everything else rather than stopping.</p>
+<p><strong>GitHub CLI (<code>gh</code>) — official Arch package, <code>github-cli</code>.</strong> Not to be confused with the AUR <code>github-cli-bin</code> prebuilt or the old <code>hub</code> tool. Installing the package only gets you the binary — it isn't authenticated on install (there's no unattended-safe way to do OAuth device-flow login from a script), so run <code>gh auth login</code> once yourself after the script finishes. This is also the tool <code>home/dot_bash_aliases</code>' <code>ghist</code> alias was named around: the original dotfiles' <code>gh</code> alias was renamed to <code>ghist</code> specifically so it wouldn't shadow this once it was installed (see <code>README.md</code>'s "What changed from the old dotfiles repo").</p>
+<h2 id="running-it">Running it</h2>
+<pre><code class="language-bash">chmod +x install-dev-stack.sh
+./install-dev-stack.sh              # install everything (safe to re-run / upgrade with)
+./install-dev-stack.sh --status     # read-only table, no changes
+./install-dev-stack.sh --check foo  # read-only: how would 'foo' get installed?
+</code></pre>
+<p>Everything is idempotent, so running it again is both how you retry a failure and how you'd manually trigger an upgrade outside of <code>omarchy update</code>.</p>
+<h2 id="the---status-table">The <code>--status</code> table</h2>
+<pre><code>$ ./install-dev-stack.sh --status
+Checking installed vs. available versions...
+(pacman upgrade check via 'checkupdates', AUR via 'yay -Qua' - both read-only, no sudo)
+
+SOFTWARE             METHOD       INSTALLED      LATEST         STATUS
+----------------------------------------------------------------------------------
+Java                  mise        21.0.5         25             UPDATE AVAILABLE
+Maven                 mise        3.9.9          3.9.9          OK
+...
+Citrix Workspace      aur-fragile -              -              NOT INSTALLED
+</code></pre>
+<p>Pacman-tracked upgrade checks use <code>checkupdates</code> (from <code>pacman-contrib</code>, already in Omarchy's base packages) — it does a safe, non-root, temp-directory sync-db check, so this never needs <code>sudo</code> and never touches your real package db. AUR-tracked checks use <code>yay -Qua</code>. Both are read-only.</p>
+<h2 id="verifying">Verifying</h2>
+<pre><code class="language-bash">java -version
+mvn -version
+clj --version
+node --version &amp;&amp; npm --version
+poly version
+uv --version
+emacs --version
+doom doctor          # Doom's own health check; run after first launch
+systemctl --user status emacs   # daemon should be &quot;active (running)&quot;
+emacsclient -e '(+ 1 2)'        # =&gt; 3, confirms a client can actually reach it
+gh --version
+gh auth status       # will say &quot;not logged in&quot; until you run 'gh auth login' once
+</code></pre>
+<h2 id="ongoing-maintenance">Ongoing maintenance</h2>
+<p>Just:</p>
+<pre><code class="language-bash">omarchy update
+</code></pre>
+<p>This one command now updates: system packages (including Emacs, uv, curl, sqlite, tree, jq, zathura), AUR packages (tre, icaclient), every mise-managed tool (Java, Maven, Clojure, Node), Doom Emacs, and Polylith — because the post-update hook it installs just re-runs <code>install-dev-stack.sh</code> itself. The daemon re-enable step is a no-op on every run after the first (<code>systemctl --user enable --now</code> is idempotent) — it only restarts the daemon if the Emacs package itself was upgraded and the unit's <code>Restart=on-failure</code> triggers, not on every <code>omarchy update</code>.</p>
+<p>If you want to update mise tools only, right now, without a full <code>omarchy update</code>: <code>mup</code> (an alias Omarchy already defines for <code>MISE_MINIMUM_RELEASE_AGE=0 mise up</code>).</p>
+<h2 id="optional-follow-ups-not-automated-on-purpose">Optional follow-ups (not automated on purpose)</h2>
+<ul>
+<li><strong>LSP for Java/Clojure.</strong> The script enables the <code>java</code> and <code>clojure</code> Doom modules <em>without</em> the <code>+lsp</code> flag, so first setup doesn't silently depend on a language server that isn't installed yet. To add it later:
+  1. Install a language server — e.g. <code>clojure-lsp</code> (AUR, or a release binary) for Clojure, and <code>eclipse.jdt-ls</code> for Java (also AUR).
+  2. In <code>~/.config/doom/init.el</code>, change <code>clojure</code> to <code>(clojure +lsp)</code> and <code>java</code> to <code>(java +lsp)</code>, and uncomment <code>;;(lsp +eglot)</code> (or plain <code>lsp</code>) under <code>:tools</code>.
+  3. Run <code>doom sync</code>.</li>
+<li><strong>Adding more languages later.</strong> Omarchy has the same pattern built in for others: <code>omarchy install dev-env &lt;ruby|go|python|rust|...&gt;</code>. Anything installed through <code>mise use --global</code> gets the same free maintenance via <code>omarchy update</code>.</li>
+<li><strong>Pinning versions per-project instead of globally.</strong> Drop a <code>.mise.toml</code> in a project directory with e.g. <code>java = "21"</code> and <code>mise</code> will use that version whenever your shell is inside that directory, overriding the global default.</li>
+<li><strong>Finishing Citrix Workspace manually</strong>, if the automated attempt failed — see the dedicated note above.</li>
+<li><strong>Authenticating the GitHub CLI.</strong> <code>gh auth login</code> once per machine (interactive OAuth device-flow login, deliberately not automated) — everything after that (<code>gh repo clone</code>, <code>gh pr create</code>, etc.) works without further setup.</li>
+<li><strong>Restarting the Emacs daemon after an Emacs version upgrade.</strong> <code>omarchy update</code> upgrades the <code>emacs-wayland</code> package on disk, but a daemon that's already running keeps using the old binary in memory until it's restarted — the script deliberately does <em>not</em> force this automatically (it would kill every open Emacs frame and unsaved buffer without warning on every update). Restart it yourself when convenient: <code>systemctl --user restart emacs</code> (or just <code>ekill</code> and let the next <code>ec</code>/<code>emax</code> auto-start it fresh).</li>
+</ul>
+<h2 id="sources">Sources</h2>
+<ul>
+<li><a href="https://mise.jdx.dev/lang/java.html">mise registry: java</a>, and the <a href="https://github.com/jdx/mise/tree/main/registry">mise registry.toml entries</a> for <code>maven</code> and <code>clojure</code> (confirms both resolve automatically to asdf/vfox/aqua backends under those short names, no manual plugin-add step)</li>
+<li><a href="https://github.com/jdx/mise/blob/main/src/plugins/core/node.rs">mise node.rs source</a> — confirms the <code>lts</code> alias exists and what it currently resolves to</li>
+<li><a href="https://mise.jdx.dev/cli/current.html">mise <code>current</code></a> and <a href="https://mise.jdx.dev/cli/latest.html"><code>latest</code></a> CLI docs — exact output format used for the status table</li>
+<li><a href="https://github.com/basecamp/omarchy">basecamp/omarchy</a> — <code>bin/omarchy-install-dev-env</code>, <code>bin/omarchy-pkg-add</code>, <code>bin/omarchy-pkg-aur-add</code>, <code>bin/omarchy-update</code>, <code>bin/omarchy-hook</code>, <code>install/user/mise.sh</code>, <code>install/omarchy-base.packages</code> / <code>install/omarchy-other.packages</code> (confirms mise is base-installed, dev-env conventions, the post-update hook mechanism, and which of the requested tools — only <code>jq</code> — are already standard)</li>
+<li><a href="https://github.com/basecamp/omarchy/releases/tag/v4.0.0">basecamp/omarchy <code>v4.0.0</code> tag</a> — checked directly against this tag (released 2026-08-14) for the Quattro review</li>
+<li><a href="https://archlinux.org/packages/extra/x86_64/emacs-wayland/">Arch Linux package: emacs-wayland</a> — 30.2-3, PGTK + native-comp</li>
+<li><a href="https://archlinux.org/packages/extra/x86_64/uv/">Arch Linux package: uv</a> — official package, distinct from <code>python-uv</code></li>
+<li><a href="https://archlinux.org/packages/extra/x86_64/github-cli/">Arch Linux package: github-cli</a> — official <code>extra</code> package, provides the <code>gh</code> command</li>
+<li><a href="https://github.com/scottjones/omarchy-emacs">scottjones/omarchy-emacs</a> — confirms the <code>~/.config/emacs/init.el</code> conflict with Doom</li>
+<li><a href="https://github.com/doomemacs/core">doomemacs/core README</a> and <a href="https://github.com/doomemacs/modules">doomemacs/modules</a> — install commands, module repo split, <code>lang/clojure</code>/<code>lang/java</code> module contents</li>
+<li><a href="https://github.com/polyfy/polylith/blob/master/doc/install.adoc">polyfy/polylith <code>doc/install.adoc</code></a> — official stand-alone Linux install method (jar + wrapper script); <a href="https://github.com/polyfy/polylith/releases">releases</a> for the current version (v0.3.32 at time of writing)</li>
+<li><a href="https://github.com/dduan/tre">dduan/tre</a> and the <code>tre-command</code> AUR package — confirms <code>tre</code> is a real, distinct tool (tree(1) rewrite), not a typo</li>
+<li><a href="https://aur.archlinux.org/packages/icaclient">AUR: icaclient</a> and long-standing Arch community reports — Citrix's download-gate behavior behind the AUR build (page itself is bot-walled from automated fetches, so this is corroborated via community threads rather than the PKGBUILD directly — flagged as the one lower-confidence item here)</li>
+<li><code>checkupdates</code> (pacman-contrib) and <code>yay -Qua</code> — standard non-root ways to check for available updates without touching the system package db</li>
+<li><a href="https://emacsredux.com/blog/2020/07/16/running-emacs-with-systemd/">Running Emacs with systemd</a> — the <code>--fg-daemon</code> + <code>Type=simple</code> systemd unit pattern this script/chezmoi tree follows</li>
+<li><a href="https://www.gnu.org/software/emacs/manual/html_node/emacs/emacsclient-Options.html">GNU Emacs manual: emacsclient Options</a> and the <a href="https://man.archlinux.org/man/emacsclient.1.en">Arch manual page</a> — confirms every flag used in the <code>ec</code>/<code>emax</code>/<code>semacs</code>/<code>ekill</code> aliases (<code>-c</code>, <code>-t</code>, <code>-n</code>, <code>-q</code>, <code>-u</code>, <code>-a</code>, <code>-T</code>/TRAMP prefix, <code>--eval</code>)</li>
+<li>XDG Base Directory / Desktop Entry spec — <code>$XDG_DATA_HOME</code> (<code>~/.local/share</code>) is searched before <code>$XDG_DATA_DIRS</code> (<code>/usr/share</code>), which is why a user-level <code>emacs.desktop</code> overrides a system one of the same name</li>
+</ul>
+          </article>
+        </section>
+
+        <section id="doc-chezmoi" data-doc="chezmoi" class="doc-section hidden">
+          <article class="prose prose-slate dark:prose-invert max-w-none
+                           prose-headings:scroll-mt-20 prose-a:text-teal-600 dark:prose-a:text-teal-400">
+            <h1 id="using-chezmoi-with-omadots">Using chezmoi with omadots</h1>
+<p>This is the day-to-day guide for the chezmoi setup in <code>omadots/home/</code>. For
+the one-time bootstrap on a fresh machine (<code>chezmoi init --apply</code>) and how
+this fits together with <code>install-dev-stack.sh</code>, see <code>README.md</code> — this doc
+picks up from there.</p>
+<p>A couple of things worth keeping in mind throughout: chezmoi never touches
+your real dotfiles (<code>~/.bashrc</code>, <code>~/.config/hypr/...</code>, etc.) directly — it
+only reads and writes them when you explicitly run <code>chezmoi apply</code>. Until
+then, all edits live in the <strong>source state</strong>, a plain directory at
+<code>~/.local/share/chezmoi</code> that's a git checkout of this repo (via
+<code>.chezmoiroot</code>, that's really <code>omadots/home/</code> on disk). Every command below
+either moves content from source → target (<code>apply</code>) or target → source
+(<code>add</code>/<code>re-add</code>), or talks to the git remote.</p>
+<h2 id="how-chezmoi-decides-what-to-apply-on-a-given-machine">How chezmoi decides what to apply on a given machine</h2>
+<p>Short answer: <strong>by default, it doesn't decide anything — every machine that
+runs <code>chezmoi apply</code> gets the entire source state, identically.</strong> There's no
+built-in concept of "this file belongs to that host." Every <code>dot_*</code> and
+<code>dot_config/*</code> entry in <code>omadots/home/</code> gets applied everywhere, in full,
+every time. As of today, that's true for everything in this repo — nothing
+in the tree is currently host-conditional at the <em>file</em> level.</p>
+<p>The one place host-awareness already exists is <em>inside</em> a couple of
+templates, not at the file-selection level: the per-machine SSH key example
+above uses <code>{{ .chezmoi.hostname }}</code> to change what a <code>.tmpl</code> file's
+<em>content</em> resolves to — the file <code>~/.ssh/id_ed25519</code> still gets created on
+every machine, it just contains a different key depending on which machine
+rendered the template. That's a different mechanism from making a file
+exist on some machines and not others.</p>
+<p>If you actually want a file to not exist at all on certain machines, there
+are two ways, and it's worth knowing which one you need:</p>
+<ul>
+<li><strong><code>.chezmoiignore</code></strong> (in <code>home/</code>, alongside <code>.chezmoi.toml.tmpl</code> and
+  <code>.chezmoiexternal.toml</code> — note this is inside <code>home/</code>, not next to
+  <code>.chezmoiroot</code> itself, which lives one level up in the repo root) — a
+  gitignore-style pattern list that's <em>always</em> treated as a template,
+  whether or not it's named <code>.chezmoiignore.tmpl</code>. Anything it matches is
+  skipped by <code>chezmoi apply</code> entirely, on whichever machine the condition
+  is true for. Example — say a future machine is work-only and you don't
+  want your Citrix config appearing anywhere else:</li>
+</ul>
+<p><code>{{- if ne .chezmoi.hostname "worklaptop" }}
+  .ICAClient
+  {{- end }}</code></p>
+<p><strong>Patterns match against the rendered <em>target</em> path, not the source
+  filename</strong> — this took a real test against the chezmoi binary to get
+  right: the first version of this example used the source-directory name
+  (<code>private_dot_ICAClient</code>) and silently matched nothing, because
+  <code>.chezmoiignore</code> only ever sees the path <em>after</em> the <code>private_</code>/<code>dot_</code>
+  prefixes are stripped (<code>.ICAClient</code>, exactly what shows up under
+  <code>$HOME</code>). Worth double-checking any ignore pattern with
+  <code>chezmoi ignored</code> after writing it — it prints exactly what's currently
+  being skipped, so a typo here fails silently otherwise. One more nuance:
+  chezmoi
+  doesn't auto-delete a file that <em>used</em> to apply and is now ignored — an
+  ignored file is invisible to chezmoi going forward (never created,
+  updated, or removed by it), not retroactively cleaned up. If you ignore
+  something that's already on disk from a previous apply, remove it
+  yourself.
+- <strong>Conditional content inside a <code>.tmpl</code> file</strong> (what the SSH key example
+  does) — use this when the file should exist everywhere but differ, not
+  when it shouldn't exist at all somewhere.</p>
+<p>Nothing in <code>omadots/home/</code> uses <code>.chezmoiignore</code> today — every plain file
+(bashrc, the whole <code>hypr/</code>, <code>nvim/</code>, etc. tree) is genuinely identical on
+every machine that applies it. If a real per-host difference comes up later
+(e.g. a laptop-only Hyprland monitor layout, or config that only makes
+sense on a work machine), that's the file to add.</p>
+<h2 id="everyday-commands">Everyday commands</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chezmoi edit ~/.bashrc</code></td>
+<td>Opens the <em>source</em> file for <code>~/.bashrc</code> in <code>$EDITOR</code>. Doesn't touch the real file until you <code>apply</code>.</td>
+</tr>
+<tr>
+<td><code>chezmoi edit --apply ~/.bashrc</code></td>
+<td>Same, but applies immediately after you save and quit.</td>
+</tr>
+<tr>
+<td><code>chezmoi diff</code></td>
+<td>Shows what <code>chezmoi apply</code> <em>would</em> change, without changing anything. Run this before every <code>apply</code> out of habit.</td>
+</tr>
+<tr>
+<td><code>chezmoi status</code></td>
+<td>Short one-line-per-file version of <code>diff</code>.</td>
+</tr>
+<tr>
+<td><code>chezmoi apply</code></td>
+<td>Writes source state → real dotfiles.</td>
+</tr>
+<tr>
+<td><code>chezmoi re-add ~/.config/hypr/looknfeel.lua</code></td>
+<td>The reverse: pulls a direct edit you made to the <em>real</em> file back into the source state. Chezmoi automatically skips this for template (<code>.tmpl</code>) files so it can't accidentally clobber a <code>{{ .email }}</code> placeholder with a literal value — edit those with <code>chezmoi edit</code> instead.</td>
+</tr>
+<tr>
+<td><code>chezmoi add ~/.config/newtool/config.toml</code></td>
+<td>Starts tracking a file that isn't in the source state yet.</td>
+</tr>
+<tr>
+<td><code>chezmoi merge ~/.bashrc</code></td>
+<td>Opens a three-way merge if both the source and the real file changed since the last apply.</td>
+</tr>
+<tr>
+<td><code>chezmoi cd</code></td>
+<td>Drops you into a subshell inside the source directory so you can run plain <code>git</code> commands. <code>exit</code> to leave it.</td>
+</tr>
+<tr>
+<td><code>chezmoi update</code></td>
+<td><code>git pull --autostash --rebase</code> in the source directory, then <code>apply</code> — the one-command way to pick up changes pushed from another machine.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="worked-example-change-a-file-push-it-to-github-pull-it-on-another-machine">Worked example: change a file, push it to GitHub, pull it on another machine</h2>
+<p>Say you're tweaking Hyprland on your main machine — nudging the blur and gap
+settings in <code>~/.config/hypr/looknfeel.lua</code> — and you want that change
+tracked and available on your other machine too.</p>
+<p><strong>1. Make the edit.</strong> Either edit the real file directly (e.g. because
+you're iterating live and want Hyprland to pick it up immediately), or go
+through chezmoi from the start with <code>chezmoi edit --apply ~/.config/hypr/looknfeel.lua</code>.
+If you used <code>chezmoi edit --apply</code>, the source state is already updated —
+skip to step 3.</p>
+<p><strong>2. Pull the direct edit back into the source state.</strong></p>
+<pre><code class="language-sh">chezmoi re-add ~/.config/hypr/looknfeel.lua
+</code></pre>
+<p>This copies your live edit back into <code>omadots/home/dot_config/hypr/looknfeel.lua</code>
+on disk. <code>chezmoi diff</code> should now report no difference (target and source
+match again) — the change has moved from "live only" to "tracked."</p>
+<p><strong>3. Review and commit the source-state change.</strong></p>
+<pre><code class="language-sh">chezmoi cd
+git diff                                  # see exactly what changed, in context
+git add dot_config/hypr/looknfeel.lua
+git commit -m &quot;hypr: increase blur, tighten gaps&quot;
+git push
+exit
+</code></pre>
+<p>(You can skip <code>chezmoi cd</code> and run the same three git steps prefixed with
+<code>chezmoi git --</code>, e.g. <code>chezmoi git add dot_config/hypr/looknfeel.lua</code> then
+<code>chezmoi git -- commit -m "..."</code> then <code>chezmoi git push</code> — same effect,
+no subshell.)</p>
+<p><strong>4. Pull it down on your other machine.</strong></p>
+<pre><code class="language-sh">chezmoi update
+</code></pre>
+<p>This runs <code>git pull --autostash --rebase</code> in that machine's source
+directory, then <code>chezmoi apply</code> — so the new <code>looknfeel.lua</code> lands and
+Hyprland picks it up on next reload, no manual copying required. If you'd
+rather review before it touches anything: <code>chezmoi git pull</code> (or <code>git pull</code>
+inside <code>chezmoi cd</code>), then <code>chezmoi diff</code> to see what's about to change,
+then <code>chezmoi apply</code> when you're happy.</p>
+<p>That's the whole loop — <code>re-add</code> (if you edited live) → <code>git commit</code>/<code>push</code>
+→ <code>chezmoi update</code> on every other machine. The same four steps work for any
+tracked file, not just Hyprland config.</p>
+<h2 id="using-bitwarden-to-manage-secrets-with-chezmoi">Using Bitwarden to manage secrets with chezmoi</h2>
+<p>The setup already has this wired up: <code>home/.chezmoi.toml.tmpl</code> sets
+<code>bitwarden.unlock = "auto"</code>, and <code>bitwarden-cli</code> (the <code>bw</code> command) is
+installed by <code>install-dev-stack.sh</code>. That means chezmoi will call <code>bw
+unlock</code> itself, on demand, the first time a template in a given <code>apply</code>
+needs a secret — you just need to have run <code>bw login</code> once on that machine
+beforehand (see <code>README.md</code>).</p>
+<p>The rule of thumb: <strong>the chezmoi source state (and the GitHub repo) should
+only ever contain the <em>retrieval logic</em> — <code>{{ bitwarden ... }}</code> — never the
+secret itself.</strong> The actual value only ever exists on disk, in the real
+target file, after <code>chezmoi apply</code> fetches it live from Bitwarden.</p>
+<p><strong>Worked example: an SSH keypair for GitHub, managed through Bitwarden.</strong></p>
+<p>This is the full end-to-end version — generate the key once, store it in
+Bitwarden, have chezmoi deploy it (on this machine and every other one),
+register the public half with GitHub, and confirm it works.</p>
+<p><em>1. Generate the keypair, once, on one machine.</em></p>
+<pre><code class="language-sh">ssh-keygen -t ed25519 -C &quot;your_email@example.com&quot; -f ~/.ssh/id_ed25519
+</code></pre>
+<p><code>ed25519</code> is what GitHub itself recommends over RSA today. You'll be
+prompted for a passphrase — optional, but worth considering even though
+Bitwarden already gates access to the file: it's a second layer in case the
+private key ever ends up copied somewhere outside Bitwarden's control.</p>
+<p><em>2. Store the private key in Bitwarden.</em></p>
+<p>Create an item — a Login or Secure Note both work — name it something like
+<code>omadots-ssh-github</code>, and attach the file <code>~/.ssh/id_ed25519</code> (the private
+half; never upload the <code>.pub</code> file here, it doesn't need to be secret).</p>
+<p><em>3. Add the chezmoi source files.</em></p>
+<pre><code>home/private_dot_ssh/private_id_ed25519.tmpl   # the private key (templated, restricted perms)
+home/dot_ssh/id_ed25519.pub                    # the public key (plain, not secret)
+home/dot_ssh/config                            # tells ssh to use this key for github.com
+</code></pre>
+<p>The <code>private_</code> prefix on both the directory and the file makes chezmoi set
+restrictive permissions on apply (<code>0700</code> on <code>~/.ssh</code>, <code>0600</code> on the key
+itself) — SSH refuses to use a private key that's group- or world-readable,
+so this isn't optional. <code>private_id_ed25519.tmpl</code> contains only the
+retrieval call:</p>
+<pre><code>{{- bitwardenAttachmentByRef &quot;id_ed25519&quot; &quot;item&quot; &quot;omadots-ssh-github&quot; -}}
+</code></pre>
+<p><code>dot_ssh/config</code> is a normal tracked file:</p>
+<pre><code>Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+  AddKeysToAgent yes
+</code></pre>
+<p><code>AddKeysToAgent yes</code> means <code>ssh-agent</code> picks the key up automatically the
+first time it's used each session — no manual <code>ssh-add</code> step, and (if you
+set a passphrase in step 1) you're only asked for it once per session
+rather than on every <code>git push</code>.</p>
+<p><em>4. Apply.</em></p>
+<pre><code class="language-sh">chezmoi apply
+</code></pre>
+<p>The first <code>bitwarden*</code> template call in the run triggers <code>bw unlock</code>,
+prompts once for your Bitwarden master password, fetches the attachment,
+and writes <code>~/.ssh/id_ed25519</code> (mode <code>0600</code>), <code>~/.ssh/id_ed25519.pub</code>, and
+<code>~/.ssh/config</code>. Nothing secret ever touches the git repo — <code>git log</code> on
+the <code>.tmpl</code> file only ever shows the retrieval call, never the key content.</p>
+<p><em>5. Register the public key with GitHub.</em></p>
+<p>Copy the public key — on Omarchy (Wayland) that's <code>wl-copy &lt; ~/.ssh/id_ed25519.pub</code>,
+or just <code>cat ~/.ssh/id_ed25519.pub</code> and select the output manually. Then in
+GitHub: profile picture (top right) → <strong>Settings</strong> → <strong>SSH and GPG keys</strong>
+(under Access) → <strong>New SSH key</strong> → paste it in → <strong>Add SSH key</strong>.</p>
+<p><em>6. Test it.</em></p>
+<pre><code class="language-sh">ssh -T git@github.com
+</code></pre>
+<p>A successful connection replies with <code>Hi &lt;username&gt;! You've successfully
+authenticated...</code> — at that point <code>git clone git@github.com:...</code> and
+<code>git push</code> over SSH both work without a password prompt.</p>
+<p><em>7. Get the same key onto your other machines.</em></p>
+<p>Commit and push the three new files from step 3 (<code>chezmoi cd</code> → <code>git add</code>
+→ <code>commit</code> → <code>push</code>, per the worked example above), then on each other
+machine: <code>bw login</code> once if you haven't already, then <code>chezmoi update</code>.
+Chezmoi unlocks Bitwarden, fetches the same attachment, and writes out the
+identical key — so every machine authenticates to GitHub as the same
+identity, with nothing copied by hand.</p>
+<p>One tradeoff worth knowing before you commit to this: GitHub's model
+assumes one key per device, so it can label and revoke them individually.
+Reusing a single Bitwarden-sourced key everywhere is simpler and is exactly
+what this setup makes easy — but it means revoking that key (e.g. because
+one machine was compromised) logs <em>every</em> machine out of GitHub at once,
+not just the affected one. If that tradeoff doesn't sit well with you, use
+the per-machine variant below instead.</p>
+<h3 id="variant-a-different-key-per-machine">Variant: a different key per machine</h3>
+<p>Same mechanism, one change: instead of a single fixed Bitwarden item name,
+the template looks up an item named after <em>the machine it's currently
+running on</em>, using the <code>.chezmoi.hostname</code> built-in. That means you keep a
+<strong>single shared template file</strong> in the repo — pushed once, applied on every
+machine — and it resolves to a different key on each one automatically.
+Nothing in the source tree needs to be duplicated per host.</p>
+<p><em>1. Confirm each machine's hostname as chezmoi sees it.</em></p>
+<p>On each machine, run:</p>
+<pre><code class="language-sh">chezmoi execute-template '{{ .chezmoi.hostname }}'
+</code></pre>
+<p>This is the short hostname (up to the first <code>.</code>) — write down what it
+prints for each machine (e.g. <code>aditya</code>, <code>worklaptop</code>). You'll use these
+exact, case-sensitive strings as the Bitwarden item-name suffix in step 3,
+so a mismatch here means the template silently looks up the wrong item (or
+none) on that machine.</p>
+<p><em>2. Generate a separate keypair on each machine.</em></p>
+<pre><code class="language-sh">ssh-keygen -t ed25519 -C &quot;your_email@example.com (aditya)&quot; -f ~/.ssh/id_ed25519
+</code></pre>
+<p>Run this once per machine, changing the <code>-C</code> comment to identify that
+machine — it's just a label embedded in the public key, purely for your
+own reference in GitHub's key list later.</p>
+<p><em>3. Store each machine's keypair in Bitwarden under a per-host item name.</em></p>
+<p>Create one Bitwarden item per machine, named using that machine's hostname
+from step 1 — e.g. <code>omadots-ssh-github-aditya</code>,
+<code>omadots-ssh-github-worklaptop</code> — and attach <strong>both</strong> files to it:
+<code>id_ed25519</code> (private) and <code>id_ed25519.pub</code> (public). Attaching the public
+key too (rather than tracking it as a plain file like the shared-key
+version did) is what lets a single template resolve to different content
+per machine — see step 4.</p>
+<p><em>4. Update the chezmoi templates to branch on hostname.</em></p>
+<pre><code>home/private_dot_ssh/private_id_ed25519.tmpl
+home/dot_ssh/id_ed25519.pub.tmpl        ← now a .tmpl too, since its content differs per machine
+home/dot_ssh/config                      ← unchanged, same IdentityFile path on every machine
+</code></pre>
+<pre><code>{{/* home/private_dot_ssh/private_id_ed25519.tmpl */}}
+{{- bitwardenAttachmentByRef &quot;id_ed25519&quot; &quot;item&quot; (printf &quot;omadots-ssh-github-%s&quot; .chezmoi.hostname) -}}
+</code></pre>
+<pre><code>{{/* home/dot_ssh/id_ed25519.pub.tmpl */}}
+{{- bitwardenAttachmentByRef &quot;id_ed25519.pub&quot; &quot;item&quot; (printf &quot;omadots-ssh-github-%s&quot; .chezmoi.hostname) -}}
+</code></pre>
+<p><code>printf "omadots-ssh-github-%s" .chezmoi.hostname</code> builds the item name at
+apply time from whichever machine is running it — on <code>aditya</code> it looks up
+<code>omadots-ssh-github-aditya</code>; on <code>worklaptop</code>, <code>omadots-ssh-github-worklaptop</code>.
+<code>dot_ssh/config</code> needs no change from the shared-key version, since
+<code>IdentityFile ~/.ssh/id_ed25519</code> is the same path on every machine — only
+what's <em>in</em> that file differs now.</p>
+<p><em>5. Apply on each machine.</em></p>
+<pre><code class="language-sh">chezmoi apply
+</code></pre>
+<p>Run on each machine after <code>bw login</code> there. Each one fetches its own
+attachment from its own Bitwarden item and writes its own distinct key —
+same command everywhere, different result per machine, by design.</p>
+<p><em>6. Register each machine's public key with GitHub separately.</em></p>
+<p>Repeat the GitHub step from the shared-key version (Settings → SSH and GPG
+keys → New SSH key) once per machine, pasting that machine's own
+<code>~/.ssh/id_ed25519.pub</code>. Give each one a title that matches its hostname
+(e.g. "aditya", "worklaptop") so GitHub's key list tells them apart — this
+is what makes revoking one machine's access, later, not touch the others.</p>
+<p><em>7. Test on each machine.</em></p>
+<pre><code class="language-sh">ssh -T git@github.com
+</code></pre>
+<p>Same command as before, run separately on each machine — each authenticates
+with its own key but the same GitHub identity.</p>
+<p><em>8. Push the template once — it's already done for every machine.</em></p>
+<p>Commit and push the three files from step 4 (<code>chezmoi cd</code> → <code>git add</code> →
+<code>commit</code> → <code>push</code>). Unlike a normal config change, you do <strong>not</strong> need to
+touch this template again when you add a future machine — just repeat
+steps 1–3 and 6–7 for the new machine (new keypair, new Bitwarden item
+named after its hostname, register its public key with GitHub), and the
+same already-pushed template picks it up on <code>chezmoi apply</code> with zero
+further edits to the repo.</p>
+<p>Other Bitwarden template functions worth knowing, for different kinds of
+secrets:</p>
+<ul>
+<li><code>{{ (bitwarden "item" "some-login").login.password }}</code> — a plain login
+  password field (e.g. for a <code>.netrc</code> or an API client config that needs a
+  password inline).</li>
+<li><code>{{ (bitwardenFields "item" "some-login").token.value }}</code> — a <em>custom
+  field</em> you defined on the Bitwarden item yourself (e.g. an API token you
+  saved under a field literally named <code>token</code>).</li>
+</ul>
+<p>Same pattern every time: store the secret in Bitwarden, reference it with a
+<code>bitwarden*</code> call inside a <code>.tmpl</code> file in the source state, and let
+<code>chezmoi apply</code> do the fetching. This is the mechanism to reach for the
+first time you actually need a live secret (API token, GPG key, etc.) —
+none of the files migrated so far needed one.</p>
+          </article>
+        </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  const docButtons = document.querySelectorAll('[data-doc-target]');
+  const docSections = document.querySelectorAll('.doc-section');
+  const docOutlines = document.querySelectorAll('.doc-outline');
+  const mobileSelect = document.getElementById('mobile-doc-select');
+
+  const docMeta = [...docButtons].map(b => ({
+    slug: b.dataset.docTarget,
+    label: b.querySelector('div').textContent
+  }));
+  docMeta.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.slug; opt.textContent = d.label;
+    mobileSelect.appendChild(opt);
+  });
+
+  function activate(slug, { scrollTop = true } = {}) {
+    docSections.forEach(s => s.classList.toggle('hidden', s.dataset.doc !== slug));
+    docOutlines.forEach(o => o.classList.toggle('hidden', o.dataset.outlineFor !== slug));
+    docButtons.forEach(b => {
+      const on = b.dataset.docTarget === slug;
+      b.classList.toggle('bg-teal-50', on);
+      b.classList.toggle('text-teal-700', on);
+      b.classList.toggle('dark:bg-slate-800', on);
+      b.classList.toggle('dark:text-teal-400', on);
+    });
+    mobileSelect.value = slug;
+    if (scrollTop) window.scrollTo({ top: 0 });
+  }
+
+  docButtons.forEach(b => b.addEventListener('click', () => {
+    activate(b.dataset.docTarget);
+    history.replaceState(null, '', '#' + b.dataset.docTarget);
+  }));
+  mobileSelect.addEventListener('change', () => activate(mobileSelect.value));
+
+  document.querySelectorAll('.doc-outline-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const [slug, id] = link.getAttribute('href').slice(1).split('/');
+      activate(slug, { scrollTop: false });
+      setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30);
+      e.preventDefault();
+    });
+  });
+
+  // Deep-link on load: #slug or #slug/heading-id
+  const initial = location.hash.replace('#', '').split('/');
+  if (initial[0] && docMeta.some(d => d.slug === initial[0])) {
+    activate(initial[0], { scrollTop: !initial[1] });
+    if (initial[1]) setTimeout(() => document.getElementById(initial[1])?.scrollIntoView({ block: 'start' }), 30);
+  }
+
+  // Theme toggle (in-memory only, no storage APIs)
+  function setTheme(dark) {
+    document.documentElement.classList.toggle('dark', dark);
+    document.getElementById('icon-sun').classList.toggle('hidden', !dark);
+    document.getElementById('icon-moon').classList.toggle('hidden', dark);
+  }
+  let isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  setTheme(isDark);
+  function toggleTheme() { isDark = !isDark; setTheme(isDark); }
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+  document.getElementById('theme-toggle-mobile').addEventListener('click', toggleTheme);
+</script>
+</body>
+</html>

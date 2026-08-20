@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Emacs
+GenericName=Text Editor
+Comment=Edit text, connecting to the always-on Emacs daemon
+Icon=emacs
+Exec=emacsclient -c -a "" %F
+Terminal=false
+Categories=Development;TextEditor;Utility;
+MimeType=text/plain;text/x-makefile;text/x-c;text/x-c++;text/x-java;text/x-python;text/x-clojure;inode/directory;
+StartupWMClass=Emacs
+Keywords=Editor;

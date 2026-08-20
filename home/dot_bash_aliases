@@ -1,0 +1,95 @@
+# Easier navigation: .., ..., ...., ....., ~ and -
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+alias ~="cd ~"
+alias -- -="cd -"
+
+# Shortcuts
+alias dl="cd ~/Downloads"
+alias p="cd ~/Projects"
+alias projects="cd ~/Projects"
+alias g="git"
+alias h="history"
+alias hs="history|grep -i "
+alias j="jobs"
+alias mkdir="mkdir -pv"
+
+# ls, GNU coreutils only (no more OS X colorflag branch needed)
+alias l="ls -lF --color"
+alias la="ls -laF --color"
+alias lsd="ls -lF --color | grep --color=never '^d'"
+alias ls="command ls --color"
+export LS_COLORS='no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:ex=01;32:*.tar=01;31:*.tgz=01;31:*.zip=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.png=01;35:*.mp3=01;35:*.wav=01;35:'
+
+alias sudo='sudo -E env "PATH=$PATH"'
+alias week='date +%V'
+alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
+alias hd="command -v hd > /dev/null || hexdump -C"
+
+alias urlencode='python3 -c "import sys, urllib.parse as ul; print(ul.quote_plus(sys.argv[1]))"'
+alias badge="tput bel"
+alias map="xargs -n1"
+alias reload="exec $SHELL -l"
+
+alias dotfiles="ls -a | grep '^\.'"
+alias magit='emacsclient -c -e \(magit-status\)'
+
+alias open='xdg-open &>/dev/null'
+alias ping='ping -c 5'
+alias untar='tar -zxvf '
+
+## pass options to free/ps
+alias meminfo='free -m -l -t'
+alias psmem='ps auxf | sort -nr -k 4'
+alias psmem10='ps auxf | sort -nr -k 4 | head -10'
+alias pscpu='ps auxf | sort -nr -k 3'
+alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
+alias cpuinfo='lscpu'
+
+# NetworkManager restart (systemd/systemctl - Arch, not the old sysvinit
+# `service` command)
+alias fix-wifi='sudo systemctl restart NetworkManager && echo "Restarted NetworkManager"'
+alias wifi-restart='sudo systemctl restart NetworkManager && echo "Restarted NetworkManager"'
+
+# emacsclient shortcuts - all talk to the single systemd-managed Emacs
+# daemon (see CHEZMOI-GUIDE.md and ~/.config/systemd/user/emacs.service).
+# The void string passed to -a is IMPORTANT: it means "auto-start the
+# daemon if it's not already running" rather than falling back to a
+# separate, non-daemon Emacs process - matters mainly before first boot/
+# apply, since systemd normally keeps the daemon running from login onward.
+alias ec="emacsclient -cnqua ''"       # new GUI frame, don't wait, quiet, no output
+alias emax="emacsclient -t -a ''"      # new frame in this terminal (text mode)
+# was `sudo emacsclient -t`, which doesn't work as written - there's no
+# separate root-owned daemon for it to connect to. This edits root-owned
+# files via TRAMP instead, through the *same* user daemon - no sudo needed.
+alias semacs="emacsclient -t /sudo::"
+# cleanly kill the daemon - since every emacsclient frame/terminal is just
+# a connection to this one process, this closes all of them at once.
+alias ekill='emacsclient --eval "(kill-emacs)"'
+alias fzfi='rg --files --hidden --follow --no-ignore-vcs -g "!{node_modules,.git}" 2> /dev/null|fzf'
+alias et='emacsclient -t $(fzfi)'
+
+alias cdtemp='cd $(mktemp -d)'
+alias rmtrash='trash-put'  # needs the trash-cli package
+
+alias df="df -ha"
+alias du="du -ach | sort -h"
+alias free="free -t --mega"
+alias psgrep="ps aux | grep -v grep | grep"
+alias mount='mount |column -t'
+alias mnt="mount | awk -F' ' '{ printf \"%s\t%s\n\",\$1,\$3; }' | column -t | egrep ^/dev/ | sort"
+# was `gh` in the old dotfiles - renamed, `gh` is now the actual GitHub CLI
+# (mise-managed, see install-dev-stack.sh)
+alias ghist='history|grep'
+
+# git shortcuts (typed bare, e.g. `gs` - distinct from git's own [alias]
+# section in .gitconfig, which you'd invoke as `git s`)
+alias gs="git status -sb"
+alias gal="git add ."
+alias gca="git commit -a -m"
+alias gcot="git checkout"
+alias gpo="git push -u origin"
+alias stash="git stash"
+alias glog="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"

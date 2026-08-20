@@ -1,0 +1,36 @@
+# Runs Emacs as a persistent daemon under systemd --user, so `emacsclient`
+# always has something to connect to - see CHEZMOI-GUIDE.md for the
+# emacsclient aliases (ec/emax/semacs/ekill) and the .desktop launcher entry
+# that this pairs with.
+#
+# /usr/bin/emacs is hardcoded rather than resolved via `command -v` because
+# this is a static file, not a template: Arch's emacs-wayland package (like
+# every alternative Emacs build on Arch) installs to the standard
+# /usr/bin/emacs path via pacman's provides/conflicts mechanism, so there's
+# nothing machine-specific to substitute here.
+#
+# `emacsclient -c` creates its graphical frame using *the client's own*
+# environment at connection time (that's how the Emacs server protocol
+# works), not the daemon's startup environment - so this deliberately does
+# NOT need any WAYLAND_DISPLAY-importing tricks to produce GUI frames
+# correctly. PartOf/After=graphical-session.target just ties this service's
+# own lifecycle to the graphical session (starts after it's up, stops when
+# it ends) - standard practice for a user-session service, not a
+# requirement for frame creation to work.
+
+[Unit]
+Description=Emacs text editor (daemon)
+Documentation=info:emacs man:emacs(1) https://gnu.org/software/emacs/
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/emacs --fg-daemon
+ExecStop=/usr/bin/emacsclient --eval "(kill-emacs)"
+Restart=on-failure
+RestartSec=3
+TimeoutStartSec=60
+
+[Install]
+WantedBy=default.target

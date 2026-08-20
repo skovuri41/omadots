@@ -1,0 +1,148 @@
+# Simple calculator
+function calc() {
+  local result=""
+  result="$(printf "scale=10;$*\n" | bc --mathlib | tr -d '\\\n')"
+  if [[ "$result" == *.* ]]; then
+    printf "$result" |
+      sed -e 's/^\./0./' -e 's/^-\./-0./' -e 's/0*$//;s/\.$//'
+  else
+    printf "$result"
+  fi
+  printf "\n"
+}
+
+# Create a new directory and enter it
+function mkd() {
+  mkdir -p "$@" && cd "$_"
+}
+
+# Determine size of a file or total size of a directory
+function fs() {
+  local arg=-sbh
+  du "$arg" -- "${@:-.[^.]* *}"
+}
+
+# Use Git's colored diff when available
+if hash git &>/dev/null; then
+  function diff() {
+    git diff --no-index --color-words "$@"
+  }
+fi
+
+# Create a data URL from a file
+function dataurl() {
+  local mimeType
+  mimeType=$(file -b --mime-type "$1")
+  [[ $mimeType == text/* ]] && mimeType="${mimeType};charset=utf-8"
+  echo "data:${mimeType};base64,$(openssl base64 -in "$1" | tr -d '\n')"
+}
+
+# Start an HTTP server from a directory, optionally specifying the port
+function server() {
+  local port="${1:-8000}"
+  xdg-open "http://localhost:${port}/" &>/dev/null &
+  python3 -m http.server "$port"
+}
+
+# Compare original and gzipped file size
+function gz() {
+  local origsize gzipsize ratio
+  origsize=$(wc -c <"$1")
+  gzipsize=$(gzip -c "$1" | wc -c)
+  ratio=$(echo "$gzipsize * 100 / $origsize" | bc -l)
+  printf "orig: %d bytes\n" "$origsize"
+  printf "gzip: %d bytes (%2.2f%%)\n" "$gzipsize" "$ratio"
+}
+
+# Syntax-highlight JSON strings or files
+function json() {
+  if [ -t 0 ]; then
+    python3 -m json.tool <<<"$*"
+  else
+    python3 -m json.tool
+  fi
+}
+
+# Run `dig` and display the most useful info
+function digga() {
+  dig +nocmd "$1" any +multiline +noall +answer
+}
+
+# `v` with no arguments opens the current directory in vim
+function v() {
+  if [ $# -eq 0 ]; then vim .; else vim "$@"; fi
+}
+
+# `o` with no arguments opens the current directory in the default file
+# manager/app (xdg-open - the Linux equivalent of macOS `open`)
+function o() {
+  if [ $# -eq 0 ]; then xdg-open .; else xdg-open "$@"; fi
+}
+
+function ediff() {
+  if [ -z "$2" ]; then
+    echo "USAGE: ediff <FILE 1> <FILE 2>"
+  else
+    emacsclient -c --eval "(ediff-files \"$1\" \"$2\")"
+  fi
+}
+
+function findit {
+  local START_PATH='.'
+  local FILES="$*"
+  if echo "$1" | grep '\.\.' >/dev/null; then
+    set -- $(echo "$1" | sed 's/\/*\.\.\/*/  /')
+  fi
+  if [ -d "$1" ] && [ -n "$2" ]; then
+    START_PATH=$1
+    shift
+    FILES="$*"
+  fi
+  find "$START_PATH" \
+    -not \( -path '*classes*' -or -path '*node_modules*' -or -path '.git*' \) \
+    -and -iname "$(perl -e 'print join " -o -iname ", @ARGV' "$FILES")"
+}
+
+function xtitle {
+  case "$1" in
+    -t) shift; echo "\e]1;$*\a" ;;
+    -w) shift; echo "\e]2;$*\a" ;;
+    -b) shift; echo "\e]0;$*\a" ;;
+    *)  echo "\e]0;$*\a" ;;
+  esac
+}
+
+# Fuzzy-pick a branch and check it out
+gch() {
+  git checkout "$(git branch --all | fzf | tr -d '[:space:]')"
+}
+
+# yt-dlp helpers (yt-dlp, not youtube-dl - it's the maintained fork and is
+# already in Omarchy's base packages)
+mp3() {
+  yt-dlp --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '%(title)s.%(ext)s' "$1"
+}
+mp3p() {
+  yt-dlp --ignore-errors --sleep-interval 30 -i -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' "$1"
+}
+dlv() {
+  yt-dlp --ignore-errors -o '%(title)s.%(ext)s' "$1"
+}
+dlp() {
+  yt-dlp --yes-playlist --ignore-errors --sleep-interval 30 -o '%(playlist)s/%(title)s.%(ext)s' "$1"
+}
+
+# --- nnn file manager wrapper - cd-on-quit. Pairs with the NNN_* exports in
+# .bash_exports. Delete both blocks together if you've moved on to yazi.
+n() {
+  if [ -n "$NNNLVL" ] && [ "${NNNLVL:-0}" -ge 1 ]; then
+    echo "nnn is already running"
+    return
+  fi
+  export NNN_TMPFILE="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"
+  nnn "$@"
+  if [ -f "$NNN_TMPFILE" ]; then
+    . "$NNN_TMPFILE"
+    rm -f "$NNN_TMPFILE" >/dev/null
+  fi
+}
