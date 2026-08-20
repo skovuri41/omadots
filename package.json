@@ -1,0 +1,12 @@
+{
+  "name": "omadots",
+  "private": true,
+  "description": "Build tooling for the omadots single-page HTML doc site (docs/index.html)",
+  "scripts": {
+    "docs:build": "python3 docs/build_docs.py"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.20",
+    "tailwindcss": "^3.4.19"
+  }
+}
