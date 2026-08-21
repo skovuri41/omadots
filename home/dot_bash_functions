@@ -132,3 +132,15 @@ dlp() {
   yt-dlp --yes-playlist --ignore-errors --sleep-interval 30 -o '%(playlist)s/%(title)s.%(ext)s' "$1"
 }
 
+# Unlock the Bitwarden vault once per shell and export the session, so
+# chezmoi's `bitwarden.unlock = "auto"` (see home/.chezmoi.toml.tmpl) stops
+# re-prompting for the master password on every `chezmoi diff`/`status`/
+# `apply`. Each of those is a fresh process and can't see a BW_SESSION set
+# by a previous chezmoi run - only one exported in this shell already.
+bwu() {
+  if [ "$(bw status --raw 2>/dev/null | jq -r .status)" = "unlocked" ]; then
+    echo "bw: already unlocked in this shell"
+    return
+  fi
+  export BW_SESSION="$(bw unlock --raw)"
+}
