@@ -333,6 +333,73 @@ enable_emacs_daemon() {
   fi
 }
 
+install_keyd() {
+  log "keyd (kernel-level key remapper: capslock + home row mods)"
+
+  if ! omarchy-pkg-add keyd; then
+    fail "keyd - package install failed"
+    return
+  fi
+
+  if ! command -v chezmoi >/dev/null 2>&1; then
+    fail "keyd - chezmoi not on PATH, can't locate keyd/default.conf in your dotfiles repo"
+    return
+  fi
+
+  local source_path repo_root conf_src
+  source_path=$(chezmoi source-path 2>/dev/null)
+  if [[ -z $source_path ]]; then
+    fail "keyd - 'chezmoi source-path' failed, is chezmoi initialized yet?"
+    return
+  fi
+
+  # chezmoi source-path returns the .chezmoiroot-adjusted dir (this repo's
+  # home/, per .chezmoiroot: home) - NOT the git repo root. keyd/default.conf
+  # lives one level up, alongside install-dev-stack.sh, so resolve the real
+  # repo root via git instead of assuming a fixed number of '..' hops (keeps
+  # working even if .chezmoiroot ever changes).
+  repo_root=$(git -C "$source_path" rev-parse --show-toplevel 2>/dev/null)
+  if [[ -z $repo_root ]]; then
+    fail "keyd - couldn't resolve the dotfiles repo root from $source_path (not a git checkout?)"
+    return
+  fi
+
+  conf_src="$repo_root/keyd/default.conf"
+  if [[ ! -f $conf_src ]]; then
+    warn "No config at $conf_src yet - this isn't chezmoi-managed (keyd reads root-owned"
+    warn "/etc/keyd/default.conf; chezmoi only manages your home dir), so it's just stored"
+    warn "in the repo for version control. Add it, then re-run this script."
+    fail "keyd - default.conf not found in dotfiles repo, skipped"
+    return
+  fi
+
+  if [[ -f /etc/keyd/default.conf ]] && diff -q "$conf_src" /etc/keyd/default.conf >/dev/null 2>&1; then
+    log "keyd config already up to date"
+  elif sudo cp "$conf_src" /etc/keyd/default.conf; then
+    log "keyd config deployed to /etc/keyd/default.conf"
+  else
+    fail "keyd - couldn't copy config to /etc/keyd/default.conf"
+    return
+  fi
+
+  if ! command -v systemctl >/dev/null 2>&1; then
+    fail "keyd - systemctl not found"
+    return
+  fi
+
+  if systemctl is-active --quiet keyd; then
+    if sudo keyd reload; then
+      log "keyd already running, reloaded new config"
+    else
+      fail "keyd - reload failed"
+    fi
+  elif sudo systemctl enable --now keyd; then
+    log "keyd enabled and started ('sudo systemctl status keyd' to check)"
+  else
+    fail "keyd - enable/start failed"
+  fi
+}
+
 poly_latest_tag() {
   curl -fsSL -o /dev/null -w '%{url_effective}' \
     https://github.com/polyfy/polylith/releases/latest 2>/dev/null | sed -E 's#.*/tag/##'
@@ -396,6 +463,7 @@ dispatch_custom() {
     doom) install_doom ;;
     poly) install_polylith ;;
     emacs-daemon) enable_emacs_daemon ;;
+    keyd) install_keyd ;;
     *)
       fail "$desc - no custom install handler registered for status_pkg '$status_pkg' (add a case to dispatch_custom() in install-dev-stack.sh)"
       ;;
@@ -558,6 +626,22 @@ print_status() {
             else
               installed="enabled, not running"
               status="ACTION NEEDED (systemctl --user start emacs)"
+            fi
+            ;;
+          keyd)
+            if systemctl is-active --quiet keyd 2>/dev/null; then
+              installed=$(pacman -Q keyd 2>/dev/null | awk '{print $2}')
+              [[ -z $installed ]] && installed="running"
+              latest="$installed"
+              status="OK"
+            elif pacman -Qq keyd >/dev/null 2>&1; then
+              installed="installed, not running"
+              latest="-"
+              status="NOT ENABLED"
+            else
+              installed=""
+              latest="-"
+              status="NOT INSTALLED"
             fi
             ;;
         esac
