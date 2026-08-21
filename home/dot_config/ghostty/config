@@ -1,3 +1,7 @@
+# role: primary daily driver on this Hyprland setup - has the Hyprland
+# performance patch below and native SSH terminfo forwarding
+# (shell-integration-features ssh-env), unlike the other 3 terminals
+
 # Dynamic theme colors
 config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"
 
@@ -25,6 +29,8 @@ shell-integration-features = no-cursor,ssh-env
 # Keyboard bindings
 keybind = shift+insert=paste_from_clipboard
 keybind = control+insert=copy_to_clipboard
+# CSI-u sync point: same fix duplicated in alacritty.toml, foot.ini,
+# kitty.conf - change the "13;2"/"13;4" codes in all 4 together.
 # Send Shift+Enter as CSI-u so TUIs can distinguish it from Enter.
 keybind = shift+enter=csi:13;2u
 # Legacy encoding sends Alt+Shift+Enter the same as Alt+Enter; send CSI-u so tmux can match M-S-Enter.

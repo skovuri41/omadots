@@ -1,5 +1,6 @@
 [tools]
 claude = "latest"
 codex = "latest"
-gh = "latest"
+# gh is pacman-managed (dev-stack-software.txt) - not duplicated here, to
+# avoid two installs of the same binary fighting over PATH order
 node = "26.7.0"

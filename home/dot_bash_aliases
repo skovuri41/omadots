@@ -26,7 +26,8 @@ export LS_COLORS='no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40
 alias sudo='sudo -E env "PATH=$PATH"'
 alias week='date +%V'
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
-alias hd="command -v hd > /dev/null || hexdump -C"
+# hd is now a function in dot_bash_functions - the alias form silently
+# discarded arguments whenever a real `hd` was already on PATH
 
 alias urlencode='python3 -c "import sys, urllib.parse as ul; print(ul.quote_plus(sys.argv[1]))"'
 alias badge="tput bel"
@@ -68,20 +69,23 @@ alias semacs="emacsclient -t /sudo::"
 # cleanly kill the daemon - since every emacsclient frame/terminal is just
 # a connection to this one process, this closes all of them at once.
 alias ekill='emacsclient --eval "(kill-emacs)"'
-alias fzfi='rg --files --hidden --follow --no-ignore-vcs -g "!{node_modules,.git}" 2> /dev/null|fzf'
+# dropped --no-ignore-vcs - it was disabling .gitignore filtering, so
+# target/, dist/, .cpcache/, node_modules, etc. flooded every fuzzy search
+alias fzfi='rg --files --hidden --follow -g "!{node_modules,.git}" 2> /dev/null|fzf'
 alias et='emacsclient -t $(fzfi)'
 
 alias cdtemp='cd $(mktemp -d)'
 alias rmtrash='trash-put'  # needs the trash-cli package
 
 alias df="df -ha"
-alias du="du -ach | sort -h"
+# du and mount are functions now (see dot_bash_functions) - as aliases they
+# silently broke when called with an argument, since bash appends typed
+# args to the end of an alias's expansion rather than into the first command
 alias free="free -t --mega"
 alias psgrep="ps aux | grep -v grep | grep"
-alias mount='mount |column -t'
-alias mnt="mount | awk -F' ' '{ printf \"%s\t%s\n\",\$1,\$3; }' | column -t | egrep ^/dev/ | sort"
+alias mnt="mount | awk -F' ' '{ printf \"%s\t%s\n\",\$1,\$3; }' | column -t | grep -E ^/dev/ | sort"
 # was `gh` in the old dotfiles - renamed, `gh` is now the actual GitHub CLI
-# (mise-managed, see install-dev-stack.sh)
+# (pacman-managed, see dev-stack-software.txt)
 alias ghist='history|grep'
 
 # git shortcuts (typed bare, e.g. `gs` - distinct from git's own [alias]

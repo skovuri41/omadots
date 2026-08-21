@@ -14,11 +14,15 @@ source "$OMARCHY_PATH/default/bash/rc"
 export HISTSIZE='32768'
 export HISTFILESIZE="${HISTSIZE}"
 export HISTCONTROL='ignoreboth'
-export HISTIGNORE="&:ls:[bf]g:exit:pwd:ls:cd"
+export HISTIGNORE="&:ls:[bf]g:exit:pwd:cd"
 shopt -s histappend
 shopt -s cdspell
 shopt -s cmdhist
-PROMPT_COMMAND='history -a'
+shopt -s nocaseglob
+# append rather than overwrite - Omarchy's rc (sourced above) may already
+# have set its own PROMPT_COMMAND (e.g. a starship precmd hook); a plain
+# assignment here would silently discard it
+PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
 
 [[ -f "$HOME/.bash_exports" ]] && source "$HOME/.bash_exports"
 [[ -f "$HOME/.bash_functions" ]] && source "$HOME/.bash_functions"

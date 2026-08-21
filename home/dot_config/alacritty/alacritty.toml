@@ -1,3 +1,5 @@
+# role: minimal baseline terminal - no scrollback/tab/remote-control config,
+# just font+padding+keybindings
 general.import = [ "~/.local/state/omarchy/current/theme/alacritty.toml" ]
 
 [env]
@@ -21,6 +23,9 @@ decorations = "None"
 bindings = [
 { key = "Insert", mods = "Shift", action = "Paste" },
 { key = "Insert", mods = "Control", action = "Copy" },
+# CSI-u sync point: this same Shift+Enter / Alt+Shift+Enter fix is
+# duplicated (per-app syntax) in foot.ini, ghostty/config, kitty.conf -
+# change the "13;2" / "13;4" codes in all 4 together if this ever changes.
 # Send Shift+Return as CSI-u so TUIs can distinguish it from Return without treating it as Alt+Return.
 { key = "Return", mods = "Shift", chars = "\u001B[13;2u" },
 # Legacy encoding sends Alt+Shift+Return the same as Alt+Return; send CSI-u so tmux can match M-S-Enter.

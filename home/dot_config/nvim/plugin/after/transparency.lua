@@ -1,59 +1,9 @@
--- Make highlight groups transparent while preserving their other attributes
-local function make_transparent(name)
-	local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = name, link = false })
-	if ok then
-		hl.bg = nil
-		vim.api.nvim_set_hl(0, name, hl)
-	end
-end
-
-local groups = {
-	-- transparent background
-	"Normal",
-	"NormalFloat",
-	"FloatBorder",
-	"Pmenu",
-	"Terminal",
-	"EndOfBuffer",
-	"FoldColumn",
-	"Folded",
-	"SignColumn",
-	"LineNr",
-	"CursorLineNr",
-	"NormalNC",
-	"WhichKeyFloat",
-	"TelescopeBorder",
-	"TelescopeNormal",
-	"TelescopePromptBorder",
-	"TelescopePromptTitle",
-	-- neotree
-	"NeoTreeNormal",
-	"NeoTreeNormalNC",
-	"NeoTreeVertSplit",
-	"NeoTreeWinSeparator",
-	"NeoTreeEndOfBuffer",
-	-- nvim-tree
-	"NvimTreeNormal",
-	"NvimTreeVertSplit",
-	"NvimTreeEndOfBuffer",
-	-- notify
-	"NotifyINFOBody",
-	"NotifyERRORBody",
-	"NotifyWARNBody",
-	"NotifyTRACEBody",
-	"NotifyDEBUGBody",
-	"NotifyINFOTitle",
-	"NotifyERRORTitle",
-	"NotifyWARNTitle",
-	"NotifyTRACETitle",
-	"NotifyDEBUGTitle",
-	"NotifyINFOBorder",
-	"NotifyERRORBorder",
-	"NotifyWARNBorder",
-	"NotifyTRACEBorder",
-	"NotifyDEBUGBorder",
-}
-
-for _, name in ipairs(groups) do
-	make_transparent(name)
-end
+-- Moved to ~/.config/nvim/after/plugin/transparency.lua - that's Neovim's
+-- real "load last" location (after/ as a top-level runtimepath entry);
+-- this directory (plugin/after/) never was. omarchy-theme-hotreload.lua
+-- has been updated to re-source the new path after each theme reload.
+--
+-- This file is now an intentional no-op, kept only because this session
+-- can't delete files in your chezmoi source - safe to `rm` it yourself:
+--   rm "$(chezmoi source-path)/dot_config/nvim/plugin/after/transparency.lua"
+-- (and `rmdir` the now-empty plugin/after/ directory alongside it)

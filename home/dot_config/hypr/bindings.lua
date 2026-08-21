@@ -27,5 +27,9 @@
 -- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
 -- o.bind("SUPER + PERIOD", nil, "omarchy-shell shell toggle omarchy.emojis")
+
 hl.unbind("SUPER + SHIFT + M") -- previously: Music
 o.bind("SUPER + SHIFT + M", "Omarchy Spotify","omarchy shell -q quickshell.spotify.player togglePlayer")
+
+hl.unbind("SUPER + SLASH") -- previously monitor scaling
+o.bind("SUPER + SLASH", "Everything", "omarchy-shell shell toggle b.everything")

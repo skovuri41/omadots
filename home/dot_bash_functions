@@ -22,12 +22,46 @@ function fs() {
   du "$arg" -- "${@:-.[^.]* *}"
 }
 
-# Use Git's colored diff when available
+# Use Git's colored diff when available. NOTE: this shadows coreutils
+# `diff` in this interactive shell - `git diff --no-index` doesn't support
+# standard diff flags like `-r`/`-y`; use `command diff` for those.
 if hash git &>/dev/null; then
   function diff() {
     git diff --no-index --color-words "$@"
   }
 fi
+
+# `du` alone gives the friendly sorted summary; `du <args>` forwards to the
+# real du. (Used to be an alias - aliases append typed args to the *end* of
+# their expansion, not into the first command, so `du ~/Downloads` silently
+# ran `du -ach | sort -h ~/Downloads` instead of doing what you'd expect.)
+function du() {
+  if [ $# -eq 0 ]; then
+    command du -ach | sort -h
+  else
+    command du "$@"
+  fi
+}
+
+# same fix as `du` above - `mount` alone still pipes through column -t,
+# `mount <args>` (e.g. mounting/unmounting something) forwards untouched
+function mount() {
+  if [ $# -eq 0 ]; then
+    command mount | column -t
+  else
+    command mount "$@"
+  fi
+}
+
+# real `hd` if one's on PATH, hexdump -C fallback otherwise - forwards args
+# either way (the old alias silently discarded them when a real `hd` existed)
+function hd() {
+  if command -v hd >/dev/null 2>&1; then
+    command hd "$@"
+  else
+    hexdump -C "$@"
+  fi
+}
 
 # Create a data URL from a file
 function dataurl() {
@@ -99,7 +133,7 @@ function findit {
     FILES="$*"
   fi
   find "$START_PATH" \
-    -not \( -path '*classes*' -or -path '*node_modules*' -or -path '.git*' \) \
+    -not \( -path '*classes*' -or -path '*node_modules*' -or -path '*/.git*' \) \
     -and -iname "$(perl -e 'print join " -o -iname ", @ARGV' "$FILES")"
 }
 

@@ -99,7 +99,10 @@
   default = upstream
 [core]
   autocrlf = false
-  editor = emacs -Q -nw
+  # emacsclient, not `emacs -Q -nw` - reuses the systemd-managed daemon
+  # (same as $EDITOR/ec/emax elsewhere) instead of cold-starting a bare
+  # Emacs that skips Doom config entirely
+  editor = emacsclient -t
   # No excludesfile set on purpose - git already reads
   # $XDG_CONFIG_HOME/git/ignore (~/.config/git/ignore) as the global
   # ignore file by default, so this repo's dot_config/git/ignore just
