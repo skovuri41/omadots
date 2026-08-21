@@ -50,11 +50,33 @@ o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fu
 -- not doing up/down on J/K - see the comment block below on why, and on how
 -- this interacts with the CAGS home row mods in keyd/default.conf.
 --
--- SUPER + K was Omarchy's default "open keybindings menu" - unbind it so K
--- is free. That menu is still reachable via SUPER+SPACE (root menu) or
--- running 'omarchy-menu-keybindings' from a terminal. H, J, L had nothing
--- bound at the plain SUPER level already, so no unbind needed for those.
+-- CORRECTION: an earlier version of this only unbound SUPER+K before adding
+-- these, on the mistaken belief that H/J/L were unbound by default. They
+-- were not - J and L each already had a default binding, and o.bind()-ing
+-- an already-bound key without unbinding it first throws (per this file's
+-- own guidance up top: "unbind it first, then bind the key again"), which
+-- aborted the rest of this block's execution - so none of H/J/K/L took
+-- effect, not just the ones that actually conflicted. All four are unbound
+-- below before rebinding, and the two defaults that were living on J/L are
+-- relocated to SUPER+ALT+<key> rather than just dropped, matching Omarchy's
+-- own ALT-tier convention (e.g. SUPER+ALT+F = full width vs SUPER+F =
+-- fullscreen):
+--   SUPER+K was "Keybindings menu" - not relocated, still reachable via
+--     SUPER+SPACE (root menu) or 'omarchy-menu-keybindings' from a terminal.
+--   SUPER+J was "Toggle window split" (dwindle-only) - moved to SUPER+ALT+J.
+--   SUPER+L was "Toggle workspace layout" - the actual scrolling/dwindle
+--     switch we've been discussing - moved to SUPER+ALT+L, since you're
+--     actively using both layouts and this is the only way to flip between
+--     them.
+--   SUPER+H had nothing bound - not calling hl.unbind() on it at all, since
+--     that's exactly the kind of "assumed safe" shortcut that caused this
+--     bug in the first place; better to only unbind keys confirmed bound.
 hl.unbind("SUPER + K") -- previously: Keybindings menu
+hl.unbind("SUPER + J") -- previously: Toggle window split
+hl.unbind("SUPER + L") -- previously: Toggle workspace layout
+
+o.bind("SUPER + ALT + J", "Toggle window split", hl.dsp.layout("togglesplit"))
+o.bind("SUPER + ALT + L", "Toggle workspace layout", "omarchy-hyprland-workspace-layout-toggle")
 
 o.bind("SUPER + J", "Focus left window", hl.dsp.focus({ direction = "l" }))
 o.bind("SUPER + K", "Focus right window", hl.dsp.focus({ direction = "r" }))
