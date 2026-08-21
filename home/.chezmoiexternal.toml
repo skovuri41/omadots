@@ -1,15 +1,3 @@
-# Externals replace the old git submodules (dotsync, emacs.d, z, fasd,
-# liquidprompt, git-extras). type = "git-repo" clones on first `chezmoi
-# apply`, then `git pull`s on every later apply/update - and critically,
-# the target keeps its OWN .git history, so ~/.config/doom stays a normal,
-# independently-committable repo rather than a submodule you have to think
-# about from the dotfiles side.
-#
-# z, fasd, liquidprompt, git-extras, and the old emacs.d (pre-Doom) config
-# were dropped rather than ported forward - zoxide and starship (both
-# already in Omarchy's base install) cover z/fasd and liquidprompt, and
-# emacs.d predates your switch to Doom.
-
 [".config/doom"]
     type = "git-repo"
     url = "git@github.com:skovuri41/doom.d.git"
