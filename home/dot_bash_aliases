@@ -93,3 +93,17 @@ alias gcot="git checkout"
 alias gpo="git push -u origin"
 alias stash="git stash"
 alias glog="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+
+# -------------------------------------
+# Chezmoi & Bitwarden Automation Aliases
+# -------------------------------------
+alias cz="chezmoi"
+alias cza="chezmoi apply"
+alias czd="chezmoi diff"
+alias czs="chezmoi status"
+alias czcd="chezmoi cd"
+alias czp="chezmoi preview"
+alias czup='export BW_SESSION=$(bw unlock --raw) && chezmoi apply'
+alias cze="chezmoi edit"
+alias czsync="chezmoi git pull -- --autostash && chezmoi apply"
+alias czpush='cz git add . && cz git commit -- -m "Update dotfiles" && cz git push'
