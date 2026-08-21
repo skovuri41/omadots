@@ -45,6 +45,14 @@ hl.unbind("SUPER + SHIFT + F") -- previously: File manager
 o.bind("SUPER + F", "File manager", { omarchy = "nautilus" })
 o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
 
+-- Close window: SUPER+Q instead of the default SUPER+W. Confirmed against
+-- literal source that plain SUPER+Q is free (only SUPER+CTRL+Q exists, bound
+-- to the calculator - different combo, no conflict), so no unbind needed
+-- for Q itself, only for W.
+hl.unbind("SUPER + W") -- previously: Close window
+
+o.bind("SUPER + Q", "Close window", hl.dsp.window.close())
+
 -- Vim-style directional movement: SUPER + J/K focus the window to the
 -- left/right, SUPER + H/L switch to the previous/next workspace. Deliberately
 -- not doing up/down on J/K - see the comment block below on why, and on how
