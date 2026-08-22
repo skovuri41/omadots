@@ -53,6 +53,87 @@ hl.unbind("SUPER + W") -- previously: Close window
 
 o.bind("SUPER + Q", "Close window", hl.dsp.window.close())
 
+-- Personal webapp/app launcher row: SUPER+SHIFT+<key>. Every one uses
+-- Omarchy's own { webapp = ... , focus = true } / { launch = ..., focus =
+-- "^regex$" } binding shapes (see default/hypr/bindings/applications.lua's
+-- WhatsApp/Google Photos/Maps/Messages entries and the Obsidian launch/focus
+-- entry) specifically because those already implement "launch it, or focus
+-- the existing window if it's already open" - not reinventing that logic.
+--
+-- Several of these keys already had a default Omarchy binding - unbound
+-- each one first (see the comment above each), same reasoning as the
+-- H/J/K/L fix earlier: o.bind()-ing an already-bound key without unbinding
+-- throws and silently kills everything after it in the file.
+--
+-- Two defaults got relocated rather than dropped (SUPER+ALT+<key>, same
+-- convention as before) since they're independent apps, not being replaced
+-- by anything in this list:
+--   Signal (was SUPER+SHIFT+G)       -> SUPER+ALT+G
+--   Omawrite (was SUPER+SHIFT+W)     -> SUPER+ALT+W
+--   Google Photos (was SUPER+SHIFT+P) -> SUPER+ALT+P
+-- Two were NOT relocated, on the assumption you don't use Basecamp's HEY
+-- (you're replacing Email with Fastmail below, and nothing here uses HEY
+-- Calendar) - say the word if that assumption's wrong and I'll put them
+-- back on an ALT-tier key instead of leaving them unbound:
+--   Calendar (was SUPER+SHIFT+C, hey.com) - dropped
+--   Email (was SUPER+SHIFT+E, hey.com) - dropped (SUPER+SHIFT+ALT+E "New
+--     email" still points at hey.com too - let me know if you want that
+--     unbound/relocated as well)
+
+hl.unbind("SUPER + SHIFT + G") -- previously: Signal
+hl.unbind("SUPER + SHIFT + W") -- previously: Omawrite
+hl.unbind("SUPER + SHIFT + P") -- previously: Google Photos
+hl.unbind("SUPER + SHIFT + A") -- previously: ChatGPT (moving to G below)
+hl.unbind("SUPER + SHIFT + C") -- previously: Calendar (hey.com)
+hl.unbind("SUPER + SHIFT + E") -- previously: Email (hey.com)
+hl.unbind("SUPER + SHIFT + X") -- previously: X (same key, adding focus=true)
+hl.unbind("SUPER + SHIFT + Y") -- previously: YouTube (same key, adding focus=true)
+-- SUPER+SHIFT+R and SUPER+SHIFT+H had nothing bound - no unbind needed.
+
+o.bind("SUPER + ALT + G", "Signal", { omarchy = "signal" })
+o.bind("SUPER + ALT + W", "Omawrite", { launch = "omawrite" })
+o.bind("SUPER + ALT + P", "Google Photos", { webapp = "https://photos.google.com/", focus = true })
+
+o.bind("SUPER + SHIFT + X", "X", { webapp = "https://x.com/", focus = true })
+o.bind("SUPER + SHIFT + W", "WhatsApp", { webapp = "https://web.whatsapp.com/", focus = true })
+o.bind("SUPER + SHIFT + Y", "YouTube", { webapp = "https://youtube.com/", focus = true })
+o.bind("SUPER + SHIFT + A", "Amazon", { webapp = "https://www.amazon.com/", focus = true })
+o.bind("SUPER + SHIFT + H", "Robinhood", { webapp = "https://robinhood.com/", focus = true })
+o.bind("SUPER + SHIFT + G", "ChatGPT", { webapp = "https://chatgpt.com", focus = true })
+o.bind("SUPER + SHIFT + E", "Fastmail", { webapp = "https://app.fastmail.com/", focus = true })
+o.bind("SUPER + SHIFT + R", "Reddit", { webapp = "https://www.reddit.com/", focus = true })
+
+-- These two are native apps, not webapps - `launch` is the command to run,
+-- `focus` is a regex matched against the window's *class* to detect an
+-- already-open instance - two different things, so confirming the
+-- executable name doesn't by itself confirm the focus regex. `launch`
+-- values below are your confirmed executable names; `focus` (window class)
+-- is still my best guess in both cases, not verified against your actual
+-- machine - check after first launch with:
+--   hyprctl clients -j | jq '.[] | {class, title}'
+-- and adjust the `focus` regex below if it doesn't land.
+--
+-- Claude desktop: launch confirmed by you. Class guessed as "claude" from
+-- the claude-desktop-bin AUR package's PKGBUILD (StartupWMClass=claude) -
+-- correct if that's the AUR package behind your claude-desktop executable.
+o.bind("SUPER + SHIFT + C", "Claude desktop", { launch = "claude-desktop", focus = "^claude$" })
+
+-- Bitwarden desktop: launch confirmed by you as bitwarden-desktop (updated
+-- from my earlier wrong guess of "bitwarden"). Class still guessed as
+-- "Bitwarden" (capitalized product name, common Electron convention) - not
+-- verified, and the executable name being bitwarden-desktop doesn't confirm
+-- it either way.
+o.bind("SUPER + SHIFT + P", "Bitwarden", { launch = "bitwarden-desktop", focus = "^Bitwarden$" })
+
+-- Emacs GUI frame via the daemon: -c new frame, -n don't block the shell,
+-- -q skip the "waiting for emacs..." message, -a '' auto-starts the daemon
+-- with 'emacs --daemon' if it isn't already running. Complements the
+-- terminal-side emacsclient usage (ec/emax/ediff aliases, git core.editor)
+-- already in this repo - same daemon, this just adds a GUI-frame shortcut.
+-- Confirmed free at the plain SUPER level (checked every default binding
+-- file - only SUPER+CTRL+E "Emojis" exists, different combo).
+o.bind("SUPER + E", "Emacs", "emacsclient -cnqua ''")
+
 -- Vim-style directional movement: SUPER + J/K focus the window to the
 -- left/right, SUPER + H/L switch to the previous/next workspace. Deliberately
 -- not doing up/down on J/K - see the comment block below on why, and on how

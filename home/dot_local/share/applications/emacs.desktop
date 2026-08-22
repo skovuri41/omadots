@@ -7,6 +7,6 @@ Icon=emacs
 Exec=emacsclient -c -a "" %F
 Terminal=false
 Categories=Development;TextEditor;Utility;
-MimeType=text/plain;text/x-makefile;text/x-c;text/x-c++;text/x-java;text/x-python;text/x-clojure;inode/directory;
+MimeType=text/plain;text/x-makefile;text/x-c;text/x-c++;text/x-java;text/x-python;text/x-clojure;text/markdown;text/x-shellscript;application/x-shellscript;application/json;application/x-yaml;text/x-yaml;application/toml;text/x-lua;text/x-log;text/x-readme;text/csv;inode/directory;
 StartupWMClass=Emacs
 Keywords=Editor;

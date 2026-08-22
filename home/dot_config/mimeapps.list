@@ -1,0 +1,56 @@
+# Default app associations (XDG mime-apps spec). This file is what actually
+# wins - ~/.local/share/applications/emacs.desktop only ADVERTISES that Emacs
+# can open these types; without an entry here, Nautilus/xdg-open fall back to
+# whatever Omarchy's own system-wide default was (nvim, wrapped in a
+# terminal), which is why double-clicking a file opened Neovim before this.
+# A user-level ~/.config/mimeapps.list always wins over any system default.
+#
+# The text/html and x-scheme-handler/* entries below are your pre-existing
+# associations (browser, claude/codex URI handlers) - merged in as-is from
+# your live file so chezmoi apply doesn't clobber them. One exception:
+# x-scheme-handler/mailto was HEY.desktop, changed to Fastmail.desktop (the
+# omarchy-launch-webapp entry at ~/.local/share/applications/Fastmail.desktop)
+# since Fastmail is your actual email webapp now. Note: Omarchy's webapp
+# .desktop files use a plain `Exec=omarchy-launch-webapp <url>` with no %u
+# placeholder, so this launches/focuses Fastmail on a mailto: click - it does
+# NOT forward the recipient/subject into a pre-filled compose window the way
+# a native mail client integration would.
+#
+# Everything from text/plain down is new, added for Emacs, and mirrors
+# emacs.desktop's own MimeType= list. A few entries (application/x-yaml vs
+# text/x-yaml, application/toml, text/x-lua) are included on a best-effort
+# basis - shared-mime-info's exact registered name for some of these has
+# changed across versions/distros, so one or two may just be inert no-ops on
+# this system rather than something actively wrong. Verify what's actually
+# taking effect with:
+#   xdg-mime query default text/plain
+#   xdg-mime query default x-scheme-handler/mailto
+[Default Applications]
+text/html=chromium.desktop
+x-scheme-handler/http=chromium.desktop
+x-scheme-handler/https=chromium.desktop
+x-scheme-handler/about=chromium.desktop
+x-scheme-handler/unknown=chromium.desktop
+x-scheme-handler/mailto=Fastmail.desktop
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+x-scheme-handler/claude=com.anthropic.Claude.desktop
+x-scheme-handler/codex=chatgpt.desktop
+
+text/plain=emacs.desktop
+text/x-makefile=emacs.desktop
+text/x-c=emacs.desktop
+text/x-c++=emacs.desktop
+text/x-java=emacs.desktop
+text/x-python=emacs.desktop
+text/x-clojure=emacs.desktop
+text/markdown=emacs.desktop
+text/x-shellscript=emacs.desktop
+application/x-shellscript=emacs.desktop
+application/json=emacs.desktop
+application/x-yaml=emacs.desktop
+text/x-yaml=emacs.desktop
+application/toml=emacs.desktop
+text/x-lua=emacs.desktop
+text/x-log=emacs.desktop
+text/x-readme=emacs.desktop
+text/csv=emacs.desktop

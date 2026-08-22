@@ -8,4 +8,6 @@
 # bootstrapped from this same repo still gets the key populated once.
 {{- if eq .chezmoi.hostname "aditya" }}
 .ssh
+.config/mise/config.toml
+.config/foot/foot.ini
 {{- end }}
