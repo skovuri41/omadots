@@ -1,0 +1,11 @@
+# .chezmoiignore - files/dirs chezmoi should not manage.
+#
+# ~/.ssh is a one-time setup on this laptop (hostname "aditya"): the private
+# key is templated from Bitwarden (private_dot_ssh/private_id_ed25519.tmpl
+# calls the `bitwarden` template function), which forces a vault unlock on
+# every `chezmoi diff`/`status`/`apply` even though the key never changes.
+# Ignoring it here stops that - but only on this host, so a fresh machine
+# bootstrapped from this same repo still gets the key populated once.
+{{- if eq .chezmoi.hostname "aditya" }}
+.ssh
+{{- end }}
