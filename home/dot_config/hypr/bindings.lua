@@ -68,9 +68,16 @@ o.bind("SUPER + Q", "Close window", hl.dsp.window.close())
 -- Two defaults got relocated rather than dropped (SUPER+ALT+<key>, same
 -- convention as before) since they're independent apps, not being replaced
 -- by anything in this list:
---   Signal (was SUPER+SHIFT+G)       -> SUPER+ALT+G
 --   Omawrite (was SUPER+SHIFT+W)     -> SUPER+ALT+W
 --   Google Photos (was SUPER+SHIFT+P) -> SUPER+ALT+P
+-- Signal (was SUPER+SHIFT+G) was briefly relocated to SUPER+ALT+G too, but
+-- dropped entirely per your request - no shortcut for Signal at all now,
+-- only reachable via the app launcher (SUPER+SPACE). For the record: that
+-- wasn't actually a duplicate/conflicting bind with Omarchy's own defaults -
+-- SUPER+ALT+G (2 modifiers, Signal) and SUPER+SHIFT+ALT+G (3 modifiers,
+-- WhatsApp - untouched, still there) are genuinely different key combos,
+-- not the same one registered twice. Removing it anyway since you don't
+-- want it.
 -- Two were NOT relocated, on the assumption you don't use Basecamp's HEY
 -- (you're replacing Email with Fastmail below, and nothing here uses HEY
 -- Calendar) - say the word if that assumption's wrong and I'll put them
@@ -90,7 +97,6 @@ hl.unbind("SUPER + SHIFT + X") -- previously: X (same key, adding focus=true)
 hl.unbind("SUPER + SHIFT + Y") -- previously: YouTube (same key, adding focus=true)
 -- SUPER+SHIFT+R and SUPER+SHIFT+H had nothing bound - no unbind needed.
 
-o.bind("SUPER + ALT + G", "Signal", { omarchy = "signal" })
 o.bind("SUPER + ALT + W", "Omawrite", { launch = "omawrite" })
 o.bind("SUPER + ALT + P", "Google Photos", { webapp = "https://photos.google.com/", focus = true })
 
@@ -213,3 +219,16 @@ o.bind("SUPER + L", "Next workspace", hl.dsp.focus({ workspace = "e+1" }))
 --    holding past ~200ms is exactly what keyd is watching for. Quick,
 --    deliberate taps (which is how you'd naturally use a WM shortcut
 --    anyway) avoid this entirely.
+
+-- Cycle windows within a Hyprland window group (tabbed/stacked windows).
+-- Confirmed SUPER+F11/F12 are unbound in every default binding file.
+-- Note: there's no existing bind in this setup that actually GROUPS windows
+-- together in the first place (Hyprland's "togglegroup" dispatcher) - these
+-- two only cycle within a group once one exists. Say the word if you want a
+-- togglegroup bind added too.
+-- hl.dsp.group.* isn't something I found in Omarchy's own literal source
+-- the way everything else in this file is - sourced from a community
+-- Hyprland Lua API reference instead, so treat this one as slightly less
+-- certain: verify it actually cycles group members after chezmoi apply.
+o.bind("SUPER + F11", "Previous window in group", hl.dsp.group.prev())
+o.bind("SUPER + F12", "Next window in group", hl.dsp.group.next())
