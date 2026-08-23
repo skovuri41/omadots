@@ -81,6 +81,8 @@ Full alias list and the daemon's systemd design (why `-c`/`-t` don't need any Wa
 
 **Citrix Workspace (`icaclient`) — AUR, but flagged as fragile on purpose.** This is the one package on the list that commonly can't finish unattended: Citrix gates the Linux Workspace app tarball behind a login/EULA wall on their own site, so `makepkg`'s automatic download frequently fails with no way around it from a script. The script tries `omarchy-pkg-aur-add icaclient` first — if your AUR mirror/cache already has the tarball cached, or the AUR package changes to no longer need it, it'll just work. If it fails, the script prints exactly what to do (download the tarball from citrix.com yourself, then re-run `yay -S icaclient`), marks it in the status table as "ACTION NEEDED," and moves on to finish everything else rather than stopping.
 
+If the AUR package itself is out of date (not just download-gated — a `yay` retry still fails), see `CITRIX-WORKSPACE-MANUAL-INSTALL.md` for the full manual tarball install, verified working as of 2026-08-23. `--status` detects that install directly (it checks for `~/ICAClient/*/wfica` alongside the normal `pacman -Q icaclient` check), so it reports "OK (manual)" instead of falsely claiming "NOT INSTALLED." There's also a commented-out `install_citrix_manual()` reference function next to `install_keyd()`/`install_polylith()` in the script, mirroring that doc — intentionally not wired into `dispatch_custom()`, so it never runs on its own; it's there so a future "make this automatic" pass has real shell to start from. None of this needs to change once the AUR package is current again — the existing `aur-fragile` entry just starts working.
+
 **GitHub CLI (`gh`) — official Arch package, `github-cli`.** Not to be confused with the AUR `github-cli-bin` prebuilt or the old `hub` tool. Installing the package only gets you the binary — it isn't authenticated on install (there's no unattended-safe way to do OAuth device-flow login from a script), so run `gh auth login` once yourself after the script finishes. This is also the tool `home/dot_bash_aliases`' `ghist` alias was named around: the original dotfiles' `gh` alias was renamed to `ghist` specifically so it wouldn't shadow this once it was installed (see `README.md`'s "What changed from the old dotfiles repo").
 
 ## Running it
@@ -106,7 +108,7 @@ SOFTWARE             METHOD       INSTALLED      LATEST         STATUS
 Java                  mise        21.0.5         25             UPDATE AVAILABLE
 Maven                 mise        3.9.9          3.9.9          OK
 ...
-Citrix Workspace      aur-fragile -              -              NOT INSTALLED
+Citrix Workspace      aur-fragile manual install -              OK (manual - see CITRIX-WORKSPACE-MANUAL-INSTALL.md; switch back to AUR once it's current)
 ```
 
 Pacman-tracked upgrade checks use `checkupdates` (from `pacman-contrib`, already in Omarchy's base packages) — it does a safe, non-root, temp-directory sync-db check, so this never needs `sudo` and never touches your real package db. AUR-tracked checks use `yay -Qua`. Both are read-only.
@@ -167,6 +169,7 @@ If you want to update mise tools only, right now, without a full `omarchy update
 - [polyfy/polylith `doc/install.adoc`](https://github.com/polyfy/polylith/blob/master/doc/install.adoc) — official stand-alone Linux install method (jar + wrapper script); [releases](https://github.com/polyfy/polylith/releases) for the current version (v0.3.32 at time of writing)
 - [dduan/tre](https://github.com/dduan/tre) and the `tre-command` AUR package — confirms `tre` is a real, distinct tool (tree(1) rewrite), not a typo
 - [AUR: icaclient](https://aur.archlinux.org/packages/icaclient) and long-standing Arch community reports — Citrix's download-gate behavior behind the AUR build (page itself is bot-walled from automated fetches, so this is corroborated via community threads rather than the PKGBUILD directly — flagged as the one lower-confidence item here)
+- `CITRIX-WORKSPACE-MANUAL-INSTALL.md` (this repo) — the manual tarball install used when the AUR package itself was out of date, with its own sources (Citrix's official docs, an Arch-specific install guide, and a live Arch Linux Forums thread covering the Hyprland/Wayland "Connecting…" hang)
 - `checkupdates` (pacman-contrib) and `yay -Qua` — standard non-root ways to check for available updates without touching the system package db
 - [Running Emacs with systemd](https://emacsredux.com/blog/2020/07/16/running-emacs-with-systemd/) — the `--fg-daemon` + `Type=simple` systemd unit pattern this script/chezmoi tree follows
 - [GNU Emacs manual: emacsclient Options](https://www.gnu.org/software/emacs/manual/html_node/emacs/emacsclient-Options.html) and the [Arch manual page](https://man.archlinux.org/man/emacsclient.1.en) — confirms every flag used in the `ec`/`emax`/`semacs`/`ekill` aliases (`-c`, `-t`, `-n`, `-q`, `-u`, `-a`, `-T`/TRAMP prefix, `--eval`)

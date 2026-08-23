@@ -213,6 +213,11 @@ step_aur_fragile() {
       warn "     (Workspace App > Linux) - a free Citrix account is required."
       warn "  2. Run 'yay -S $pkg' again; when the automatic download fails, yay"
       warn "     will let you point it at the file you just downloaded."
+      warn "  If the AUR package itself is out of date (not just download-gated -"
+      warn "  yay retry above still fails after step 2), see"
+      warn "  CITRIX-WORKSPACE-MANUAL-INSTALL.md in this repo for the full manual"
+      warn "  tarball install that's known to work instead. --status detects that"
+      warn "  install too, so it won't keep reporting NOT INSTALLED once you're done."
       ;;
     *)
       warn "Try 'yay -S $pkg' by hand to see exactly what it's waiting on."
@@ -452,6 +457,66 @@ EOF
   log "Polylith (poly) $version installed to $POLY_BIN"
 }
 
+# install_citrix_manual() - DISABLED, reference only.
+#
+# dev-stack-software.txt still lists Citrix Workspace as method=aur-fragile
+# (see step_aur_fragile() above), and that stays the intended long-term
+# install path - this function is NOT wired into dispatch_custom() below, so
+# it never runs, and nothing in dev-stack-software.txt points at it. It's
+# left here, commented out, purely as a live copy of
+# CITRIX-WORKSPACE-MANUAL-INSTALL.md's steps so a future "make this
+# automatic" pass has real shell to start from instead of re-deriving it.
+#
+# Why it exists at all: the AUR icaclient package was out of date enough
+# (as of 2026-08-23) that step_aur_fragile()'s normal retry-with-downloaded-
+# tarball flow didn't help either - so Citrix was installed by hand from
+# the tarball instead. print_status()'s icaclient special-case (see
+# citrix_manual_bin() below) already detects that manual install directly,
+# so --status doesn't need this function to report correctly.
+#
+# To bring this back once you want it automated: uncomment the body,
+# add `citrix-manual) install_citrix_manual ;;` to dispatch_custom() below,
+# and either add a new `method=custom` line for it to dev-stack-software.txt
+# or swap the existing Citrix Workspace line's method - whichever you'd
+# rather maintain once the AUR package is fixed and this is no longer needed
+# at all.
+#
+# install_citrix_manual() {
+#   log "Citrix Workspace (manual tarball install)"
+#   warn "This is disabled - see CITRIX-WORKSPACE-MANUAL-INSTALL.md and the"
+#   warn "comment above install_citrix_manual() in this script before enabling it."
+#   return
+#
+#   # 1. Download linuxx64-<version>.tar.gz yourself first - Citrix gates
+#   #    this behind a login/EULA wall, no unattended download is possible.
+#   #    https://www.citrix.com/downloads/workspace-app/linux/workspace-app-for-linux-latest.html
+#   local tarball="$1"   # path to the downloaded tarball, passed in by caller
+#   if [[ -z $tarball || ! -f $tarball ]]; then
+#     fail "Citrix Workspace (manual) - no tarball path given/found"
+#     return
+#   fi
+#
+#   # 2. Dependencies the tarball installer doesn't check for itself.
+#   step_pacman "Citrix Workspace deps" gtk2 webkit2gtk gdk-pixbuf2 nss
+#
+#   # 3. Extract and run the installer non-interactively isn't supported by
+#   #    setupwfc (it's a menu-driven installer) - this would need expect/
+#   #    a here-string of prompt answers to fully automate, which is why
+#   #    this stayed manual rather than becoming a real custom entry yet.
+#   local extract_dir="$DEV_STACK_DIR/citrix-extract"
+#   mkdir -p "$extract_dir"
+#   tar xzf "$tarball" -C "$extract_dir"
+#   # ./setupwfc lives somewhere under $extract_dir - run it, answer its
+#   # prompts (1, Enter, y, y/n, 3) same as CITRIX-WORKSPACE-MANUAL-INSTALL.md.
+#
+#   # 4. ICAROOT - wire via dev_stack_path_add-style env.sh, not dot_bash_exports.
+#   # dev_stack_path_add "$HOME/ICAClient/linuxx64" "Citrix Workspace ICAROOT"
+#
+#   # 5. Certs - see CITRIX-WORKSPACE-MANUAL-INSTALL.md step 5, same commands.
+#
+#   log "Citrix Workspace (manual) installed"
+# }
+
 # Fixed dispatch table for method=custom entries - see dev-stack-software.txt's
 # header for why this is intentionally NOT a pluggable/external mechanism.
 # A status_pkg with no case here fails loudly (not silently skipped), so a
@@ -537,6 +602,24 @@ EOF
 # ---------------------------------------------------------------------------
 # Status table
 # ---------------------------------------------------------------------------
+
+# Detects a Citrix Workspace install that pacman doesn't know about - see
+# CITRIX-WORKSPACE-MANUAL-INSTALL.md and install_citrix_manual() above. Echoes
+# the first Citrix binary found (wfica or selfservice) and returns non-zero
+# if none exist. Checked in a few plausible install dirs since the exact
+# subdirectory name (e.g. "linuxx64" vs "platform") varies by version/build -
+# see the note in CITRIX-WORKSPACE-MANUAL-INSTALL.md's step 3.
+citrix_manual_bin() {
+  local dir bin
+  for dir in "$HOME"/ICAClient/*/ "$HOME/ICAClient/"; do
+    for bin in wfica selfservice; do
+      [[ -x "${dir}${bin}" ]] && { echo "${dir}${bin}"; return 0; }
+    done
+  done
+  command -v wfica 2>/dev/null && return 0
+  return 1
+}
+
 print_status() {
   echo "Checking installed vs. available versions..."
   echo "(pacman upgrade check via 'checkupdates', AUR via 'yay -Qua' - both read-only, no sudo)"
@@ -556,9 +639,19 @@ print_status() {
     case "$method" in
       pacman|aur|aur-fragile)
         installed=$(pacman -Q "$status_pkg" 2>/dev/null | awk '{print $2}')
-        if [[ -z $installed ]]; then
+        if [[ -z $installed && $status_pkg == icaclient ]] && citrix_manual_bin >/dev/null; then
+          # pacman doesn't know about this - it's the manual tarball install
+          # from CITRIX-WORKSPACE-MANUAL-INSTALL.md, done because the AUR
+          # package was out of date. Report it as installed instead of
+          # false-alarming NOT INSTALLED every run.
+          installed="manual install"
+          latest="-"
+          status="OK (manual - see CITRIX-WORKSPACE-MANUAL-INSTALL.md; switch back to AUR once it's current)"
+        elif [[ -z $installed ]]; then
           status="NOT INSTALLED"
           latest="-"
+          [[ $status_pkg == icaclient ]] &&
+            status="NOT INSTALLED (see CITRIX-WORKSPACE-MANUAL-INSTALL.md if AUR keeps failing)"
         else
           local upline
           if [[ $method == pacman ]]; then
@@ -574,8 +667,12 @@ print_status() {
             status="OK"
           fi
         fi
-        [[ $method == aur-fragile && -f "$DEV_STACK_DIR/${status_pkg}.needs-manual-download" ]] &&
+        # Don't let a stale marker from an earlier failed AUR attempt stomp
+        # the "OK (manual)" status just set above once a manual install is
+        # actually detected.
+        if [[ $method == aur-fragile && -f "$DEV_STACK_DIR/${status_pkg}.needs-manual-download" && $installed != "manual install" ]]; then
           status="ACTION NEEDED (manual download)"
+        fi
         ;;
       mise)
         installed=$(mise current "$status_pkg" 2>/dev/null | awk '{print $1}')
