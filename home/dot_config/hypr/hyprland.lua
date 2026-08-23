@@ -21,9 +21,9 @@ require("hypr.input")
 require("hypr.bindings")
 require("hypr.looknfeel")
 require("hypr.autostart")
+require("hypr.windowrules")
 
 -- Toggle config flags dynamically.
 require("default.hypr.toggles")
 
 -- Add any other personal Hyprland configuration below.
--- o.window("qemu", { workspace = "5" })

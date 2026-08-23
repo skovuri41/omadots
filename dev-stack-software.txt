@@ -52,6 +52,8 @@ Clojure CLI|mise|clojure@latest|clojure|needs rlwrap, above
 Node.js + npm|mise|node@lts|node|LTS only, not 'current'/latest
 Emacs|pacman|emacs-wayland ripgrep fd|emacs-wayland|30.2, native-comp + PGTK (Wayland); ripgrep/fd for Doom
 Doom Emacs|custom||doom|
+JetBrains Mono Nerd Font|pacman|ttf-jetbrains-mono-nerd|ttf-jetbrains-mono-nerd|doom-font/doom-big-font in doom.d/config.el (family "JetBrains Mono"); official extra repo pkg, patched with icon glyphs
+Overpass|pacman|ttf-overpass|ttf-overpass|doom-variable-pitch-font in doom.d/config.el; official extra repo pkg
 Emacs daemon|custom||emacs-daemon|systemd --user service; unit file comes from chezmoi
 Polylith (poly)|custom||poly|GitHub-release jar, no Arch/AUR package exists
 uv|pacman|uv|uv|official Arch package, not AUR
@@ -61,6 +63,7 @@ tree|pacman|tree|tree|
 tre|aur|tre-command|tre-command|Rust tree(1) alternative, AUR-only
 jq|pacman|jq|jq|already in Omarchy's base packages
 zathura|pacman|zathura zathura-pdf-mupdf|zathura|+ mupdf backend for PDF support
+Spotify|aur|spotify|spotify|native desktop client, AUR-only (licensing); SUPER+SHIFT+U in bindings.lua, workspace-4-assigned in windowrules.lua. Distinct from Omarchy's own SUPER+SHIFT+M Quickshell mini-player toggle - that one's a panel, not a window
 Citrix Workspace|aur-fragile|icaclient|icaclient|AUR-only; Citrix gates the download, see below. AUR was out of date as of 2026-08-23 - installed manually instead, see CITRIX-WORKSPACE-MANUAL-INSTALL.md ('--status' detects this too)
 chezmoi|pacman|chezmoi|chezmoi|dotfiles manager, see omadots/home
 Bitwarden CLI|pacman|bitwarden-cli|bitwarden-cli|bw - chezmoi's secret backend

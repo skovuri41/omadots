@@ -131,6 +131,21 @@ o.bind("SUPER + SHIFT + C", "Claude desktop", { launch = "claude-desktop", focus
 -- it either way.
 o.bind("SUPER + SHIFT + P", "Bitwarden", { launch = "bitwarden-desktop", focus = "^Bitwarden$" })
 
+-- Spotify (native desktop client, AUR - see dev-stack-software.txt). This
+-- replaces Omarchy's own default SUPER+SHIFT+M ({ omarchy = "spotify" }),
+-- which you'd already overridden above with a Quickshell mini-player toggle
+-- instead - that toggle is a panel, not a real window, so it can't be
+-- workspace-assigned (see windowrules.lua). This is a second, independent
+-- way to get at Spotify: a full app window you can actually put on a
+-- workspace. Key is SUPER+SHIFT+U - picked arbitrarily since every letter
+-- with an obvious "S for Spotify"/"M for Music" mnemonic was already taken
+-- (S = Google Maps, M = your Quickshell toggle, both left as-is since you
+-- didn't ask to change either) - say the word if you'd rather free up S or
+-- M for this instead.
+-- `focus` (class) is an unverified guess, same caveat as Claude
+-- desktop/Bitwarden above - check with hyprctl clients -j after first launch.
+o.bind("SUPER + SHIFT + U", "Spotify", { launch = "spotify", focus = "^[Ss]potify$" })
+
 -- Emacs GUI frame via the daemon: -c new frame, -n don't block the shell,
 -- -q skip the "waiting for emacs..." message, -a '' auto-starts the daemon
 -- with 'emacs --daemon' if it isn't already running. Complements the
