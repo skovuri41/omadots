@@ -1,0 +1,38 @@
+# Personal override for the Omarchy shell (Quickshell bar/menu/panels).
+# Layers on top of whatever theme is active - source: shell/Commons/Color.qml
+# ("Last theme-supplied and user-supplied shell.toml dicts... User keys win,
+# so a machine-level ~/.config/omarchy/shell.toml survives theme switches").
+# This is also the exact file/key `omarchy display text size <px>` writes -
+# see below.
+#
+# Answers "how do I make the top bar/font bigger": there's no separate
+# bar-only font-size knob - Style.font.<token> (body/caption/title/etc.) is
+# shared by the bar, root menu, and every panel (shell/Commons/Style.qml).
+# What IS independently adjustable is the bar's own cross-axis thickness
+# ([bar] size-horizontal/size-vertical, default 26/28) - but bumping
+# base-size alone already grows the bar too, because [bar]
+# scale-with-font defaults to true: every Style.bar.* token (including
+# size-horizontal/size-vertical) gets multiplied by fontBaseSize/12
+# automatically. So one knob does both:
+#   base-size 12 -> 14  =>  bar height (top/bottom) 26px -> ~30px
+#                           bar width  (left/right)  28px -> ~33px
+#                           every shell text/icon token  ~+17%
+# If you ever want the bar bigger WITHOUT the font following, set
+# `scale-with-font = false` here and pin size-horizontal/size-vertical
+# explicitly instead.
+#
+# To tune this live without hand-editing TOML, `omarchy-display-text-size`
+# (bin/omarchy-display-text-size in the Omarchy repo) writes this same
+# [font] base-size key - AND, as a bonus, keeps GTK app scaling and all 4
+# terminal configs' font point size in lockstep with it:
+#   omarchy display text size 14
+#   omarchy display text size        # prints the current size
+#   omarchy display text size reset  # back to theme default (12px)
+# Careful: that command edits your *deployed* terminal configs directly
+# (~/.config/{alacritty,kitty,ghostty,foot}/...), which chezmoi also
+# manages - if you run it, `chezmoi re-add` those 4 files afterward (or
+# tell me the new size) so the change doesn't get reverted by your next
+# `chezmoi apply`. This file isn't affected by that risk since chezmoi owns
+# it outright - no live drift to worry about here.
+[font]
+base-size = 20 

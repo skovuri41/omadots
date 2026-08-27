@@ -18,7 +18,11 @@ new_cwd = "follow"
 prefix = "ctrl+space"
 
 # Config and help
-reload_config = "prefix+q"
+#
+# Moved off plain prefix+q (freed for close_tab below, see the Panes/tabs
+# comments) onto prefix+shift+q - matches ../tmux/tmux.conf's Q, same
+# reasoning there.
+reload_config = "prefix+shift+q"
 help = "prefix+?"
 detach = "prefix+d"
 
@@ -26,24 +30,86 @@ detach = "prefix+d"
 copy_mode = "prefix+["
 
 # Panes
-split_horizontal = ["prefix+h", "alt+enter"]
+#
+# VIM/DOOM COHERENCE (added so herdr muscle memory matches evil-mode's
+# window commands - see the matching block in ../tmux/tmux.conf, which
+# mirrors this 1:1, same reasoning): evil's own window map (bound in Doom
+# under SPC w, and available everywhere as plain C-w since it's vanilla
+# evil, not Doom-specific - evil-maps.el) uses:
+#   SPC w s / C-w s -> horizontal split   SPC w v / C-w v -> vertical split
+#   SPC w h/j/k/l   / C-w h/j/k/l -> move focus left/down/up/right
+# That's an exact geometry match for herdr's own split_horizontal (top/bottom
+# stacked, dividing line horizontal) / split_vertical (side by side, dividing
+# line vertical) naming - so split_horizontal moves off prefix+h onto
+# prefix+s (freeing h for focus movement below), and split_vertical's prefix+v
+# was already correct, no change needed there.
+#
+# Resizing deliberately stays off hjkl (ctrl+alt+shift+arrows, unchanged
+# below) - vim itself doesn't use hjkl for resize (that's what
+# evil-window-increase-height/-width etc. use +/-/</> for), so overloading
+# hjkl with a second meaning here would work against muscle memory, not for
+# it.
+split_horizontal = ["prefix+s", "alt+enter"]
 split_vertical = ["prefix+v", "alt+shift+enter"]
 close_pane = ["prefix+x", "alt+esc"]
 zoom = "prefix+z"
 last_pane = "prefix+;"
 
-focus_pane_left = "ctrl+alt+left"
-focus_pane_down = "ctrl+alt+down"
-focus_pane_up = "ctrl+alt+up"
-focus_pane_right = "ctrl+alt+right"
+# prefix+h/j/k/l added as the primary vim/evil-style trigger (SPC w h/j/k/l
+# in Doom, C-w h/j/k/l anywhere evil runs); ctrl+alt+arrow kept as a
+# secondary/fallback trigger since it doesn't conflict with anything and was
+# already muscle memory from before this change.
+focus_pane_left = ["prefix+h", "ctrl+alt+left"]
+focus_pane_down = ["prefix+j", "ctrl+alt+down"]
+focus_pane_up = ["prefix+k", "ctrl+alt+up"]
+focus_pane_right = ["prefix+l", "ctrl+alt+right"]
 
 resize_mode = ["prefix+ctrl+left", "prefix+ctrl+down", "prefix+ctrl+up", "prefix+ctrl+right"]
 
-# Like resize-pane on C-M-S-arrows
-resize_pane_left = "ctrl+alt+shift+left"
-resize_pane_down = "ctrl+alt+shift+down"
-resize_pane_up = "ctrl+alt+shift+up"
-resize_pane_right = "ctrl+alt+shift+right"
+# VIM/HYPRLAND COHERENCE: matches the physical keys Hyprland's own default
+# resize binds use (checked the literal Omarchy source,
+# default/hypr/bindings/tiling.lua) - SUPER+code:20/code:21, which Hyprland's
+# own source (KeybindManager.cpp: "e.keycode + 8, because to xkbcommon it's
+# +8 from libinput") resolves to xkb keycodes 20/21 - the physical "-" and
+# "=" keys on a US layout, immediately right of 0/right of "-". SHIFT flips
+# to the vertical axis there too (SUPER+SHIFT+code:20/21).
+#
+# Note this ISN'T a literal semantic port, because the two schemes don't
+# line up 1:1: Hyprland's default only manipulates two of the window's four
+# edges (left via code:20/21, top via SHIFT+code:20/21 - no default bind for
+# the right/bottom edges at all), while herdr already has a real,
+# independent action for all four directions. So what's preserved here is
+# the PHYSICAL KEY CHOICE and the "shift = vertical axis" pattern (the part
+# that's actually muscle memory), not Hyprland's specific expand-vs-shrink
+# meaning per key - mapped onto herdr's fuller 4-direction model as the
+# natural pairing: minus/equal = left/right (horizzontal axis, matching
+# Hyprland's own minus = "Expand window left" AND the pre-existing
+# ctrl+alt+shift+left = resize_pane_left below), shift+minus/shift+equal =
+# up/down (vertical axis).
+#
+# Also NOT replicated: Hyprland's ALT (small step) / CTRL (large step)
+# modifier tiers for a finer/coarser resize amount - there's no evidence in
+# this file's schema that resize_pane_* accepts a configurable step size
+# (unlike Hyprland's explicit hl.dsp.window.resize({x=N}) pixel argument), so
+# adding alt+/ctrl+ variants here would just be 3 different key combos
+# calling the exact same action - no actual behavior difference, not worth
+# the extra binds.
+#
+# UNVERIFIED SYNTAX CAVEAT (same caveat as everywhere else this session
+# where herdr's own docs couldn't be trusted - see the split_horizontal/
+# focus_pane_* comments above): "prefix+-" / "prefix+shift+-" / "prefix+="
+# / "prefix+shift+=" is my best inference from this file's own established
+# pattern (every existing punctuation bind - copy_mode's "[", last_pane's
+# ";", help's "?" - uses the literal character directly as the base key,
+# and shift is always a separate composable modifier token elsewhere, e.g.
+# ctrl+alt+shift+left), not confirmed against real herdr docs. If herdr
+# rejects this or shift+- doesn't register as expected, try the resulting
+# character directly instead ("prefix+_" for shift+minus, "prefix+plus" or
+# "prefix+shift+equal" for shift+equal) and let me know which form works.
+resize_pane_left = ["prefix+-", "ctrl+alt+shift+left"]
+resize_pane_right = ["prefix+=", "ctrl+alt+shift+right"]
+resize_pane_up = ["prefix+shift+-", "ctrl+alt+shift+up"]
+resize_pane_down = ["prefix+shift+=", "ctrl+alt+shift+down"]
 
 # No tmux equivalent; herdr's default prefix+shift+p is taken by previous session
 rename_pane = "prefix+shift+o"
@@ -51,7 +117,10 @@ rename_pane = "prefix+shift+o"
 # Windows -> tabs
 new_tab = "prefix+c"
 rename_tab = "prefix+r"
-close_tab = "prefix+k"
+# Moved off prefix+k (freed for focus_pane_up above - plain k was colliding
+# with this) onto prefix+q, your call - matches ../tmux/tmux.conf's "Kill
+# window" q, and reads fine as "quit this tab."
+close_tab = "prefix+q"
 switch_tab = ["prefix+1..9", "alt+1..9"]
 previous_tab = ["prefix+p", "alt+left"]
 next_tab = ["prefix+n", "alt+right"]

@@ -193,6 +193,29 @@ o.bind("SUPER + K", "Focus right window", hl.dsp.focus({ direction = "r" }))
 o.bind("SUPER + H", "Previous workspace", hl.dsp.focus({ workspace = "e-1" }))
 o.bind("SUPER + L", "Next workspace", hl.dsp.focus({ workspace = "e+1" }))
 
+-- Workspace back-and-forth toggle, on SUPER + P as requested. This is
+-- different from H/L above: e-1/e+1 step sequentially through workspaces in
+-- order, while Hyprland's "previous" workspace keyword is a true
+-- back-and-forth toggle - jump to whichever workspace was last active, press
+-- again to jump right back, regardless of workspace number/order.
+--
+-- Turns out Omarchy already ships exactly this dispatcher by default -
+-- hl.dsp.focus({ workspace = "previous" }) - just bound to the easy-to-miss
+-- SUPER+CTRL+TAB chord as "Former workspace" (default/hypr/bindings/
+-- tiling.lua). That tracks with "I don't think it's enabled" - it was there,
+-- just not on a key you'd stumble onto. Left that default binding in place
+-- (harmless to have two paths to the same toggle) and added this second,
+-- easier one on SUPER + P.
+--
+-- SUPER + P wasn't free: Omarchy's default has it as "Pseudo window"
+-- (hl.dsp.window.pseudo(), dwindle-layout-only pseudo-tiling, same
+-- tiling.lua) - unbound below per your instruction. Still reachable via the
+-- root menu / 'omarchy-menu-keybindings' if you ever want it back on
+-- another key - say the word.
+hl.unbind("SUPER + P") -- previously: Pseudo window
+
+o.bind("SUPER + P", "Former workspace (back and forth)", hl.dsp.focus({ workspace = "previous" }))
+
 -- Notes on this approach:
 --
 -- 1. Dispatcher choice / scrolling vs dwindle: this deliberately reuses the
