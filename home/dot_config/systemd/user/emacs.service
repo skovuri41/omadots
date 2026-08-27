@@ -1,7 +1,7 @@
 # Runs Emacs as a persistent daemon under systemd --user, so `emacsclient`
 # always has something to connect to - see CHEZMOI-GUIDE.md for the
-# emacsclient aliases (ec/emax/semacs/ekill) and the .desktop launcher entry
-# that this pairs with.
+# emacsclient aliases/functions (ec/emax/semacs/ekill, estart/erestart/
+# estop/estatus/elog) and the .desktop launcher entry that this pairs with.
 #
 # /usr/bin/emacs is hardcoded rather than resolved via `command -v` because
 # this is a static file, not a template: Arch's emacs-wayland package (like
@@ -13,10 +13,39 @@
 # environment at connection time (that's how the Emacs server protocol
 # works), not the daemon's startup environment - so this deliberately does
 # NOT need any WAYLAND_DISPLAY-importing tricks to produce GUI frames
-# correctly. PartOf/After=graphical-session.target just ties this service's
-# own lifecycle to the graphical session (starts after it's up, stops when
-# it ends) - standard practice for a user-session service, not a
-# requirement for frame creation to work.
+# correctly.
+#
+# [Install] WantedBy=graphical-session.target (changed from default.target -
+# see below) matches how Omarchy anchors its own user services under
+# uwsm-managed Hyprland: confirmed directly against Omarchy's own test
+# suite (test/shell.d/systemd-test.sh in basecamp/omarchy), which asserts
+# its fcitx5 service uses exactly PartOf=/After=/WantedBy=
+# graphical-session.target together, with a comment explaining why -
+# "fcitx5 needs WAYLAND_DISPLAY, which uwsm imports before it reaches
+# graphical-session.target". default.target (the old value here) can be
+# reached at a different point in the session than uwsm's
+# graphical-session.target, which is a plausible contributor to the
+# reported "daemon isn't reliably there yet" flakiness alongside the
+# emacsclient_safe() fix in dot_bash_functions/dot_bash_aliases - PartOf/
+# After were already correct (unchanged), only [Install]'s enablement
+# target was inconsistent with them.
+#
+# OPTIONAL follow-up, not applied here (unverified for this machine's
+# actual emacs-wayland build): Type=simple below is the pre-Emacs-27.1
+# default; upstream's own unit file has used Type=notify since 27.1,
+# which makes systemd wait for Emacs's real "I'm ready" signal (sent via
+# libsystemd's sd_notify once `--fg-daemon` finishes init) instead of
+# considering the unit "started" the instant it forks - fixes a real,
+# previously-Arch-confirmed bug class (see FS#70400) where a daemon still
+# loading Doom's packages gets treated as up before it truly is. This is
+# only safe to flip if the installed emacs-wayland binary was actually
+# built with libsystemd notify support; check with:
+#   ldd "$(command -v emacs)" | grep -i systemd
+# If that prints a libsystemd.so line, change Type=simple to Type=notify
+# below and re-run `systemctl --user daemon-reload && erestart`. If it
+# prints nothing, leave Type=simple - Type=notify with no real notify
+# support would just make the unit sit "activating" for the full
+# TimeoutStartSec and then fail, which is worse than what's here now.
 
 [Unit]
 Description=Emacs text editor (daemon)
@@ -33,4 +62,4 @@ RestartSec=3
 TimeoutStartSec=60
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target

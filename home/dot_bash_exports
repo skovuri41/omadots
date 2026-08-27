@@ -5,8 +5,21 @@ export LC_ALL='en_US.UTF-8'
 # Don't clear the screen after quitting a manual page.
 export MANPAGER='less -X'
 
-# Editors - Doom Emacs via emacsclient, starting the daemon on first use.
-export ALTERNATE_EDITOR=""
+# Editors - Doom Emacs via emacsclient, talking to the single
+# systemd-managed daemon (~/.config/systemd/user/emacs.service).
+#
+# Deliberately NOT exporting ALTERNATE_EDITOR anymore. It used to be set
+# to "" here, which - since emacsclient reads that env var whenever no
+# explicit -a/-s flag is given - made EVERY emacsclient call below (plus
+# git's core.editor, the `magit`/`et`/`ediff` helpers) silently fork a
+# brand-new `emacs --daemon` on any connection failure, racing whatever
+# daemon systemd already had running. That's the confirmed root cause of
+# "a second Emacs daemon sometimes appears" - full writeup on
+# emacsclient_safe() in dot_bash_functions, which is now the only place
+# allowed to ask systemd to (re)start the real daemon. Without it, a
+# failed connection here just errors loudly ("Have you started the
+# server?") instead of quietly multiplying - if you see that, run `estart`
+# (dot_bash_aliases) and try again.
 export EDITOR="emacsclient -t"
 export VISUAL="emacsclient -c"
 

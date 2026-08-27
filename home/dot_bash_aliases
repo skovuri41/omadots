@@ -56,12 +56,13 @@ alias wifi-restart='sudo systemctl restart NetworkManager && echo "Restarted Net
 
 # emacsclient shortcuts - all talk to the single systemd-managed Emacs
 # daemon (see CHEZMOI-GUIDE.md and ~/.config/systemd/user/emacs.service).
-# The void string passed to -a is IMPORTANT: it means "auto-start the
-# daemon if it's not already running" rather than falling back to a
-# separate, non-daemon Emacs process - matters mainly before first boot/
-# apply, since systemd normally keeps the daemon running from login onward.
-alias ec="emacsclient -cnqua ''"       # new GUI frame, don't wait, quiet, no output
-alias emax="emacsclient -t -a ''"      # new frame in this terminal (text mode)
+# ec/emax used to pass emacsclient's own `-a ''` auto-start flag directly,
+# which turned out to be the cause of "a second daemon sometimes appears" -
+# see the emacsclient_safe() comment in dot_bash_functions for the full
+# root-cause writeup. They're now functions (defined there), not aliases,
+# since the fix needs actual logic (check, wait, only ask systemd to start
+# it if truly needed) rather than a single flag.
+#
 # was `sudo emacsclient -t`, which doesn't work as written - there's no
 # separate root-owned daemon for it to connect to. This edits root-owned
 # files via TRAMP instead, through the *same* user daemon - no sudo needed.
@@ -69,6 +70,17 @@ alias semacs="emacsclient -t /sudo::"
 # cleanly kill the daemon - since every emacsclient frame/terminal is just
 # a connection to this one process, this closes all of them at once.
 alias ekill='emacsclient --eval "(kill-emacs)"'
+
+# Explicit lifecycle control for the systemd-managed daemon - the only
+# thing now allowed to create/replace the actual `emacs --daemon` process
+# (see emacsclient_safe() in dot_bash_functions). Use estart after a fresh
+# `chezmoi apply` or `estop`; erestart to pick up a changed init.el without
+# a full stop/start; estatus/elog to check whether it's actually healthy.
+alias estart="systemctl --user start emacs.service"
+alias erestart="systemctl --user restart emacs.service"
+alias estop="systemctl --user stop emacs.service"
+alias estatus="systemctl --user status emacs.service --no-pager"
+alias elog="journalctl --user -u emacs.service -e --no-pager"
 # dropped --no-ignore-vcs - it was disabling .gitignore filtering, so
 # target/, dist/, .cpcache/, node_modules, etc. flooded every fuzzy search
 alias fzfi='rg --files --hidden --follow -g "!{node_modules,.git}" 2> /dev/null|fzf'

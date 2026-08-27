@@ -4,8 +4,8 @@
  hl.config({
    general = {
      -- No gaps between windows or borders.
-     gaps_in = 10,
-     gaps_out = 10,
+     gaps_in = 40,
+     gaps_out = 40,
      border_size = 2,
      -- Change to niri-like side-scrolling layout.
      layout = "scrolling",
@@ -19,7 +19,7 @@
      rounding = 8,
      -- Dim unfocused windows (0.0 = no dim, 1.0 = fully dimmed).
      dim_inactive = true,
-     dim_strength = 0.15,
+     dim_strength = 0.5,
    },
  })
 
@@ -30,19 +30,15 @@
 --     enabled = false,
 --   },
 -- })
+hl.config({
+    layout = {
+        single_window_aspect_ratio = { 1, 1 },
+        single_window_aspect_ratio_tolerance = 0.0
+    },
+    scrolling = {
+        fullscreen_on_one_column = true,
+        focus_fit_method = 0,
+        column_width = 0.66,
+    }
+})
 
--- https://wiki.hypr.land/Configuring/Basics/Variables/#layout
--- hl.config({
---   layout = {
---     -- Avoid overly wide single-window layouts on wide screens.
---     single_window_aspect_ratio = { 1, 1 },
---   },
--- })
-
--- https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/
- hl.config({
-   scrolling = {
-     -- See only one column per screen instead of two.
-     column_width = 0.97,
-   },
- })

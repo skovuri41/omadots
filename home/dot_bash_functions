@@ -121,6 +121,82 @@ function ediff() {
   fi
 }
 
+# --- Emacs / emacsclient reliability ------------------------------------
+#
+# `ec`/`emax` used to call `emacsclient -a ''` directly, and
+# `ALTERNATE_EDITOR=""` (used to be exported in dot_bash_exports) meant
+# every OTHER emacsclient call - git's core.editor, $EDITOR/$VISUAL, the
+# `magit`/`et` aliases, `ediff` above - got the same behavior implicitly,
+# since emacsclient reads $ALTERNATE_EDITOR whenever `-a`/`-s` isn't
+# passed explicitly.
+#
+# That's the confirmed root cause of "a new daemon sometimes appears
+# instead of connecting to the systemd one": per emacsclient's own source
+# (lib-src/emacsclient.c, set_socket()/fail()), `-a ''` unconditionally
+# forks a brand-new `emacs --daemon` the instant ANY connection attempt
+# fails - a still-starting daemon (Doom's packages take a moment to load),
+# a mid-restart window (the unit has Restart=on-failure), a transient
+# hiccup - with no check for "is a daemon already on its way up." Whoever
+# wins the race to call `(server-start)` first keeps the socket; the loser
+# just logs a warning to its own *Messages* buffer and sits there as an
+# orphan process forever, untracked by systemd. Do that enough times and
+# you get exactly the reported symptom, with `systemctl --user status`
+# innocently showing "active" the whole time (it's tracking the ORIGINAL
+# daemon's PID, which may or may not still own the socket).
+#
+# Fix: nothing except systemd is allowed to start `emacs --daemon` now
+# (the global ALTERNATE_EDITOR export is gone). This wrapper is the one
+# place allowed to *ask* systemd to start it, and only after confirming
+# the client genuinely can't connect - so at most one daemon ever exists.
+emacsclient_safe() {
+  if emacsclient --eval '(+ 1 1)' &>/dev/null; then
+    emacsclient "$@"
+    return
+  fi
+
+  local state
+  state=$(systemctl --user is-active emacs.service 2>/dev/null)
+  case "$state" in
+    activating | reloading)
+      : # already coming up - wait below instead of racing it
+      ;;
+    active)
+      : # systemd thinks it's fine but we couldn't connect yet - wait it out
+      ;;
+    *)
+      echo "emacsclient_safe: emacs.service is '$state' - starting it" >&2
+      systemctl --user start emacs.service
+      ;;
+  esac
+
+  local i
+  for i in $(seq 1 20); do
+    if emacsclient --eval '(+ 1 1)' &>/dev/null; then
+      emacsclient "$@"
+      return
+    fi
+    sleep 0.5
+  done
+
+  echo "emacsclient_safe: emacs.service still unreachable after 10s" \
+    "(state: $(systemctl --user is-active emacs.service 2>/dev/null))." >&2
+  echo "Check: estatus / elog (see dot_bash_aliases)" >&2
+  return 1
+}
+
+# New GUI frame, don't wait, quiet, no output - was `alias ec="emacsclient
+# -cnqua ''"`, now routed through emacsclient_safe instead of emacsclient's
+# own auto-start (see the comment above emacsclient_safe for why).
+ec() {
+  emacsclient_safe -cnqu "$@"
+}
+
+# New frame in this terminal (text mode) - was `alias emax="emacsclient -t
+# -a ''"`, same reasoning as ec() above.
+emax() {
+  emacsclient_safe -t "$@"
+}
+
 function findit {
   local START_PATH='.'
   local FILES="$*"
