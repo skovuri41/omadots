@@ -34,7 +34,7 @@
 #   status_pkg  the single package/tool name used to look up an installed/
 #               available version for the --status table (for custom
 #               entries, one of the fixed keys the script recognizes: doom,
-#               poly, emacs-daemon)
+#               poly, bws, emacs-daemon, keyd)
 #   note        freeform, shown nowhere but here - just for you
 #
 # Lines starting with # and blank lines are ignored. Don't use literal "|"
@@ -66,6 +66,7 @@ zathura|pacman|zathura zathura-pdf-mupdf|zathura|+ mupdf backend for PDF support
 Spotify|aur|spotify|spotify|native desktop client, AUR-only (licensing); SUPER+SHIFT+U in bindings.lua, workspace-4-assigned in windowrules.lua. Distinct from Omarchy's own SUPER+SHIFT+M Quickshell mini-player toggle - that one's a panel, not a window
 Citrix Workspace|aur-fragile|icaclient|icaclient|AUR-only; Citrix gates the download, see below. AUR was out of date as of 2026-08-23 - installed manually instead, see CITRIX-WORKSPACE-MANUAL-INSTALL.md ('--status' detects this too)
 chezmoi|pacman|chezmoi|chezmoi|dotfiles manager, see omadots/home
-Bitwarden CLI|pacman|bitwarden-cli|bitwarden-cli|bw - chezmoi's secret backend
+Bitwarden CLI|pacman|bitwarden-cli|bitwarden-cli|bw - ad hoc personal-vault access only, see CHEZMOI-GUIDE.md
+Bitwarden Secrets Manager CLI|custom||bws|bws - chezmoi's actual secret backend as of 2026-08-31 (no Arch/AUR pkg verified, GitHub-release binary instead, see install_bws())
 GitHub CLI|pacman|github-cli|github-cli|provides the 'gh' command; run 'gh auth login' once after install
 Keyd|custom||keyd|kernel-level key remapper; installs the keyd pkg, deploys keyd/default.conf to /etc/keyd/default.conf, enables the systemd service - see install_keyd()

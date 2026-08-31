@@ -146,23 +146,81 @@ tracked file, not just Hyprland config.
 
 ## Using Bitwarden to manage secrets with chezmoi
 
-The setup already has this wired up: `home/.chezmoi.toml.tmpl` sets
-`bitwarden.unlock = "auto"`, and `bitwarden-cli` (the `bw` command) is
-installed by `install-dev-stack.sh`. That means chezmoi will call `bw
-unlock` itself, on demand, the first time a template in a given `apply`
-needs a secret — you just need to have run `bw login` once on that machine
-beforehand (see `README.md`).
+**Updated 2026-08-31 — switched from `bw` to `bws` (Bitwarden Secrets
+Manager) as the backend chezmoi templates use.** The original design here
+used `bitwarden.unlock = "auto"` plus the regular `bw` CLI, on the
+assumption that "auto" meant "only unlock once." In practice it doesn't:
+`bitwarden.unlock = "auto"` only skips calling `bw unlock` if `BW_SESSION`
+is *already* set in the environment — it never persists a session across
+separate processes, and Bitwarden's own CLI is explicit that a session
+"will not persist if you open a new terminal window." So every fresh
+`chezmoi apply` (a new shell, a fresh terminal, the `omarchy update` hook)
+had no `BW_SESSION`, "auto" called `bw unlock` again, and every single
+apply prompted for the master password — not a chezmoi bug, just how `bw
+unlock` sessions work. That's what led to keeping Bitwarden-backed secret
+files out of the tree entirely up to now (see the checklist item this
+closes out).
 
-The rule of thumb: **the chezmoi source state (and the GitHub repo) should
-only ever contain the *retrieval logic* — `{{ bitwarden ... }}` — never the
-secret itself.** The actual value only ever exists on disk, in the real
-target file, after `chezmoi apply` fetches it live from Bitwarden.
+**Secrets Manager sidesteps the problem structurally, not by tuning a
+setting.** It authenticates with a static **access token** issued to a
+"machine account" (a service identity, not your personal login) — there's
+no master-password unlock step at all, so there's nothing that can expire
+mid-session or fail to persist across processes. The tradeoff: it's a
+genuinely separate product from your personal vault (secrets live in
+"projects" under a Bitwarden *organization*, not alongside your normal
+vault items), and it only stores plain text values — no file attachments,
+so a private key has to be pasted in as text rather than uploaded as a
+file. `bitwarden-cli` (`bw`) stays installed for ad hoc personal-vault
+lookups (browsing your own logins, etc.) — it's just no longer what chezmoi
+templates depend on.
 
-**Worked example: an SSH keypair for GitHub, managed through Bitwarden.**
+**One-time account setup** (once per Bitwarden account, not per machine —
+skip if you already have a Secrets Manager org):
 
-This is the full end-to-end version — generate the key once, store it in
-Bitwarden, have chezmoi deploy it (on this machine and every other one),
-register the public half with GitHub, and confirm it works.
+1. In the Bitwarden web vault, if you don't already have an organization
+   with Secrets Manager: **Secrets Manager → Get started**, or from an
+   existing Families/Premium account, create a new **Free** organization
+   (Free tier: unlimited secrets, up to 2 users, 3 projects, 3 machine
+   accounts — plenty for one person's dotfiles).
+2. **Projects → New project** — e.g. `omadots`. Projects are just a
+   grouping; one is enough here.
+3. **Machine accounts → New machine account** — e.g. `aditya-laptop` (or
+   one per machine, if you want to be able to revoke one machine's access
+   to secrets without affecting others — same one-key-per-device tradeoff
+   as the old GitHub SSH key setup below, just at the token level instead).
+   Grant it read access to the `omadots` project.
+4. On that machine account's page, **New access token** — copy it
+   immediately, Bitwarden only shows it once.
+
+**Per-machine setup** (once per machine, after `install-dev-stack.sh` has
+installed `bws` — see `README-dev-stack.md`):
+
+```sh
+mkdir -p -m 700 ~/.config/bws
+install -m 600 /dev/stdin ~/.config/bws/access-token   # paste the token, then Ctrl-D
+```
+
+`home/dot_bash_exports` sources this file automatically (if present) and
+exports it as `BWS_ACCESS_TOKEN` in every new shell — chezmoi's
+`bitwardenSecrets` template function picks it up from there with no
+per-apply prompt at all. This file is **deliberately not chezmoi-managed**
+(same reasoning as `~/.config/dev-stack/env.sh` — it holds a live
+credential, which has no business in git even in a repo that's otherwise
+just retrieval logic) — you create it once by hand per machine, and it's
+also how you'd revoke/rotate: delete the file (or the machine account's
+token in Bitwarden) and the machine loses access.
+
+The rule of thumb, unchanged from before: **the chezmoi source state (and
+the GitHub repo) should only ever contain the *retrieval logic* — `{{
+bitwardenSecrets ... }}` and a secret's *ID* — never the secret's value.**
+A Secrets Manager secret ID is an opaque UUID, not a name, so it's fine to
+commit in plain sight (same as the old setup committing a Bitwarden *item
+name*, just a UUID instead of a string) — the actual value only ever
+exists on disk, in the real target file, after `chezmoi apply` fetches it
+live.
+
+**Worked example: an SSH keypair for GitHub, managed through Secrets
+Manager.**
 
 *1. Generate the keypair, once, on one machine.*
 
@@ -172,20 +230,29 @@ ssh-keygen -t ed25519 -C "your_email@example.com" -f ~/.ssh/id_ed25519
 
 `ed25519` is what GitHub itself recommends over RSA today. You'll be
 prompted for a passphrase — optional, but worth considering even though
-Bitwarden already gates access to the file: it's a second layer in case the
-private key ever ends up copied somewhere outside Bitwarden's control.
+Secrets Manager already gates access to the value: it's a second layer in
+case the private key ever ends up copied somewhere outside Bitwarden's
+control.
 
-*2. Store the private key in Bitwarden.*
+*2. Store the private key as a Secrets Manager secret.*
 
-Create an item — a Login or Secure Note both work — name it something like
-`omadots-ssh-github`, and attach the file `~/.ssh/id_ed25519` (the private
-half; never upload the `.pub` file here, it doesn't need to be secret).
+In the Bitwarden web vault, under the `omadots` project: **New secret** —
+name it something like `omadots-ssh-github`, and for the value, paste the
+**entire contents** of `~/.ssh/id_ed25519` (the whole PEM block, including
+the `-----BEGIN`/`-----END` lines — Secrets Manager stores it as plain
+text, multi-line values are fine). After saving, open the secret and copy
+its **Secret ID** (a UUID) — that's what the template below needs, not the
+name.
+
+Unlike the old attachment-based setup, the **public** key doesn't need
+Bitwarden at all — it isn't sensitive, so it's tracked as a normal plain
+file below.
 
 *3. Add the chezmoi source files.*
 
 ```
 home/private_dot_ssh/private_id_ed25519.tmpl   # the private key (templated, restricted perms)
-home/dot_ssh/id_ed25519.pub                    # the public key (plain, not secret)
+home/dot_ssh/id_ed25519.pub                    # the public key (plain file, add via `chezmoi add`)
 home/dot_ssh/config                            # tells ssh to use this key for github.com
 ```
 
@@ -193,10 +260,10 @@ The `private_` prefix on both the directory and the file makes chezmoi set
 restrictive permissions on apply (`0700` on `~/.ssh`, `0600` on the key
 itself) — SSH refuses to use a private key that's group- or world-readable,
 so this isn't optional. `private_id_ed25519.tmpl` contains only the
-retrieval call:
+retrieval call, with the Secret ID from step 2 pasted in:
 
 ```
-{{- bitwardenAttachmentByRef "id_ed25519" "item" "omadots-ssh-github" -}}
+{{- (bitwardenSecrets "11111111-2222-3333-4444-555555555555").value -}}
 ```
 
 `dot_ssh/config` is a normal tracked file:
@@ -221,11 +288,13 @@ rather than on every `git push`.
 chezmoi apply
 ```
 
-The first `bitwarden*` template call in the run triggers `bw unlock`,
-prompts once for your Bitwarden master password, fetches the attachment,
-and writes `~/.ssh/id_ed25519` (mode `0600`), `~/.ssh/id_ed25519.pub`, and
+`bitwardenSecrets` shells out to `bws secret get <id>` using
+`BWS_ACCESS_TOKEN` from the environment — no prompt, no unlock step,
+whether this is the first apply of the day or the fifth. Writes
+`~/.ssh/id_ed25519` (mode `0600`), `~/.ssh/id_ed25519.pub`, and
 `~/.ssh/config`. Nothing secret ever touches the git repo — `git log` on
-the `.tmpl` file only ever shows the retrieval call, never the key content.
+the `.tmpl` file only ever shows the retrieval call and the (non-secret)
+UUID, never the key content.
 
 *5. Register the public key with GitHub.*
 
@@ -247,28 +316,28 @@ authenticated...` — at that point `git clone git@github.com:...` and
 *7. Get the same key onto your other machines.*
 
 Commit and push the three new files from step 3 (`chezmoi cd` → `git add`
-→ `commit` → `push`, per the worked example above), then on each other
-machine: `bw login` once if you haven't already, then `chezmoi update`.
-Chezmoi unlocks Bitwarden, fetches the same attachment, and writes out the
+→ `commit` → `push`, per the worked example earlier in this doc), then on
+each other machine: complete "Per-machine setup" above (its own machine
+account, its own `~/.config/bws/access-token`) if you haven't already,
+then `chezmoi update`. Chezmoi fetches the same secret and writes out the
 identical key — so every machine authenticates to GitHub as the same
 identity, with nothing copied by hand.
 
 One tradeoff worth knowing before you commit to this: GitHub's model
 assumes one key per device, so it can label and revoke them individually.
-Reusing a single Bitwarden-sourced key everywhere is simpler and is exactly
-what this setup makes easy — but it means revoking that key (e.g. because
-one machine was compromised) logs *every* machine out of GitHub at once,
-not just the affected one. If that tradeoff doesn't sit well with you, use
-the per-machine variant below instead.
+Reusing a single Secrets-Manager-sourced key everywhere is simpler and is
+exactly what this setup makes easy — but it means revoking that key (e.g.
+because one machine was compromised) logs *every* machine out of GitHub at
+once, not just the affected one. If that tradeoff doesn't sit well with
+you, use the per-machine variant below instead.
 
 ### Variant: a different key per machine
 
-Same mechanism, one change: instead of a single fixed Bitwarden item name,
-the template looks up an item named after *the machine it's currently
-running on*, using the `.chezmoi.hostname` built-in. That means you keep a
-**single shared template file** in the repo — pushed once, applied on every
-machine — and it resolves to a different key on each one automatically.
-Nothing in the source tree needs to be duplicated per host.
+`bws secret get` takes a secret's **ID**, not a name, so this can't
+branch the way the old `bw`-based version did (building an item *name* at
+apply time with `printf "...-%s" .chezmoi.hostname`). Instead, keep a
+small, non-secret **map of hostname → secret ID** in chezmoi's own
+template data, and look up that machine's ID from it.
 
 *1. Confirm each machine's hostname as chezmoi sees it.*
 
@@ -279,32 +348,25 @@ chezmoi execute-template '{{ .chezmoi.hostname }}'
 ```
 
 This is the short hostname (up to the first `.`) — write down what it
-prints for each machine (e.g. `aditya`, `worklaptop`). You'll use these
-exact, case-sensitive strings as the Bitwarden item-name suffix in step 3,
-so a mismatch here means the template silently looks up the wrong item (or
-none) on that machine.
+prints for each machine (e.g. `aditya`, `worklaptop`).
 
-*2. Generate a separate keypair on each machine.*
+*2. Generate a separate keypair on each machine, and store each as its own
+Secrets Manager secret* (same as steps 1–2 of the worked example above, but
+name each secret after its machine, e.g. `omadots-ssh-github-aditya`,
+`omadots-ssh-github-worklaptop`, and copy each one's Secret ID).
 
-```sh
-ssh-keygen -t ed25519 -C "your_email@example.com (aditya)" -f ~/.ssh/id_ed25519
+*3. Add the ID map to `home/.chezmoi.toml.tmpl`* (create this file if it
+doesn't exist yet — it's chezmoi's own config, templated so it can vary per
+machine, and lives in `home/` alongside `.chezmoiexternal.toml`). IDs are
+opaque UUIDs, not secrets, so this is safe to commit:
+
+```toml
+[data.bwsSecrets]
+  aditya      = "11111111-2222-3333-4444-555555555555"
+  worklaptop  = "66666666-7777-8888-9999-000000000000"
 ```
 
-Run this once per machine, changing the `-C` comment to identify that
-machine — it's just a label embedded in the public key, purely for your
-own reference in GitHub's key list later.
-
-*3. Store each machine's keypair in Bitwarden under a per-host item name.*
-
-Create one Bitwarden item per machine, named using that machine's hostname
-from step 1 — e.g. `omadots-ssh-github-aditya`,
-`omadots-ssh-github-worklaptop` — and attach **both** files to it:
-`id_ed25519` (private) and `id_ed25519.pub` (public). Attaching the public
-key too (rather than tracking it as a plain file like the shared-key
-version did) is what lets a single template resolve to different content
-per machine — see step 4.
-
-*4. Update the chezmoi templates to branch on hostname.*
+*4. Update the chezmoi templates to branch on hostname:*
 
 ```
 home/private_dot_ssh/private_id_ed25519.tmpl
@@ -314,20 +376,26 @@ home/dot_ssh/config                      ← unchanged, same IdentityFile path o
 
 ```
 {{/* home/private_dot_ssh/private_id_ed25519.tmpl */}}
-{{- bitwardenAttachmentByRef "id_ed25519" "item" (printf "omadots-ssh-github-%s" .chezmoi.hostname) -}}
+{{- (bitwardenSecrets (index .bwsSecrets .chezmoi.hostname)).value -}}
 ```
 
-```
-{{/* home/dot_ssh/id_ed25519.pub.tmpl */}}
-{{- bitwardenAttachmentByRef "id_ed25519.pub" "item" (printf "omadots-ssh-github-%s" .chezmoi.hostname) -}}
-```
+The public key can't be derived from the same secret the way the old
+attachment version did (Secrets Manager has no second attachment slot) —
+store it as its own secret per machine too, named e.g.
+`omadots-ssh-github-aditya-pub`, and add a matching `.pub` entry to the
+`bwsSecrets` map, or simplest: since public keys aren't sensitive, just
+`chezmoi add` each machine's `~/.ssh/id_ed25519.pub` as a plain
+per-machine file instead of round-tripping it through Secrets Manager at
+all.
 
-`printf "omadots-ssh-github-%s" .chezmoi.hostname` builds the item name at
-apply time from whichever machine is running it — on `aditya` it looks up
-`omadots-ssh-github-aditya`; on `worklaptop`, `omadots-ssh-github-worklaptop`.
-`dot_ssh/config` needs no change from the shared-key version, since
-`IdentityFile ~/.ssh/id_ed25519` is the same path on every machine — only
-what's *in* that file differs now.
+`index .bwsSecrets .chezmoi.hostname` looks up whichever machine is running
+the apply — on `aditya` it resolves the first UUID above; on `worklaptop`,
+the second. A hostname missing from the map renders an empty string
+(`index` on a missing map key doesn't error in Go templates) rather than
+failing loudly, so double-check `chezmoi execute-template` output after
+adding a new machine to the map. `dot_ssh/config` needs no change from the
+shared-key version, since `IdentityFile ~/.ssh/id_ed25519` is the same path
+on every machine — only what's *in* that file differs now.
 
 *5. Apply on each machine.*
 
@@ -335,9 +403,10 @@ what's *in* that file differs now.
 chezmoi apply
 ```
 
-Run on each machine after `bw login` there. Each one fetches its own
-attachment from its own Bitwarden item and writes its own distinct key —
-same command everywhere, different result per machine, by design.
+Run on each machine after its own "Per-machine setup" (its own machine
+account + `~/.config/bws/access-token`) is done. Each one fetches its own
+secret and writes its own distinct key — same command everywhere, different
+result per machine, by design.
 
 *6. Register each machine's public key with GitHub separately.*
 
@@ -358,26 +427,36 @@ with its own key but the same GitHub identity.
 
 *8. Push the template once — it's already done for every machine.*
 
-Commit and push the three files from step 4 (`chezmoi cd` → `git add` →
+Commit and push the files from step 3–4 (`chezmoi cd` → `git add` →
 `commit` → `push`). Unlike a normal config change, you do **not** need to
-touch this template again when you add a future machine — just repeat
-steps 1–3 and 6–7 for the new machine (new keypair, new Bitwarden item
-named after its hostname, register its public key with GitHub), and the
-same already-pushed template picks it up on `chezmoi apply` with zero
-further edits to the repo.
+touch these templates again when you add a future machine — just repeat
+steps 1–2 and 6–7 for the new machine (new keypair, new Secrets Manager
+secret, register its public key with GitHub), add one line to the
+`bwsSecrets` map, and the same already-pushed template picks it up on
+`chezmoi apply`.
 
-Other Bitwarden template functions worth knowing, for different kinds of
-secrets:
+**Other Bitwarden template functions still available**, if you want ad hoc
+access to your *personal* vault (not Secrets Manager) from a template:
 
 - `{{ (bitwarden "item" "some-login").login.password }}` — a plain login
-  password field (e.g. for a `.netrc` or an API client config that needs a
-  password inline).
+  password field.
 - `{{ (bitwardenFields "item" "some-login").token.value }}` — a *custom
-  field* you defined on the Bitwarden item yourself (e.g. an API token you
-  saved under a field literally named `token`).
+  field* you defined on the Bitwarden item yourself.
+- `{{ bitwardenAttachmentByRef "filename" "item" "item-name" }}` — a file
+  attachment (the mechanism the old SSH-key setup used).
 
-Same pattern every time: store the secret in Bitwarden, reference it with a
-`bitwarden*` call inside a `.tmpl` file in the source state, and let
-`chezmoi apply` do the fetching. This is the mechanism to reach for the
-first time you actually need a live secret (API token, GPG key, etc.) —
-none of the files migrated so far needed one.
+All three still shell out to `bw`, so they carry the same per-apply
+master-password prompt discussed at the top of this section unless you
+persist `BW_SESSION` yourself (e.g. by running
+`export BW_SESSION=$(bw unlock --raw)` once per login, from wherever your
+Hyprland/uwsm session sets up its environment, rather than per-shell) —
+not something this setup currently does, since nothing here depends on
+`bw` for anything needed on every `apply` anymore. Fine for something you
+reach for occasionally by hand; `bitwardenSecrets`/`bws` is the mechanism
+for anything chezmoi needs unattended.
+
+Same pattern every time, whichever function you use: store the secret,
+reference it with a template call inside a `.tmpl` file in the source
+state, let `chezmoi apply` do the fetching. This is the mechanism to reach
+for the first time you actually need a live secret (API token, GPG key,
+etc.) — none of the files migrated so far needed one.

@@ -4,8 +4,8 @@
  hl.config({
    general = {
      -- No gaps between windows or borders.
-     gaps_in = 40,
-     gaps_out = 40,
+     gaps_in = 10,
+     gaps_out = 10,
      border_size = 2,
      -- Change to niri-like side-scrolling layout.
      layout = "scrolling",
@@ -38,7 +38,7 @@ hl.config({
     scrolling = {
         fullscreen_on_one_column = true,
         focus_fit_method = 0,
-        column_width = 0.66,
+        column_width = .97,
     }
 })
 

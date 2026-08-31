@@ -50,9 +50,29 @@ or chat history — this file stays a scannable checklist.
 - [x] Fix Emacs daemon "second daemon appears" bug (ALTERNATE_EDITOR/-a
       race) + safe emacsclient wrapper + estart/erestart/estop/estatus/elog
       aliases + emacs.service WantedBy=graphical-session.target
+- [x] Make Emacs follow Omarchy's system monospace font (new
+      font-set.d hook restarts the daemon on font change); font *size*
+      sync evaluated and deliberately deferred (see Next steps)
+- [x] Switch chezmoi's secret backend from `bw` to `bws` (Bitwarden
+      Secrets Manager) — `bw`'s per-`chezmoi apply` master-password
+      prompt was structural (sessions never persist across processes),
+      not a config bug; see `dev-stack-setup.md`'s "Bitwarden secret
+      backend: bw → bws" section for the full writeup
 
 ## Next steps
 
+- [ ] Apply the doom.d snippet by hand (separate repo, outside chezmoi):
+      change `doom-font`/`doom-big-font`'s `:family` from
+      `"JetBrains Mono"` to `"Monospace"`, keep `:size` unchanged
+- [ ] After that: `chezmoi apply`, then run `omarchy-font-set <font>` once
+      to confirm both the terminals re-theme and the new hook restarts
+      the Emacs daemon with the new font
+- [ ] Revisit Emacs font *size* sync later if wanted — no Omarchy hook
+      exists for text-size changes; a float `font-spec :size` (e.g.
+      `11.0`, matching the terminal's point size) sizes consistently —
+      confirmed Emacs's PGTK point→pixel conversion uses a fixed 96dpi
+      assumption, not the HiDPI `scale=2` monitor setting, so no
+      scale-factor math is needed (corrects an earlier assumption here)
 - [ ] Configure Vimium (Chromium) to complete the 4-tool h/j/k/l coherence system
 - [ ] Execute the drafted "dotfiles review" batch: shell alias bugs, tmux
       escape-time conflict, terminal config parity/dedup, Hyprland
@@ -61,7 +81,10 @@ or chat history — this file stays a scannable checklist.
 - [ ] Confirm zathurarc's Omarchy theme integration (needs an on-device check)
 - [ ] Check `chromium-flags.conf` for drift vs. Omarchy's own default
 - [ ] Check whether kitty's remote-control socket is still needed under Quickshell
-- [ ] Add Bitwarden-backed secret templates (pattern documented, none created yet)
+- [ ] Add a live `bws`-backed secret template (pattern documented in
+      CHEZMOI-GUIDE.md's rewritten SSH-keypair example, none created
+      yet — needs a Bitwarden Secrets Manager org/project/machine
+      account + access token set up in the web vault first)
 - [ ] Author per-machine chezmoi overrides once a second machine joins
 - [ ] Confirm emacs-wayland has libsystemd notify support, then optionally
       flip emacs.service to Type=notify (`ldd $(command -v emacs) | grep -i systemd`)

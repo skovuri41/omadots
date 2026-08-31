@@ -1,0 +1,28 @@
+#!/bin/bash
+# Installed by chezmoi (home/dot_config/omarchy/hooks/font-set.d/) - keeps the
+# Doom Emacs daemon in sync whenever `omarchy-font-set`/`omarchy font set`
+# changes the system monospace font.
+#
+# doom.d/config.el's doom-font/doom-big-font now point at (font-spec
+# :family "Monospace" ...) - the fontconfig GENERIC alias omarchy-font-set
+# actually rewrites (~/.config/fontconfig/fonts.conf), the same mechanism
+# every GTK/Qt app and the omarchy shell itself resolves through (confirmed
+# against omarchy-font-set's own source and the GNU Emacs manual, which
+# uses "Monospace" as its own worked example of a fontconfig-pattern family
+# name - Emacs's PGTK/fontconfig build resolves it the same way any other
+# fontconfig-aware app does).
+#
+# Emacs only re-resolves that alias when it (re)starts though - same reason
+# omarchy-font-set already tells you to restart Ghostty/Foot after a font
+# change. Rather than leave the daemon on the old font until you happen to
+# restart it yourself, this hook restarts it automatically. `omarchy-hook`
+# calls every file in this directory (minus `*.sample`) with the new font
+# name as $1 - not needed here since we're relying on fontconfig
+# re-resolution, not passing the name into Emacs directly.
+#
+# Only acts if the daemon is already running - a font change before Emacs
+# has ever been started shouldn't spuriously start it (see emacsclient_safe()
+# in dot_bash_functions for why only systemctl is allowed to do that).
+if systemctl --user is-active --quiet emacs.service; then
+  systemctl --user restart emacs.service
+fi

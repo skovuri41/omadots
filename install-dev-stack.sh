@@ -8,7 +8,9 @@
 # needs to change for that (open/closed - see below). Currently that list
 # covers Java, Maven, Clojure CLI, Polylith (poly), Node/npm (LTS), Emacs +
 # Doom Emacs, uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace,
-# chezmoi, the Bitwarden CLI (chezmoi's secret backend), and the GitHub CLI.
+# chezmoi, the Bitwarden CLI (bw, for ad hoc personal-vault access), bws
+# (Bitwarden Secrets Manager CLI - chezmoi's actual secret backend as of
+# 2026-08-31, see CHEZMOI-GUIDE.md), and the GitHub CLI.
 #
 # Also enables the Emacs daemon as a systemd --user service, once chezmoi
 # has put its unit file in place (see below) - emacsclient (ec/emax/semacs/
@@ -85,6 +87,8 @@ fail() { FAILURES+=("$1"); warn "$1 - FAILED (continuing)"; }
 DEV_STACK_DIR="$HOME/.local/share/dev-stack"
 POLY_DIR="$DEV_STACK_DIR/polylith"
 POLY_BIN="$HOME/.local/bin/poly"
+BWS_DIR="$DEV_STACK_DIR/bws"
+BWS_BIN="$HOME/.local/bin/bws"
 SELF_COPY="$DEV_STACK_DIR/install-dev-stack.sh"
 PATH_ENV_FILE="$HOME/.config/dev-stack/env.sh"
 
@@ -457,6 +461,96 @@ EOF
   log "Polylith (poly) $version installed to $POLY_BIN"
 }
 
+# No official Arch/AUR package could be verified for bws (Bitwarden Secrets
+# Manager CLI) at the time this was written - Bitwarden's own docs point at
+# a prebuilt-binary GitHub release, so this mirrors that install method
+# rather than Polylith's "latest via redirect" approach: sdk-sm is a shared
+# monorepo for several Bitwarden products, so /releases/latest doesn't
+# reliably mean "latest bws" the way it does for Polylith's single-purpose
+# repo. Version is pinned instead and bumped by hand - see BWS_TARGET_VERSION.
+BWS_TARGET_VERSION="2.1.0"
+
+bws_installed_version() {
+  [[ -x $BWS_BIN ]] || return 0
+  "$BWS_BIN" --version 2>/dev/null | awk '{print $NF}'
+}
+
+install_bws() {
+  log "Bitwarden Secrets Manager CLI (bws)"
+  local current
+  current=$(bws_installed_version)
+  if [[ $current == "$BWS_TARGET_VERSION" ]]; then
+    log "bws $BWS_TARGET_VERSION already up to date"
+    return
+  fi
+
+  if ! command -v unzip >/dev/null 2>&1; then
+    fail "bws - 'unzip' not found, can't extract the release download"
+    return
+  fi
+
+  local os_name platform arch_name
+  os_name=$(uname -s)
+  if [[ $os_name != Linux ]]; then
+    fail "bws - unsupported OS '$os_name' (this script only targets Omarchy/Linux)"
+    return
+  fi
+  platform="unknown-linux-gnu"
+
+  arch_name=$(uname -m)
+  case "$arch_name" in
+    x86_64|aarch64) : ;; # matches bitwarden/sdk-sm's release-asset naming directly
+    *)
+      fail "bws - unsupported architecture '$arch_name'"
+      return
+      ;;
+  esac
+
+  mkdir -p "$BWS_DIR"
+  local asset="bws-${arch_name}-${platform}-${BWS_TARGET_VERSION}.zip"
+  local zip_url="https://github.com/bitwarden/sdk-sm/releases/download/bws-v${BWS_TARGET_VERSION}/${asset}"
+  local sum_url="https://github.com/bitwarden/sdk-sm/releases/download/bws-v${BWS_TARGET_VERSION}/bws-sha256-checksums-${BWS_TARGET_VERSION}.txt"
+  local zip_file="$BWS_DIR/$asset"
+  local sum_file="$BWS_DIR/bws-${BWS_TARGET_VERSION}-checksums.txt"
+
+  if ! curl -fsSL -o "$zip_file" "$zip_url"; then
+    fail "bws - download failed: $zip_url"
+    rm -f "$zip_file"
+    return
+  fi
+  if ! curl -fsSL -o "$sum_file" "$sum_url"; then
+    fail "bws - checksum file download failed: $sum_url"
+    rm -f "$zip_file" "$sum_file"
+    return
+  fi
+
+  local expected actual
+  expected=$(grep -F "$asset" "$sum_file" | awk '{print $1}')
+  actual=$(sha256sum "$zip_file" 2>/dev/null | awk '{print $1}')
+  if [[ -z $expected || $expected != "$actual" ]]; then
+    fail "bws - checksum verification failed for $asset (expected '$expected', got '$actual')"
+    rm -f "$zip_file" "$sum_file"
+    return
+  fi
+
+  if ! unzip -oq "$zip_file" -d "$BWS_DIR"; then
+    fail "bws - extraction failed"
+    rm -f "$zip_file" "$sum_file"
+    return
+  fi
+  rm -f "$zip_file" "$sum_file"
+
+  if [[ ! -f "$BWS_DIR/bws" ]]; then
+    fail "bws - expected binary not found in extracted archive"
+    return
+  fi
+  install -m 755 "$BWS_DIR/bws" "$BWS_BIN"
+  # ~/.local/bin is already on PATH via home/dot_bash_exports's static
+  # prepend_path - same reasoning as Polylith's $POLY_BIN above, no
+  # dev_stack_path_add call needed here.
+  log "bws $BWS_TARGET_VERSION installed to $BWS_BIN"
+}
+
 # install_citrix_manual() - DISABLED, reference only.
 #
 # dev-stack-software.txt still lists Citrix Workspace as method=aur-fragile
@@ -527,6 +621,7 @@ dispatch_custom() {
   case "$status_pkg" in
     doom) install_doom ;;
     poly) install_polylith ;;
+    bws) install_bws ;;
     emacs-daemon) enable_emacs_daemon ;;
     keyd) install_keyd ;;
     *)
@@ -710,6 +805,17 @@ print_status() {
             else
               status="OK"
               [[ -z $latest ]] && latest="$installed"
+            fi
+            ;;
+          bws)
+            installed=$(bws_installed_version)
+            latest="$BWS_TARGET_VERSION"
+            if [[ -z $installed ]]; then
+              status="NOT INSTALLED"
+            elif [[ $installed != "$latest" ]]; then
+              status="UPDATE AVAILABLE"
+            else
+              status="OK"
             fi
             ;;
           emacs-daemon)

@@ -44,6 +44,24 @@ prepend_path "${HOME}/.babashka/bbin/bin"
 # it doesn't exist yet (e.g. before install-dev-stack.sh's first run).
 [[ -f "$HOME/.config/dev-stack/env.sh" ]] && source "$HOME/.config/dev-stack/env.sh"
 
+# Bitwarden Secrets Manager access token, for chezmoi's `bitwardenSecrets`
+# template function (the `bws` CLI) - a static machine/service-account
+# token, not a personal login, so there's no interactive unlock step for
+# `chezmoi apply` to prompt for (see the 2026-08-31 update in
+# CHEZMOI-GUIDE.md's Bitwarden section for why this replaced `bw` there).
+# Generate one in the Bitwarden web vault (Secrets Manager -> Machine
+# accounts -> your account -> Access tokens -> New access token), then:
+#   mkdir -p -m 700 ~/.config/bws
+#   install -m 600 /dev/stdin ~/.config/bws/access-token   # paste, then Ctrl-D
+# Never chezmoi-managed (same reasoning as env.sh above) - this is a live
+# credential, not something that belongs in git even in a repo that's
+# otherwise just retrieval logic. Safe to source even if it doesn't exist
+# yet (e.g. before you've set up Secrets Manager on this machine).
+if [[ -f "$HOME/.config/bws/access-token" ]]; then
+  export BWS_ACCESS_TOKEN
+  BWS_ACCESS_TOKEN="$(cat "$HOME/.config/bws/access-token")"
+fi
+
 if [ -d "$HOME/node_modules" ]; then
   export PATH="$HOME/node_modules/.bin:$PATH"
 fi
