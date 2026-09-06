@@ -68,11 +68,155 @@ are two ways, and it's worth knowing which one you need:
   does) — use this when the file should exist everywhere but differ, not
   when it shouldn't exist at all somewhere.
 
-Nothing in `omadots/home/` uses `.chezmoiignore` today — every plain file
-(bashrc, the whole `hypr/`, `nvim/`, etc. tree) is genuinely identical on
-every machine that applies it. If a real per-host difference comes up later
-(e.g. a laptop-only Hyprland monitor layout, or config that only makes
-sense on a work machine), that's the file to add.
+**Update**: `.chezmoiignore` is no longer unused (it was, when this was first
+written) — it now has two entries: a host-conditional block (only on
+"aditya") ignoring `.ssh`/`mise/config.toml`/`foot/foot.ini` to dodge a
+Bitwarden vault-unlock prompt on every `apply`, and an unconditional
+`.config/bws/access-token` entry (added 2026-09-05) as a backstop so the
+`bws` access token can never be `chezmoi add`ed by accident — see the
+"Bitwarden secret backend" section below for both. Everything else in
+`omadots/home/` — bashrc, the whole `hypr/`, `nvim/`, etc. tree — is still
+genuinely identical on every machine that applies it. If another real
+per-host difference comes up later (e.g. a laptop-only Hyprland monitor
+layout, or config that only makes sense on a work machine), that's the
+file to add it to.
+
+## External git repos (`.chezmoiexternal.toml`)
+
+A `.chezmoiexternal.toml` entry with `type = "git-repo"` tells chezmoi to
+`git clone` (first `apply`) then `git pull` (every later `apply`/`update`)
+a repo straight into a target path under `$HOME` — the full `.git` history
+is kept, so the result is a normal, independently-committable git working
+copy, not a snapshot. This is what replaced the old dotfiles repo's git
+submodules (see `claude/dotfiles-migration-plan.md` for that history).
+
+Two entries exist today:
+
+```toml
+[".config/doom"]
+    type = "git-repo"
+    url = "git@github.com:skovuri41/doom.d.git"
+    clone.args = ["--depth", "1"]
+
+[".config/clojure"]
+    type = "git-repo"
+    url = "git@github.com:skovuri41/clojure-deps-edn.git"
+    clone.args = ["--depth", "1"]
+```
+
+`doom.d` → `~/.config/doom` — your real Doom Emacs config, pulled in before
+`install-dev-stack.sh` ever runs `doom install` (see `README.md`'s "Why
+this order matters"). `clojure-deps-edn` (added 2026-09-06, a personal fork
+of `practicalli/clojure-deps-edn`) → `~/.config/clojure` — user-level
+Clojure CLI aliases (`deps.edn`) available to every `deps.edn` project on
+the machine, the same "add stuff to `-M:`/`-X:`/`-T:` aliases here once,
+use everywhere" convenience Java/Node devs get from a global config file.
+
+**Why `.config/clojure` and not `.clojure` — this needed checking, not
+assuming, and went through two iterations.** The upstream project's own
+install instructions clone into `$XDG_CONFIG_HOME/clojure`, falling back to
+`$HOME/.clojure` only if that env var isn't set. The Clojure CLI's own
+config-dir resolution — confirmed directly from clojure.org's CLI
+reference, not the generic XDG spec — is **`$CLJ_CONFIG` →
+`$XDG_CONFIG_HOME/clojure` → `$HOME/.clojure`**, with no "default
+`XDG_CONFIG_HOME` to `~/.config` if unset" fallback baked in the way some
+XDG-aware tools implement themselves. At the time this external was first
+added, this repo didn't export `XDG_CONFIG_HOME` anywhere, so the first
+version of this entry targeted `.clojure` to match what the CLI would
+actually read.
+
+That was then revisited: rather than leave `XDG_CONFIG_HOME` unset forever
+for one tool's sake, `home/dot_bash_exports` now exports
+`XDG_CONFIG_HOME="$HOME/.config"` globally (2026-09-06) — but only after
+auditing every other tool on this machine that reads that variable, to
+confirm the change was actually safe:
+
+| Tool | Reads `XDG_CONFIG_HOME`? | Effect of exporting it |
+|---|---|---|
+| Clojure CLI | Yes, explicit legacy fallback to `~/.clojure` | **Changes** — now resolves to `~/.config/clojure` |
+| mise | Yes, full spec fallback (`${XDG_CONFIG_HOME:-$HOME/.config}/mise`, per mise's own docs) | No-op — already `~/.config/mise` |
+| chezmoi | Yes, documents itself as fully XDG-compliant | No-op — already `~/.config/chezmoi` |
+| GitHub CLI (`gh`) | Yes, full spec fallback (`$HOME/.config/gh`, per `gh_help_environment`) | No-op |
+| Bitwarden CLI (`bw`) | Yes, confirmed directly from `bw.ts` source (`XDG_CONFIG_HOME ?? path.join(HOME, ".config/Bitwarden CLI")`) | No-op |
+| Maven | No — `~/.m2` always, XDG support is still an open, unimplemented request (`MNG-6603`) | Unaffected either way |
+| npm | No — `~/.npmrc` always, no XDG support per npm's own docs | Unaffected either way |
+| Babashka (`bb`) | No — uses its own `~/.babashka` convention, unrelated to the Clojure CLI's `deps.edn` resolution | Unaffected either way |
+
+So of everything currently installed, the export changes exactly one
+thing: where the Clojure CLI (and therefore this external) looks. Everyone
+else was already there, or was never going to be. `.chezmoiexternal.toml`'s
+target was updated to `.config/clojure` to match. **Installing Clojure CLI
+via `mise` doesn't change any of this**: mise's `clojure` tool
+(`vfox:jdx/vfox-clojure` or `asdf:mise-plugins/mise-clojure`, per mise's
+own registry) just runs the same official Clojure installer under the hood
+and puts the resulting `clojure`/`clj` scripts on `PATH` via a shim — the
+config-dir logic lives inside those scripts themselves, identical
+regardless of who installed them or where the binary lives.
+
+**Update (2026-09-06, later the same day): also set at the Hyprland level.**
+The `dot_bash_exports` export only reaches bash-launched processes — a GUI
+app spawned directly by Hyprland (the app launcher, a keybinding `exec`,
+an autostart entry) never sources `dot_bash_exports` and so never saw it.
+Rather than leave that as a standing limitation, `home/dot_config/hypr/envs.lua`
+now sets all four standard XDG Base Directories directly in Hyprland's own
+config, via `hl.env(...)` — the Lua-config equivalent of the classic
+`env = VAR,VALUE` hyprland.conf directive, and the same mechanism already in
+use one file over in `monitors.lua` (`hl.env("GDK_SCALE", ...)`):
+
+```lua
+local home = os.getenv("HOME")
+
+hl.env("XDG_CONFIG_HOME", home .. "/.config")
+hl.env("XDG_CACHE_HOME", home .. "/.cache")
+hl.env("XDG_DATA_HOME", home .. "/.local/share")
+hl.env("XDG_STATE_HOME", home .. "/.local/state")
+```
+
+Since Hyprland is the parent process for everything in the graphical
+session, every child it spawns — including terminal windows, and therefore
+the bash shells running inside them — inherits these, making the
+`dot_bash_exports` export effectively a no-op re-assertion for anything
+launched inside Hyprland. It's kept anyway because it's still the only one
+of the two that reaches a bash shell opened *outside* Hyprland entirely —
+SSH into this machine, a bare TTY login, cron.
+
+Two things were confirmed directly from Hyprland's own sources before
+writing `envs.lua`, not assumed:
+
+1. `hl.env()` does **not** do shell-style `$VAR` expansion the way the
+   classic `env = VAR,VALUE` directive does — confirmed directly by
+   Hyprland's maintainer (vaxry) on the official forum
+   ([thread](https://forum.hypr.land/t/lua-config-hl-env-doesn-t-do-parameter-expansion/1568)):
+   HyprLang has built-in `$VAR` expansion, Lua has none. `envs.lua` resolves
+   `$HOME` itself via `os.getenv("HOME")` rather than passing the literal
+   string `"$HOME/.config"`, which would otherwise set `XDG_CONFIG_HOME` to
+   the four literal characters `$HOME` followed by `/.config`, not an
+   expanded path.
+2. `env` values only take effect on a **fresh Hyprland session start**
+   (log out/in, or a full compositor restart) — `hyprctl reload` re-parses
+   the rest of the config but does not re-apply already-set env vars to the
+   already-running compositor process. Confirmed via
+   [hyprwm/Hyprland#8403](https://github.com/hyprwm/Hyprland/issues/8403),
+   closed "not planned" — this is intentional upstream behavior. After
+   `envs.lua` lands, log out and back in (or reboot) rather than expecting
+   `hyprctl reload` alone to pick it up.
+
+`hyprland.lua` was updated to `require("hypr.envs")` first among the
+personal-override requires, before `hypr.monitors`, so these are set before
+anything later in the require chain might spawn a process that cares.
+
+No separate "installation" step exists beyond the external itself — unlike
+Doom Emacs (a program `install-dev-stack.sh` has to actually build/install
+via `install_doom()`), `clojure-deps-edn` is pure configuration (a
+`deps.edn` plus alias definitions), and the Clojure CLI itself is already
+on the machine via the existing `mise`-managed registry entry. The upstream
+README's other "setup requirements" (Clojure CLI ≥ `1.11.1.xxxx`) are
+satisfied automatically since `dev-stack-software.txt` tracks
+`clojure@latest`. First real use: `cd` into any `deps.edn` project and run
+one of the aliases this repo defines, e.g. `clojure -M:repl/rebel` for a
+Rebel-readline REPL — `clojure` resolves user-level aliases from
+`~/.clojure/deps.edn` and merges them with the project's own, automatically,
+no extra flag needed.
 
 ## Everyday commands
 
@@ -209,6 +353,14 @@ credential, which has no business in git even in a repo that's otherwise
 just retrieval logic) — you create it once by hand per machine, and it's
 also how you'd revoke/rotate: delete the file (or the machine account's
 token in Bitwarden) and the machine loses access.
+
+Two backstops against this file ever ending up in the git repo by accident:
+`home/.chezmoiignore` lists `.config/bws/access-token` - verified with a
+real `chezmoi add` (including `-r ~/.config/bws` and `--force`) that a
+matched path is actually skipped, not just warned about, so `chezmoi add`
+can't put it in the source state even by muscle memory. The repo's root
+`.gitignore` also has a `*access-token*` pattern as a second layer, in case
+a copy ever lands in the tree some other way (e.g. hand-copied in).
 
 The rule of thumb, unchanged from before: **the chezmoi source state (and
 the GitHub repo) should only ever contain the *retrieval logic* — `{{

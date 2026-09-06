@@ -11,3 +11,14 @@
 .config/mise/config.toml
 .config/foot/foot.ini
 {{- end }}
+
+# ~/.config/bws/access-token holds the live bws (Bitwarden Secrets Manager)
+# machine-account token - see CHEZMOI-GUIDE.md's Bitwarden section. It's
+# never supposed to be chezmoi-managed on any host (unlike the entries
+# above, this applies everywhere, not just "aditya"). Verified with a real
+# `chezmoi add` (v2.72.0, incl. `-r` on the whole ~/.config/bws dir and
+# with `--force`): a path matched here is actually skipped, not just
+# warned about - "chezmoi: warning: ignoring ..." and no file is written
+# to the source state. So this line is real protection on its own, even
+# before the root .gitignore's backstop below kicks in.
+.config/bws/access-token

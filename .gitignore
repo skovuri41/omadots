@@ -1,3 +1,12 @@
 node_modules/
 docs/_intermediate.html
 docs/_tw-output.css
+
+# Second-layer backstop - ~/.config/bws/access-token (the bws/Secrets
+# Manager machine-account token) is deliberately never chezmoi-managed and
+# already blocked from `chezmoi add` by home/.chezmoiignore (verified: a
+# real `chezmoi add`, even with `-r`/`--force`, skips it entirely). This
+# just covers a copy landing in the tree some other way (e.g. hand-copied
+# in) - matches on basename only, so it also catches chezmoi's
+# private_/encrypted_-prefixed source names.
+*access-token*

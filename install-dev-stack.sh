@@ -6,8 +6,9 @@
 # dev-stack-software.txt (same directory), one line per tool. To add,
 # remove, or change a piece of software, edit that file; this script never
 # needs to change for that (open/closed - see below). Currently that list
-# covers Java, Maven, Clojure CLI, Polylith (poly), Node/npm (LTS), Emacs +
-# Doom Emacs, uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace,
+# covers Java, Maven, Clojure CLI, Babashka (bb), Polylith (poly), Node/npm
+# (LTS), Emacs + Doom Emacs, JetBrains Mono Nerd Font, Overpass, Maple Mono
+# Nerd Font, uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace,
 # chezmoi, the Bitwarden CLI (bw, for ad hoc personal-vault access), bws
 # (Bitwarden Secrets Manager CLI - chezmoi's actual secret backend as of
 # 2026-08-31, see CHEZMOI-GUIDE.md), and the GitHub CLI.

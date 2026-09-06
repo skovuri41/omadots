@@ -49,11 +49,13 @@ Java|mise|java@latest|java|JDK, tracks latest via 'omarchy update'
 Maven|mise|maven@latest|maven|
 rlwrap|pacman|rlwrap|rlwrap|for the Clojure REPL, no version tracking needed
 Clojure CLI|mise|clojure@latest|clojure|needs rlwrap, above
+Babashka|mise|babashka@latest|babashka|bb - fast-starting native Clojure scripting runtime, for bb scripts/tasks
 Node.js + npm|mise|node@lts|node|LTS only, not 'current'/latest
 Emacs|pacman|emacs-wayland ripgrep fd|emacs-wayland|30.2, native-comp + PGTK (Wayland); ripgrep/fd for Doom
 Doom Emacs|custom||doom|
 JetBrains Mono Nerd Font|pacman|ttf-jetbrains-mono-nerd|ttf-jetbrains-mono-nerd|doom-font/doom-big-font in doom.d/config.el (family "JetBrains Mono"); official extra repo pkg, patched with icon glyphs
 Overpass|pacman|ttf-overpass|ttf-overpass|doom-variable-pitch-font in doom.d/config.el; official extra repo pkg
+Maple Mono Nerd Font|aur|maplemono-nf-unhinted|maplemono-nf-unhinted|round-corner ligature monospace w/ built-in Nerd Font icons (family "Maple Mono NF" once installed - set via omarchy-font-set or doom-font/doom-big-font); AUR-only, "unhinted" is the plain (non-CN) NF variant's only AUR flavor per upstream's own font.subf.dev/en/download - aur.archlinux.org itself is unreachable from this sandbox to double check package currency, same limitation noted for bws-bin earlier
 Emacs daemon|custom||emacs-daemon|systemd --user service; unit file comes from chezmoi
 Polylith (poly)|custom||poly|GitHub-release jar, no Arch/AUR package exists
 uv|pacman|uv|uv|official Arch package, not AUR

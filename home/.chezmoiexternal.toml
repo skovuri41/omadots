@@ -2,3 +2,25 @@
     type = "git-repo"
     url = "git@github.com:skovuri41/doom.d.git"
     clone.args = ["--depth", "1"]
+
+# Personal fork of practicalli/clojure-deps-edn - user-level Clojure CLI
+# aliases (deps.edn), available to every deps.edn project on this machine.
+# Target is `.config/clojure`, matching the upstream project's own default
+# instructions. This needed a real check first, not an assumption: the
+# Clojure CLI's own config-dir resolution (confirmed directly from
+# clojure.org's CLI reference) is `$CLJ_CONFIG` -> `$XDG_CONFIG_HOME/clojure`
+# -> `$HOME/.clojure` - when XDG_CONFIG_HOME is unset it does NOT fall back
+# to `.config/clojure`, it skips straight to the legacy `.clojure`. This
+# repo now exports `XDG_CONFIG_HOME="$HOME/.config"` globally
+# (`home/dot_bash_exports`, added 2026-09-06, after auditing every other
+# installed tool that reads this var - mise/chezmoi/gh/bw already default
+# to `~/.config` on their own either way, so the export only actually
+# changes the Clojure CLI's resolved path), so `.config/clojure` is now the
+# correct target. Installing Clojure CLI via `mise` doesn't change any of
+# this - mise just runs the same official install, so the `clojure`/`clj`
+# scripts it puts on PATH have the identical resolution logic. See
+# CHEZMOI-GUIDE.md's "External git repos" section for the full writeup.
+[".config/clojure"]
+    type = "git-repo"
+    url = "git@github.com:skovuri41/clojure-deps-edn.git"
+    clone.args = ["--depth", "1"]

@@ -1,3 +1,39 @@
+# XDG_CONFIG_HOME, exported explicitly (added 2026-09-06) rather than left
+# for each tool to assume its own default. Most tools on this machine
+# already resolve to $HOME/.config on their own when this is unset - mise,
+# chezmoi, gh, and bw were each checked directly against their own docs/
+# source and all implement the full XDG Base Directory fallback themselves
+# (mise: `${XDG_CONFIG_HOME:-$HOME/.config}/mise`; bw's `bw.ts` literally
+# has `XDG_CONFIG_HOME ?? path.join(HOME, ".config/Bitwarden CLI")`) - so
+# exporting this is a genuine no-op for all of them. The one tool where it
+# is NOT a no-op: the Clojure CLI's own script resolves its user config dir
+# as `$CLJ_CONFIG -> $XDG_CONFIG_HOME/clojure -> $HOME/.clojure` (confirmed
+# from clojure.org's CLI reference) - unset, it skips `~/.config` entirely
+# and goes straight to the legacy `~/.clojure`, which is why the
+# `clojure-deps-edn` external in `.chezmoiexternal.toml` now targets
+# `.config/clojure` instead. Maven (`~/.m2`) and npm (`~/.npmrc`) don't
+# check this variable at all (confirmed via Maven's own still-open XDG
+# feature request, MNG-6603, and npm's docs) - unaffected either way.
+# Deliberately placed here (`dot_bash_exports`, sourced by `dot_bashrc` for
+# every interactive shell) rather than `dot_bash_profile` - a login-shell-
+# only export would silently miss every Hyprland/uwsm-launched terminal
+# shell, which is non-login (same class of bug flagged for `nocaseglob`
+# elsewhere in this repo's history).
+#
+# This only ever reached bash-launched processes, though - not a GUI app
+# spawned directly by Hyprland (app launcher, keybinding `exec`, autostart
+# entries). That gap is now closed at the source instead: as of the same
+# day, `dot_config/hypr/envs.lua` sets all four standard XDG Base
+# Directories (CONFIG/CACHE/DATA/STATE_HOME) directly in Hyprland's own
+# process environment via `hl.env(...)`, so every child Hyprland spawns
+# inherits them regardless of whether bash is in the picture - see that
+# file's header comment and CHEZMOI-GUIDE.md's XDG_CONFIG_HOME section for
+# the full writeup. This export is kept anyway since it's still the only
+# one of the two that reaches a bash shell opened outside Hyprland
+# entirely (SSH into this machine, a bare TTY login, cron) - setting the
+# same value twice, here and in Hyprland, is a harmless no-op.
+export XDG_CONFIG_HOME="$HOME/.config"
+
 # Prefer US English and use UTF-8.
 export LANG='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'

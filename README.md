@@ -6,7 +6,7 @@ Personal Omarchy Linux (Arch-based) setup, split into two independent, composabl
 
 | Piece | What it manages | Tool |
 |---|---|---|
-| `home/` (chezmoi source state) | dotfiles: shell, git, tmux, readline, zathura, doom.d, the Emacs daemon's systemd unit + launcher entry | [chezmoi](https://www.chezmoi.io/) + [Bitwarden CLI](https://bitwarden.com/help/cli/) |
+| `home/` (chezmoi source state) | dotfiles: shell, git, tmux, readline, zathura, doom.d, clojure-deps-edn, the Emacs daemon's systemd unit + launcher entry | [chezmoi](https://www.chezmoi.io/) + [Bitwarden CLI](https://bitwarden.com/help/cli/) |
 | `install-dev-stack.sh` + `dev-stack-software.txt` | dev tools: Java, Clojure, Maven, Node, Emacs, Doom Emacs (as a systemd --user daemon), Polylith, uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace, chezmoi, Bitwarden CLI, GitHub CLI | `mise`, pacman, AUR, self-updating hook |
 
 They're deliberately decoupled: chezmoi never installs software, and `install-dev-stack.sh` never touches your dotfiles.
@@ -47,7 +47,7 @@ Needed so chezmoi's `bitwarden`/`bitwardenAttachmentByRef` template functions ca
 chezmoi init --apply git@github.com:skovuri41/omadots.git
 ```
 
-(Swap in your actual repo URL if it's not that one.) This one command: clones the full repo into `~/.local/share/chezmoi`, prompts once for your git name/email (`promptStringOnce` - cached after this, never asked again on this machine), applies every `dot_*`/`dot_config/*` file to your real `$HOME`, and - via `.chezmoiexternal.toml` - clones your actual `doom.d` config into `~/.config/doom`, so it's already in place before Doom Emacs itself is installed in step 5.
+(Swap in your actual repo URL if it's not that one.) This one command: clones the full repo into `~/.local/share/chezmoi`, prompts once for your git name/email (`promptStringOnce` - cached after this, never asked again on this machine), applies every `dot_*`/`dot_config/*` file to your real `$HOME` - including `dot_bash_exports`, which exports `XDG_CONFIG_HOME="$HOME/.config"` globally (added 2026-09-06) - and, via `.chezmoiexternal.toml`, clones your actual `doom.d` config into `~/.config/doom` (so it's already in place before Doom Emacs itself is installed in step 5) and your `clojure-deps-edn` config into `~/.config/clojure` (see `CHEZMOI-GUIDE.md`'s "External git repos" section for why `.config/clojure` and not the Clojure CLI's legacy `~/.clojure` default, and the audit behind exporting `XDG_CONFIG_HOME` globally).
 
 Confirm it landed cleanly:
 
@@ -159,7 +159,9 @@ a blind copy). Highlights:
   bug in `gch()`.
 - `EDITOR` now points at `emacsclient` to match the Doom Emacs setup.
 - Six git submodules replaced by `.chezmoiexternal.toml` `git-repo` entries
-  (currently just `doom.d`) - same effect, no submodule commands to remember.
+  (`doom.d`, plus `clojure-deps-edn` added 2026-09-06 - see
+  `CHEZMOI-GUIDE.md`'s "External git repos" section for the current list)
+  - same effect, no submodule commands to remember.
 
 6 git submodules -> `.chezmoiexternal.toml`; 230 files in the old repo
 pruned down to the files actually relevant to an Omarchy setup.
