@@ -612,3 +612,104 @@ reference it with a template call inside a `.tmpl` file in the source
 state, let `chezmoi apply` do the fetching. This is the mechanism to reach
 for the first time you actually need a live secret (API token, GPG key,
 etc.) — none of the files migrated so far needed one.
+
+## Claude Code's own config (`~/.claude`)
+
+Added 2026-09-06. `~/.claude` is Claude Code's own global config directory
+— the natural next question once everything *else* on the machine is
+chezmoi-managed. It's a mixed bag, though: alongside genuinely portable
+config it holds a live OAuth credential and a lot of session/app state that
+should never be synced. Rather than guess at the split from memory, the
+real directory was copied into a connected folder and inspected file by
+file before deciding anything.
+
+**What was actually found** (your mileage may vary as Claude Code adds
+features — see the note on the ignore pattern's shape below):
+
+- `settings.json` — small, portable: TUI mode, theme, notification toggle,
+  and a `SessionStart` hook wired up by `herdr` (the pane-management tool
+  already referenced elsewhere in this repo, via `dot_config/herdr`). One
+  catch: the hook command hardcoded this
+  machine's home directory (`bash '/home/shyam/.claude/hooks/...'`) —
+  chezmoi-managing it as a plain file would have baked that literal path
+  into every future machine's copy. Managed instead as
+  `home/dot_claude/settings.json.tmpl`, with `{{ .chezmoi.homeDir }}`
+  substituted in — verified by rendering it against a scratch `$HOME`
+  simulating a completely different username and confirming the hook
+  command came out pointing at *that* machine's home, not this one's.
+- `themes/omarchy.json` — a custom Claude Code color theme matching the
+  Omarchy palette. Plain, portable, no templating needed. Managed as
+  `home/dot_claude/themes/omarchy.json`.
+- `.credentials.json` — a live OAuth token. **Never chezmoi-managed.**
+- `history.jsonl`, `.last-cleanup`, `backups/`, `cache/`, `session-env/`,
+  `sessions/`, `shell-snapshots/` — session and app state Claude Code
+  writes and manages itself, not config you'd author by hand.
+- `projects/` — full conversation transcripts and auto-memory. Worth
+  calling out specifically: Claude Code's own docs are explicit that these
+  are **plaintext, unencrypted at rest**, and that if a tool reads a
+  `.env` file or a command prints a credential during a session, that
+  value lands directly in the transcript file. Committing this to git
+  would be exactly the kind of accidental-secret-exposure this repo's
+  `bws`/`access-token` ignore rules (above) exist to prevent — never
+  chezmoi-manage it.
+- `plugins/` — installed-plugin cache and cloned marketplaces, managed by
+  `claude plugin` commands, not hand-edited.
+- `chrome/chrome-native-host` — a wrapper script Claude Code generates
+  itself ("do not edit manually," per its own header comment), hardcoding
+  the exact `mise`-installed Claude Code binary path and version on this
+  machine. Regenerated automatically; nothing to sync.
+- `hooks/herdr-agent-state.sh` — installed and overwritten by herdr's own
+  integration ("managed by herdr; reinstalling or updating the integration
+  overwrites this file," per its own header). Chezmoi-managing it would
+  fight herdr's next reinstall or update, so it's excluded — the
+  `settings.json` hook entry above still points at wherever herdr puts it,
+  templated to the right `$HOME`, but the script itself is herdr's to own.
+- `skills/diagnose-crash`, `skills/omarchy` — turned out to be symlinks
+  (confirmed with `ls -la` over the device bridge, not assumed from the
+  directory listing alone) into
+  `/usr/share/omarchy/default/agents/skills/` — Omarchy's own package
+  content, already present on any Omarchy install. Nothing to sync; these
+  aren't user-authored.
+
+**The `.chezmoiignore` shape is deliberately a default-deny allowlist, not
+a named block-list** — the opposite of the bws entry above, and for a
+specific reason: `~/.claude` holds a live credential, so the safe posture
+is "ignore everything by default, explicitly allow only what's been
+checked," not "ignore the things I currently know about." If a future
+Claude Code version adds some new file or directory here, it's excluded
+automatically instead of silently getting swept in by an accidental
+`chezmoi add -r ~/.claude`. Getting gitignore-style negation right took a
+real test, not just reading the pattern and assuming it'd work — see
+below.
+
+```
+.claude/**
+!.claude
+!.claude/settings.json
+!.claude/themes
+!.claude/themes/**
+```
+
+The `!.claude` line matters more than it looks: without it, the very first
+line (`.claude/**`) causes chezmoi to prune the whole `.claude` directory
+from traversal, and no later negation pattern can reach anything inside it
+— a well-known gitignore-pattern gotcha (you can't un-ignore a file whose
+parent directory is itself ignored). Confirmed this the hard way: the
+first version of this pattern (without `!.claude`) silently produced
+`chezmoi: warning: ignoring .claude` and added nothing at all, including
+the two files meant to be allowed through.
+
+**Validated against the real chezmoi v2.72.0 binary**, not just read and
+assumed correct: built a scratch `$HOME` reproducing the exact directory
+structure found above (including a dummy `.credentials.json` and the
+Omarchy symlinks), then ran `chezmoi add -r ~/.claude` — confirmed only
+`settings.json` and `themes/omarchy.json` land in source state, with an
+explicit `chezmoi: warning: ignoring ...` line for every other path.
+Repeated with a direct (non-recursive) `chezmoi add` targeting
+`.credentials.json` and the herdr hook script individually, and again with
+`--force` on `.credentials.json` — all three still correctly skipped.
+Finally ran a full `chezmoi apply` against a scratch `$HOME` under a
+different path entirely (simulating a different machine/username) to
+confirm the `settings.json.tmpl` renders its hook command with *that*
+machine's home directory, and that a second `apply`/`diff` is a clean
+no-op.

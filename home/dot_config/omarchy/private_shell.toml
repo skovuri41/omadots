@@ -35,4 +35,4 @@
 # `chezmoi apply`. This file isn't affected by that risk since chezmoi owns
 # it outright - no live drift to worry about here.
 [font]
-base-size = 20 
+base-size = 18

@@ -10,3 +10,10 @@ docs/_tw-output.css
 # in) - matches on basename only, so it also catches chezmoi's
 # private_/encrypted_-prefixed source names.
 *access-token*
+
+# Same idea for ~/.claude/.credentials.json (Claude Code's own OAuth
+# token) - already blocked from `chezmoi add` by home/.chezmoiignore's
+# default-deny .claude/** allowlist (verified with the real binary,
+# including -r/--force), this is just the same basename-match backstop
+# in case a copy ever lands in the tree some other way.
+.credentials.json
