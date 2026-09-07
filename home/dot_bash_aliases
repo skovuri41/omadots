@@ -84,7 +84,10 @@ alias elog="journalctl --user -u emacs.service -e --no-pager"
 # dropped --no-ignore-vcs - it was disabling .gitignore filtering, so
 # target/, dist/, .cpcache/, node_modules, etc. flooded every fuzzy search
 alias fzfi='rg --files --hidden --follow -g "!{node_modules,.git}" 2> /dev/null|fzf'
-alias et='emacsclient -t $(fzfi)'
+# et is now a function in dot_bash_functions - the alias form silently ran
+# `emacsclient -t $(fzfi) somefile` when called as `et somefile`, invoking
+# the fzfi picker AND passing the typed filename as a second, ignored
+# argument to emacsclient (same bug class as du/mount/hd above)
 
 alias cdtemp='cd $(mktemp -d)'
 alias rmtrash='trash-put'  # needs the trash-cli package

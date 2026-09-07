@@ -1,0 +1,41 @@
+# agent-skills.txt
+#
+# Agent-agnostic skills for install-agent-extensions.sh - plain git repos
+# in the open agentskills.io SKILL.md format, cloned into
+# ~/.agents/skills/<name>. This is the ONLY file you need to touch to add
+# or remove one; install-agent-extensions.sh never needs to change for it.
+#
+# Why "agent-agnostic": ~/.agents/skills is the location the open Agent
+# Skills standard itself defines, and the one Codex reads natively. Claude
+# Code reads the same tree indirectly, via the ~/.claude/skills symlink
+# chezmoi manages (home/dot_claude/symlink_skills -> ../.agents/skills) -
+# so one clone here shows up in both tools, and in any future
+# agentskills.io-compliant tool too, with zero extra work.
+#
+# One line per skill repo:
+#   name|source|ref|note
+#
+# Fields:
+#   name    directory name under ~/.agents/skills/ - also what shows up as
+#           the /name command in any tool that exposes skills that way
+#   source  git clone URL (https:// or git@) or GitHub owner/repo won't
+#           work here (unlike claude-plugins.txt below) - this is a plain
+#           `git clone`, so give it a real clone URL
+#   ref     branch or tag to clone, or leave empty for the repo's default
+#           branch. Only applied at the FIRST clone - see
+#           install-agent-extensions.sh's header comment for why re-runs
+#           don't force-switch branches
+#   note    freeform, shown nowhere but here - just for you
+#
+# Lines starting with # and blank lines are ignored. Don't use literal "|"
+# in any field.
+#
+# Personal, hand-authored skills (the ones you write yourself, like
+# clojure-style under home/dot_agents/skills/) do NOT belong in this file -
+# they're chezmoi-managed content, materialized directly, same bucket as
+# settings.json. This file is only for cloning OTHER people's skill repos.
+#
+# Example (verified real - mattpocock/skills is genuinely structured as a
+# plain .agents/skills-style repo; commented out so nothing installs until
+# you actually want it):
+# mattpocock-ts|https://github.com/mattpocock/skills.git|main|Matt Pocock's TDD/code-review/domain-modelling skills

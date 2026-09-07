@@ -193,6 +193,37 @@ o.bind("SUPER + K", "Focus right window", hl.dsp.focus({ direction = "r" }))
 o.bind("SUPER + H", "Previous workspace", hl.dsp.focus({ workspace = "e-1" }))
 o.bind("SUPER + L", "Next workspace", hl.dsp.focus({ workspace = "e+1" }))
 
+-- Unify J/K muscle memory across grouped and non-grouped windows, instead of
+-- having a separate pair of keys (F11/F12 below) just for cycling within a
+-- Hyprland window group (tabbed/stacked windows). You'd asked for a custom
+-- hyprctl+jq script (check active window's `.grouped[]`, compare to
+-- `.address`, dispatch `changegroupactive` vs `cyclenext` accordingly) bound
+-- onto J/K to do this - turns out Hyprland already has this exact behavior
+-- built in as a one-line config flag, so no script/process-per-keypress is
+-- needed. Verified directly against Hyprland's own source (not docs, which
+-- don't render this option's page reliably), specifically
+-- Actions::moveFocus() in src/config/shared/actions/ConfigActions.cpp:
+--   binds:movefocus_cycles_groupfirst (default false) - when a grouped
+--   window has focus, `movefocus l` first steps to the PREVIOUS tab in the
+--   group (group->moveCurrent(false)) and `movefocus r` steps to the NEXT
+--   tab (moveCurrent(true)), instead of immediately jumping focus outside
+--   the group. Only once you're already on the group's first/last tab does
+--   movefocus fall through to its normal spatial behavior and leave the
+--   group (or wrap back within the group if there's nothing outside to go
+--   to - e.g. a single monitor with only this one group on the workspace).
+-- Since SUPER+J/K already dispatch exactly `hl.dsp.focus({direction="l"/
+-- "r"})` (confirmed in Hyprland's LuaBindingsDispatchers.cpp to be a thin
+-- wrapper over this same Actions::moveFocus()), enabling this flag is the
+-- entire change - no new bind, no new script file, and it applies
+-- identically under both dwindle and the scrolling layout (the group check
+-- runs before either layout's spatial resolution, so it doesn't disturb the
+-- scrolling-layout-parity reasoning in the Notes section below).
+hl.config({
+  binds = {
+    movefocus_cycles_groupfirst = true,
+  },
+})
+
 -- Workspace back-and-forth toggle, on SUPER + P as requested. This is
 -- different from H/L above: e-1/e+1 step sequentially through workspaces in
 -- order, while Hyprland's "previous" workspace keyword is a true
@@ -264,9 +295,21 @@ o.bind("SUPER + P", "Former workspace (back and forth)", hl.dsp.focus({ workspac
 -- together in the first place (Hyprland's "togglegroup" dispatcher) - these
 -- two only cycle within a group once one exists. Say the word if you want a
 -- togglegroup bind added too.
--- hl.dsp.group.* isn't something I found in Omarchy's own literal source
--- the way everything else in this file is - sourced from a community
--- Hyprland Lua API reference instead, so treat this one as slightly less
--- certain: verify it actually cycles group members after chezmoi apply.
+--
+-- Not fully redundant with the J/K + movefocus_cycles_groupfirst behavior
+-- above, despite doing similar things: these two dispatch
+-- `changegroupactive` directly, which only ever cycles within the group and
+-- wraps at the ends - it never breaks out to a window outside the group.
+-- J/K's movefocus-based cycling does break out at the group boundary. So
+-- F11/F12 is "stay in this group no matter what", J/K is "flow through the
+-- group as part of normal window navigation" - keep both.
+--
+-- Verified directly against Hyprland's own source this time (previously
+-- flagged here as sourced from an unverified community Lua API reference):
+-- hl.dsp.group.prev()/next() are real, defined in
+-- src/config/lua/bindings/LuaBindingsDispatchers.cpp, and are confirmed
+-- thin wrappers over the classic `changegroupactive b`/`f` dispatcher
+-- (Actions::changeGroupActive() in ConfigActions.cpp) - not a separate or
+-- speculative mechanism.
 o.bind("SUPER + F11", "Previous window in group", hl.dsp.group.prev())
 o.bind("SUPER + F12", "Next window in group", hl.dsp.group.next())

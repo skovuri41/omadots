@@ -62,3 +62,13 @@
 !.claude/settings.json
 !.claude/themes
 !.claude/themes/**
+# skills/ is NOT a `.claude/skills/**` wildcard allow, on purpose -
+# skills/diagnose-crash and skills/omarchy above are Omarchy's own
+# symlinked package content, and anything else Claude Code itself drops
+# in this directory later should stay ignored by default too. Only
+# specific, named personal skills (chezmoi-managed as
+# home/dot_claude/skills/symlink_<name>, materializing the real content
+# from home/dot_agents/skills/<name>/ - see CHEZMOI-GUIDE.md's
+# "agent-agnostic skills" section) get un-ignored, one line per skill.
+!.claude/skills
+!.claude/skills/clojure-style

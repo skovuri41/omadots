@@ -8,8 +8,9 @@ Personal Omarchy Linux (Arch-based) setup, split into two independent, composabl
 |---|---|---|
 | `home/` (chezmoi source state) | dotfiles: shell, git, tmux, readline, zathura, doom.d, clojure-deps-edn, the Emacs daemon's systemd unit + launcher entry | [chezmoi](https://www.chezmoi.io/) + [Bitwarden CLI](https://bitwarden.com/help/cli/) |
 | `install-dev-stack.sh` + `dev-stack-software.txt` | dev tools: Java, Clojure, Maven, Node, Emacs, Doom Emacs (as a systemd --user daemon), Polylith, uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace, chezmoi, Bitwarden CLI, GitHub CLI | `mise`, pacman, AUR, self-updating hook |
+| `agent-extensions/install-agent-extensions.sh` | coding-agent config: Codex-and-Claude-agnostic skill repos (`agent-skills.txt`, cloned into `~/.agents/skills/`) and Claude Code plugins (`claude-plugins.txt`, via `claude plugin marketplace add`/`install`) | `git`, `claude` CLI |
 
-They're deliberately decoupled: chezmoi never installs software, and `install-dev-stack.sh` never touches your dotfiles.
+They're deliberately decoupled: chezmoi never installs software, `install-dev-stack.sh` never touches your dotfiles, and `install-agent-extensions.sh` is a separate manual step from both - it needs `claude` (and optionally `codex`) already installed *and* logged in via at least one interactive run, which `install-dev-stack.sh`'s unattended bootstrap can't assume. Personal, hand-authored skills (as opposed to other people's skill repos) aren't run through this script at all - they're plain chezmoi-managed files under `home/dot_agents/skills/`, symlinked into `~/.claude/skills` - see `CHEZMOI-GUIDE.md`'s "agent-agnostic skills" section.
 
 **Browsable docs.** `docs/index.html` is this README, `README-dev-stack.md`, and `CHEZMOI-GUIDE.md` rendered as one Tailwind-styled page (sidebar nav, per-doc outline, dark mode) - open it directly in a browser, no server needed. It's fully self-contained (no CDN calls at load time). Regenerate it after editing any of the three source `.md` files:
 

@@ -713,3 +713,77 @@ different path entirely (simulating a different machine/username) to
 confirm the `settings.json.tmpl` renders its hook command with *that*
 machine's home directory, and that a second `apply`/`diff` is a clean
 no-op.
+
+### Update (2026-09-06, later still): agent-agnostic skills under `~/.agents`, symlinked into `~/.claude/skills`
+
+Anthropic open-sourced the Skills file format itself (`agentskills.io`) — a
+folder with `SKILL.md` (`name`/`description` frontmatter, plus optional
+`scripts/`/`references/`/`assets/`) that's read natively by both Claude
+Code and, as of the same research pass, OpenAI Codex. The two tools just
+look in different places: Claude reads `~/.claude/skills/<name>/`, Codex
+reads `~/.agents/skills/<name>/`. So personal, hand-authored skills (as
+opposed to marketplace plugins — see `agent-extensions/` below) are
+chezmoi-managed once, at the tool-neutral location, and symlinked into
+Claude's:
+
+- `home/dot_agents/skills/<name>/SKILL.md` (plus any `scripts/`/etc.) —
+  the actual content, real chezmoi-managed files, materializing at
+  `~/.agents/skills/<name>/`. First one added: `clojure-style`, a
+  distillation of the community Clojure Style Guide
+  (<https://guide.clojure.style/>) — naming, threading macros, namespace
+  layout, control-flow/data idioms, docstrings, testing conventions.
+  Written using only the open spec's plain frontmatter and markdown body —
+  deliberately none of Claude Code's own runtime syntax (no `` !`cmd` ``
+  shell injection, no `${CLAUDE_PROJECT_DIR}`-style substitution) — so it
+  reads correctly in Codex too, not just Claude.
+- `home/dot_claude/skills/symlink_<name>` — one chezmoi symlink source
+  file per personal skill, content `../../.agents/skills/<name>` (the
+  relative path from `~/.claude/skills/` up to `~/`, back down into
+  `.agents/skills/<name>`). Chezmoi strips the trailing newline and treats
+  a `symlink_*` source file's content as the link target — confirmed
+  against chezmoi's own reference docs, not assumed.
+
+**Important correction, caught before it shipped, not after**: the original
+plan was to symlink the whole `~/.claude/skills` *directory* at
+`~/.agents/skills`. Re-reading this very section's own findings above
+first — `skills/diagnose-crash` and `skills/omarchy` are real, live
+Omarchy-owned symlinks already sitting inside `~/.claude/skills/` — showed
+that would have shadowed both of them the moment chezmoi applied it.
+Symlinking each personal skill individually instead
+(`~/.claude/skills/clojure-style`, not `~/.claude/skills` itself) leaves
+Omarchy's own entries, and anything else that ever lands in that
+directory, completely untouched. `.chezmoiignore`'s allowlist reflects
+that precision — `!.claude/skills/clojure-style` by name, not a
+`.claude/skills/**` wildcard:
+
+```
+!.claude/skills
+!.claude/skills/clojure-style
+```
+
+Adding a future personal skill means three things, always together: the
+content under `home/dot_agents/skills/<new-name>/`, a matching
+`home/dot_claude/skills/symlink_<new-name>` (content
+`../../.agents/skills/<new-name>`), and a matching
+`!.claude/skills/<new-name>` line here.
+
+**Validated against the real chezmoi v2.72.0 binary**, reproducing this
+exact scenario: a scratch `$HOME` pre-populated with the same
+`diagnose-crash`/`omarchy` Omarchy symlinks and a dummy `.credentials.json`
+(so the test actually exercises the shadowing risk, not just an empty
+directory) before running `chezmoi apply`. Confirmed: `clojure-style`
+appears as a symlink resolving to `~/.agents/skills/clojure-style` and its
+`SKILL.md` reads correctly through it; the two Omarchy symlinks and the
+credentials file are untouched, byte-for-byte; a second `apply`/`diff` is
+a clean no-op; and a defensive `chezmoi add -r ~/.claude` still correctly
+skips everything except the two previously-allowed files plus the new
+`skills/symlink_clojure-style` entry (which was already in source state,
+so `add` left it alone rather than duplicating it).
+
+The *other* half of agent-config management — skill repos you didn't write
+yourself, and Claude Code plugins — is deliberately kept separate from
+this personal-skills setup, via `agent-extensions/install-agent-extensions.sh`
+(repo root, sibling to `install-dev-stack.sh`). See that script's own
+header comment for the full reasoning; short version: those are other
+people's code, fetched from a registry, not something to fork into this
+repo the way a hand-written skill is.

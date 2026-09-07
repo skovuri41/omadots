@@ -1,0 +1,43 @@
+# claude-plugins.txt
+#
+# Claude Code plugins for install-agent-extensions.sh - marketplace-
+# distributed bundles of skills PLUS MCP servers/hooks/agents, installed
+# via `claude plugin marketplace add` + `claude plugin install`. This is
+# the ONLY file you need to touch to add or remove one;
+# install-agent-extensions.sh never needs to change for it.
+#
+# Claude-only, deliberately: this is a Claude Code concept (a marketplace-
+# discoverable bundle of more than just skills) with no Codex equivalent
+# today - Codex has no marketplace/plugin CLI at all, confirmed against its
+# own docs. Plain skill repos (which Codex DOES support, natively) belong
+# in agent-skills.txt instead, not here.
+#
+# One line per plugin:
+#   marketplace-name|marketplace-source|plugin-name|note
+#
+# Fields:
+#   marketplace-name    the marketplace's OWN declared name, from its
+#                        marketplace.json - NOT necessarily the same as the
+#                        repo slug in marketplace-source below. Get this
+#                        wrong and install-agent-extensions.sh will never
+#                        detect the marketplace as already added, and will
+#                        keep re-running `marketplace add` on every run
+#                        (harmless, since Anthropic's docs confirm
+#                        re-adding just replaces rather than erroring, but
+#                        it also means --status will permanently show
+#                        MARKETPLACE MISSING even after a real install).
+#                        Confirmed by testing: mattpocock/skills's
+#                        marketplace.json declares itself "mattpocock", NOT
+#                        "skills" - see the worked example below.
+#   marketplace-source   what `claude plugin marketplace add` takes: GitHub
+#                        owner/repo shorthand, a git URL, or a local path
+#   plugin-name          the plugin's name within that marketplace, as
+#                        listed in its marketplace.json
+#   note                 freeform, shown nowhere but here - just for you
+#
+# Lines starting with # and blank lines are ignored. Don't use literal "|"
+# in any field.
+#
+# Example (verified real against the actual repo's marketplace.json;
+# commented out so nothing installs until you actually want it):
+# mattpocock|mattpocock/skills|mattpocock-skills|TDD/code-review/domain-modelling skills bundle
