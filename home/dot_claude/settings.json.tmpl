@@ -1,7 +1,20 @@
 {
   "tui": "fullscreen",
-  "skipDangerousModePermissionPrompt": true,
   "theme": "auto",
   "agentPushNotifEnabled": true,
-  "hooks": {"SessionStart":[{"matcher":"*","hooks":[{"type":"command","command":"bash '{{ .chezmoi.homeDir }}/.claude/hooks/herdr-agent-state.sh' session","timeout":10}]}]}
+  "hooks": {"SessionStart":[{"matcher":"*","hooks":[{"type":"command","command":"bash '{{ .chezmoi.homeDir }}/.claude/hooks/herdr-agent-state.sh' session","timeout":10}]}]},
+  {{/* Claude Code plugins, declared here rather than a separate registry
+  file - see CHEZMOI-GUIDE.md for the full mechanism, the two-step
+  marketplace/install flow, and how to add another one.
+  Marketplaces are pinned to a commit sha (supply-chain safety - a
+  marketplace is arbitrary code these plugins can run). Bump the sha by
+  hand via `git ls-remote <repo> HEAD` when you want to pick up updates. */}}
+  "extraKnownMarketplaces": {
+    "i-have-adhd": { "source": { "source": "github", "repo": "ayghri/i-have-adhd", "sha": "58494af57962b2d7a996b4d419474380a299af5e" } },
+    "mattpocock": { "source": { "source": "github", "repo": "mattpocock/skills", "sha": "3cca18b368ae95cdbdebbff572ccafa662551015" } }
+  },
+  "enabledPlugins": {
+    "i-have-adhd@i-have-adhd": true,
+    "mattpocock-skills@mattpocock": true
+  }
 }

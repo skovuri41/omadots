@@ -787,3 +787,195 @@ this personal-skills setup, via `agent-extensions/install-agent-extensions.sh`
 header comment for the full reasoning; short version: those are other
 people's code, fetched from a registry, not something to fork into this
 repo the way a hand-written skill is.
+
+### Update (2026-09-07 → corrected 2026-09-08): third-party skill repos, and why this dropped its own git-clone logic
+
+Added `tt-a1i/archify` (a typed-JSON-to-interactive-HTML diagram-generator
+skill - architecture/workflow/sequence/data-flow/lifecycle diagrams,
+verified MIT-licensed with no Claude-Code-specific frontmatter or
+terminology, explicitly designed to work from Claude Code, Codex CLI,
+Cursor, and OpenCode alike) to `agent-extensions/agent-skills.txt`, and hit
+a case the original registry format couldn't express: its `SKILL.md`
+lives at `archify/SKILL.md`, one level inside the repo, not at the repo
+root the way `mattpocock/skills` is.
+
+**First attempt (2026-09-07, since replaced):** taught
+`install-agent-extensions.sh` a `subpath` registry field, cloned each repo
+into a cache dir, and symlinked `~/.agents/skills/<name>` at that subpath.
+This worked, but only ever touched `~/.agents/skills` - it never created
+the separate, Claude-specific `~/.claude/skills/<name>` symlink
+hand-authored skills get (the mechanism documented above). Net effect:
+`archify` was completely invisible to Claude Code, only reachable by
+Codex-like tools reading `~/.agents/skills` natively - not discovered
+until actually trying to use it.
+
+**Root cause once found, and the bigger question it raised:** fixing the
+missing Claude-side symlink imperatively would have worked, but
+`tt-a1i/archify`'s own README already recommends installing it via `npx
+skills add tt-a1i/archify -g` - a real, actively maintained, MIT-licensed
+tool (`github.com/vercel-labs/skills`, not the same thing as the
+agentskills.io spec site itself, but built for skills conforming to it).
+Verified against its actual source rather than the README alone: it
+auto-finds a nested `SKILL.md` up to 3 levels deep (no `subpath` field
+needed at all), installs into a canonical `~/.agents/skills/<name>` and
+then symlinks every OTHER requested agent's native directory to that
+canonical copy in one call (including `~/.claude/skills/<name>` for
+Claude Code - confirmed by inspecting the actual resulting symlink after
+a real install), and re-running `add` on an already-installed skill is a
+clean, safe overwrite (`rm -rf` the canonical dir + recopy, no error, no
+prompt with `--yes`) - i.e. already idempotent, no state-tracking needed.
+That made the hand-rolled cache/subpath/symlink code pure duplicated,
+worse-maintained logic for a problem someone else had already solved
+properly. Dropped it.
+
+**Current shape:** `agent-skills.txt` is back down to 3 fields -
+`name|source|note` - since `npx skills add` parses ref/subpath out of
+`source` itself (a plain `owner/repo` is enough unless the repo has
+multiple skills, `SKILL.md` sits deeper than 3 levels, or you need a
+non-default branch). `install-agent-extensions.sh` just shells out to
+`npx --yes skills add "$source" --agent claude-code codex --global --yes`
+per entry - `SKILL_AGENTS` in the script controls which agents every
+entry installs for. Trade-off, disclosed in both files: this replaces a
+pure git+bash, fully-offline-auditable mechanism with one that runs
+`npx skills@latest` - an unpinned third-party npm package - at
+install/update time. Node/npx is already required by this dev stack, so
+it's a new trust surface, not a new runtime dependency.
+
+Verified with a full smoke test against the REAL `tt-a1i/archify` repo
+(not a fake fixture this time, since the whole point was confirming the
+real tool's real behavior) from a scratch `$HOME`: confirmed the
+canonical copy lands at `~/.agents/skills/archify`, `~/.claude/skills/archify`
+is a real symlink to it (`../../.agents/skills/archify`) with `SKILL.md`
+readable through it, a second run overwrites cleanly with no errors, and
+`--status` correctly reports `OK` - which needed its own fix along the
+way: `npx skills list` defaults to *project* scope and prints `[]` for
+everything installed `--global`, discovered by testing rather than
+assumed from the `--help` text alone.
+
+### Update (2026-09-08): Claude Code plugins moved into `settings.json`, `claude-plugins.txt` dropped
+
+Same kind of reassessment as the `npx skills` switch above, this time for
+the other half of `install-agent-extensions.sh` - the Claude-only plugin
+section that used to maintain its own registry file,
+`agent-extensions/claude-plugins.txt` (`marketplace-name|marketplace-
+source|plugin-name|note`, one line per plugin), and call `claude plugin
+marketplace add` / `claude plugin install` for each entry after checking
+both with hand-written `claude plugin ... --json` parsing.
+
+**What changed, and why:** checked Anthropic's own current docs rather
+than assuming the CLI-wrapper approach was still the best one, and found
+two things that mattered:
+
+1. `claude plugin marketplace add` on an already-registered name is
+   explicitly documented as a safe *replace*, not an error - so the
+   script's own `marketplace_installed()` pre-check before adding was
+   unnecessary complexity for that half. (`claude plugin install`'s
+   idempotency on an already-installed plugin is a different story - not
+   reliably documented, and real open Claude Code GitHub issues show
+   buggy "already installed" detection - so that pre-check stayed.)
+2. Anthropic's docs describe declaring `extraKnownMarketplaces` and
+   `enabledPlugins` directly in `settings.json` as the *recommended* way
+   to check plugin configuration into version control - not just an
+   enterprise-policy mechanism. Since this repo already chezmoi-manages
+   `~/.claude/settings.json.tmpl`, maintaining a second, parallel
+   `claude-plugins.txt` list of the same information was duplicating a
+   place to declare intent that already existed and was already
+   version-controlled.
+
+One nuance confirmed before relying on it: at **user/global** scope
+(`~/.claude/settings.json`, what this repo manages - not a project's
+`.claude/settings.json`), there's no "trust this folder" prompt gating
+`extraKnownMarketplaces` the way there is for a project settings file
+someone else's repo might ship - every documented instance of that trust
+gate in Anthropic's docs is scoped to "the repository" / "teammates"
+opening a project folder, never to the user's own global config. So a
+marketplace declared in this repo's `settings.json.tmpl` registers itself
+with no interaction needed. What declaring `enabledPlugins` does **not**
+do, also confirmed against the docs: fetch the plugin's actual content -
+Claude Code still needs `claude plugin install` run at least once for
+that, which is exactly the part `install-agent-extensions.sh` still
+handles.
+
+**Current shape:** `home/dot_claude/settings.json.tmpl` carries the
+declarations (a Go template comment - `{{/* ... */}}`, verified with a
+real `text/template` render that it strips cleanly to nothing and leaves
+valid JSON behind - documents the exact shape to add, since JSON itself
+can't hold a comment the way `claude-plugins.txt` could). `agent-
+extensions/claude-plugins.txt` is deleted.
+`install-agent-extensions.sh`'s plugin section is now a small
+reconciliation loop instead of a registry-driven install: read
+`extraKnownMarketplaces`/`enabledPlugins` back out of the *applied*
+`~/.claude/settings.json` (not the `.tmpl` source), register every
+declared marketplace unconditionally (cheap and confirmed-idempotent),
+then install-if-missing every declared-and-enabled plugin (still checked
+first, per point 1 above).
+
+Verified with a full smoke test using a fake `claude` CLI shim (no real
+Claude Code plugin available to test against in this environment) that
+tracks marketplace/plugin state on disk exactly like the real thing would
+via `--json` output: a scratch `$HOME` with the `mattpocock`/
+`mattpocock-skills` example live in `settings.json` - confirmed a first
+run registers the marketplace and installs the plugin, a second run
+re-registers the marketplace (harmless) but correctly reports the plugin
+as already installed rather than reinstalling, `--status` reports `OK`,
+and three failure paths behave correctly: a missing `settings.json` (warns
+and skips, doesn't fail the run), invalid JSON in `settings.json` (clear
+parse-error message, fails just that section), and nothing declared at
+all (silently does nothing, not an error).
+
+### Update (2026-09-08): `settings.json.tmpl` trimmed, `mattpocock` made live, marketplaces pinned by commit sha, `skipDangerousModePermissionPrompt` dropped
+
+Three changes to `home/dot_claude/settings.json.tmpl` in one pass, all
+requested directly rather than discovered:
+
+1. **Comment trimmed.** The Go-template comment explaining the plugin
+   mechanism (added in the update above) had grown into a multi-paragraph
+   block duplicating most of what this file already says, plus a
+   "hypothetical example" for `mattpocock/skills` shown only as inline
+   JSON text, not live. Cut down to a few lines pointing back here, since
+   this doc is where the full mechanism/rationale/troubleshooting
+   history actually belongs - the template file's job is to declare
+   config, not explain it.
+
+2. **`mattpocock/skills` made live**, replacing the comment-only example.
+   Before adding it, cloned the real repo and read its actual
+   `marketplace.json` rather than trusting the earlier comment's claim -
+   confirmed marketplace name `mattpocock` (not the repo slug `skills`)
+   and plugin name `mattpocock-skills`, so the live entry is
+   `"mattpocock-skills@mattpocock"` in `enabledPlugins`, matching
+   `ayghri/i-have-adhd`'s existing shape.
+
+3. **Both marketplaces pinned to a commit sha.** `extraKnownMarketplaces`'
+   `github` source type supports optional `ref` (branch/tag) and `sha`
+   fields; when `sha` is set, Claude Code checks out that exact commit
+   regardless of what the default branch later becomes. A marketplace is
+   arbitrary code these plugins can run, so floating on a branch HEAD
+   means a marketplace repo's owner (or anyone who compromises their
+   account) can silently change what gets installed on your machine on
+   your next `claude plugin marketplace add`/reconcile - pinning closes
+   that. Shas were read directly off each repo (`git ls-remote`/`git
+   clone`, not assumed): `ayghri/i-have-adhd` at
+   `58494af57962b2d7a996b4d419474380a299af5e`, `mattpocock/skills` at
+   `3cca18b368ae95cdbdebbff572ccafa662551015`. Tradeoff worth knowing:
+   pinning means neither marketplace picks up new plugins or fixes
+   automatically - bump the `sha` by hand (`git ls-remote <repo> HEAD`)
+   when you want to move it forward.
+
+4. **`skipDangerousModePermissionPrompt: true` removed** from the top
+   level of the file (it predated this repo's plugin work and wasn't
+   related to it). It silently pre-accepts Claude Code's one-time
+   "dangerous mode" (`bypassPermissions`, equivalent to
+   `--dangerously-skip-permissions`) consent dialog for every future
+   session, at user/global scope - meaning every project you ever open,
+   not just trusted ones. Anthropic's own docs on this setting warn that
+   `bypassPermissions` "offers no protection against prompt injection or
+   unintended actions" and should only be used "in isolated environments
+   like containers, VMs, or dev containers without internet access."
+   Removing it restores the one-time confirmation dialog as a deliberate
+   friction point before that mode activates - asked directly rather than
+   changed unilaterally, since it's a real day-to-day behavior tradeoff,
+   not a clear-cut bug.
+
+Verified the resulting template with a real `text/template` render
+(`go run`) into a scratch `$HOME`, then `json.load`'d the output to
+confirm still-valid JSON.
