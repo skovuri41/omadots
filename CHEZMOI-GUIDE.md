@@ -979,3 +979,46 @@ requested directly rather than discovered:
 Verified the resulting template with a real `text/template` render
 (`go run`) into a scratch `$HOME`, then `json.load`'d the output to
 confirm still-valid JSON.
+
+### Update (2026-09-08): `install-agent-extensions.sh --status` wrongly showed installed plugins as NOT INSTALLED
+
+Real bug, caught from the user's own machine, not from testing here. After
+enabling `mattpocock-skills@mattpocock` and `i-have-adhd@i-have-adhd`
+(previous update), `./install-agent-extensions.sh --status` reported both
+as `NOT INSTALLED` even though `claude plugin list --json` on the same
+machine showed both present with `"enabled": true`.
+
+**Root cause:** the script's own header comment had already flagged this
+as an open risk ("known limitations") - `plugin_installed()`'s schema
+guess for `claude plugin list --json` was never confirmed against real
+output. It checked for `name`/`marketplace`/`source` keys. The user's
+actual output has neither - each entry looks like:
+
+```json
+{"id": "mattpocock-skills@mattpocock", "version": "1.2.3", "scope": "user",
+ "enabled": true, "installPath": "...", "installedAt": "...", "lastUpdated": "..."}
+```
+
+The plugin+marketplace pair lives in `id`, already in `"plugin@marketplace"`
+form. `p.get("name")` was always `None`, so the check always failed and
+reported NOT INSTALLED regardless of reality - a pure detection bug, no
+actual plugin was ever missing.
+
+**Fix:** replaced `plugin_installed()` with `plugin_status()`, which
+matches on `id` directly and also surfaces the `enabled` flag as a third
+state (`OK` / `DISABLED` / `NOT INSTALLED`) instead of collapsing
+"installed but disabled" into "not installed". `ensure_plugin_installed()`
+now treats `DISABLED` as "leave it alone, tell the user how to
+`claude plugin enable` it by hand" rather than either reinstalling or
+silently doing nothing unexplained.
+
+Verified with a fake `claude` CLI shim reproducing the user's exact real
+output (marketplace list keeps its `name`-based shape, which was already
+correct and untouched; plugin list uses the `id`/`enabled` shape) across
+three cases: already-installed+enabled -> `OK`, installed-but-disabled ->
+`DISABLED` with no reinstall attempt, and genuinely-not-installed -> a
+real `claude plugin install` call fires. Could not re-verify against the
+user's actual `claude` binary from this session (no live shell on the
+real machine) - the fake-CLI test above is a byte-for-byte match of the
+schema the user pasted back, which is as close to "real" as this session
+can get without device access to the real `claude` install.

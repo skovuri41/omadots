@@ -108,17 +108,21 @@
 #     `npx skills` (verified against its source - `list --json` reports
 #     what's installed, not whether upstream has moved on). Re-running
 #     this script is how you actually refresh a skill.
-#   - `claude plugin list --json`'s exact field for "which marketplace
-#     this plugin came from" isn't documented anywhere verifiable
-#     (checked Anthropic's plugins-reference page directly) - this script
-#     checks both a `marketplace` and a `source` key defensively. If
-#     neither matches your installed CLI version's actual output,
-#     plugin_installed() will under-detect and this script will just
-#     re-run `claude plugin install`, which the docs confirm is safe to
-#     repeat in the sense that a marketplace add "replaces" rather than
-#     erroring - re-running install itself just isn't confirmed idempotent
-#     either way (see above), so this is a "probably fine, not proven"
-#     situation either way you slice it.
+#   - `claude plugin list --json`'s schema was unconfirmed when this
+#     section was first written (2026-09-08), and the first version of
+#     plugin_installed() guessed wrong: it checked for `name`/
+#     `marketplace`/`source` keys that don't exist. A real installed-plugin
+#     entry (confirmed 2026-09-08 against actual `claude plugin list
+#     --json` output) looks like:
+#       {"id": "mattpocock-skills@mattpocock", "version": "1.2.3",
+#        "scope": "user", "enabled": true, "installPath": "...",
+#        "installedAt": "...", "lastUpdated": "..."}
+#     i.e. the plugin+marketplace pair is the `id` field, already in
+#     "plugin@marketplace" form - no separate name/marketplace fields at
+#     all. plugin_installed() below matches on `id` directly and reports
+#     the `enabled` flag too, so a plugin someone disabled by hand (via
+#     `claude plugin disable`) shows as disabled rather than being
+#     silently confused with "not installed".
 
 set -uo pipefail
 
@@ -292,22 +296,27 @@ sys.exit(0 if name in names else 1)
 ' <<<"$CLAUDE_MARKETPLACE_JSON"
 }
 
-plugin_installed() {
-  # $1 = plugin name, $2 = marketplace name. See the header comment above
-  # for why both a `marketplace` and a `source` key are checked - the
-  # exact field name in `claude plugin list --json`'s output for "which
-  # marketplace this came from" isn't confirmed against Anthropic's docs.
-  CHECK_PLUGIN="$1" CHECK_MARKETPLACE="$2" python3 -c '
+# $1 = plugin name, $2 = marketplace name. Prints one of "OK",
+# "DISABLED", or "NOT INSTALLED" to stdout and exits 0 if installed
+# (OK or DISABLED), 1 if not. Matches on the `id` field
+# ("plugin@marketplace") - confirmed 2026-09-08 against real `claude
+# plugin list --json` output; see the header comment's "Known
+# limitations" note for why this replaced an earlier, wrong guess at the
+# schema (name/marketplace/source keys that don't actually exist).
+plugin_status() {
+  CHECK_ID="${1}@${2}" python3 -c '
 import json, os, sys
-plugin = os.environ["CHECK_PLUGIN"]
-marketplace = os.environ["CHECK_MARKETPLACE"]
+target = os.environ["CHECK_ID"]
 try:
     data = json.loads(sys.stdin.read() or "[]")
 except Exception:
+    print("NOT INSTALLED")
     sys.exit(1)
 for p in (data if isinstance(data, list) else []):
-    if p.get("name") == plugin and marketplace in (p.get("marketplace"), p.get("source")):
+    if p.get("id") == target:
+        print("OK" if p.get("enabled", True) else "DISABLED")
         sys.exit(0)
+print("NOT INSTALLED")
 sys.exit(1)
 ' <<<"$CLAUDE_PLUGIN_JSON"
 }
@@ -319,9 +328,14 @@ sys.exit(1)
 ensure_plugin_installed() {
   local plugin_name="$1" mp_name="$2"
   local desc="plugin: $plugin_name@$mp_name"
+  local status
 
-  if plugin_installed "$plugin_name" "$mp_name"; then
+  status="$(plugin_status "$plugin_name" "$mp_name")"
+  if [[ $status == "OK" ]]; then
     log "$desc (already installed)"
+    return
+  elif [[ $status == "DISABLED" ]]; then
+    log "$desc (installed but disabled - run 'claude plugin enable ${plugin_name}@${mp_name}' if you want it back on; not doing that automatically here)"
     return
   fi
 
@@ -456,7 +470,7 @@ print_status() {
     mp_lines="$(read_declared_marketplaces 2>/dev/null)"
     enabled_lines="$(read_enabled_plugins)"
     if [[ -z $mp_lines && -z $enabled_lines ]]; then
-      echo "(nothing declared - see settings.json.tmpl's extraKnownMarketplaces/enabledPlugins comment)"
+      echo "(nothing declared - see settings.json.tmpl's extraKnownMarketplaces/enabledPlugins)"
     else
       printf "%-24s %-20s %-14s %s\n" "PLUGIN" "MARKETPLACE" "STATUS" "SOURCE"
       printf '%s\n' "----------------------------------------------------------------------"
@@ -467,10 +481,8 @@ print_status() {
         mp_source="$(grep "^${mp_name}|" <<<"$mp_lines" | cut -d'|' -f2-)"
         if ! marketplace_installed "$mp_name"; then
           status="MARKETPLACE MISSING"
-        elif plugin_installed "$plugin_name" "$mp_name"; then
-          status="OK"
         else
-          status="NOT INSTALLED"
+          status="$(plugin_status "$plugin_name" "$mp_name")"
         fi
         printf "%-24s %-20s %-14s %s\n" "$plugin_name" "$mp_name" "$status" "${mp_source:-?}"
       done <<<"$enabled_lines"
