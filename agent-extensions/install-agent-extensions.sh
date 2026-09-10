@@ -15,11 +15,11 @@
 # Two independent sections, because they're genuinely different kinds of
 # thing:
 #
-#   Skill repos (agent-skills.txt)   Third-party agentskills.io SKILL.md
+#   Skill repos (agent-skills.toml)  Third-party agentskills.io SKILL.md
 #                       repos, installed for every agent listed in
 #                       SKILL_AGENTS below via `npx skills`
 #                       (github.com/vercel-labs/skills). See
-#                       agent-skills.txt's own header for the registry
+#                       agent-skills.toml's own header for the registry
 #                       format, and this script's own history (`git log`
 #                       on this file) for why that replaced a hand-rolled
 #                       git-clone implementation.
@@ -41,7 +41,7 @@
 #   ./install-agent-extensions.sh -h           this help
 #
 # Design principles (same as install-dev-stack.sh):
-#   - Open/closed: what to install lives in agent-skills.txt (skill repos)
+#   - Open/closed: what to install lives in agent-skills.toml (skill repos)
 #     or ~/.claude/settings.json (plugins - see below), never hardcoded
 #     here.
 #   - Failsafe: one entry failing must not stop the rest. Every step is
@@ -51,6 +51,14 @@
 #     marketplace add` are both confirmed-idempotent by their own
 #     tools/docs, so this script doesn't pre-check before calling either.
 #     `claude plugin install` is the one exception - see below.
+#   - Registry format: agent-skills.toml is read via `yq` (mikefarah/yq,
+#     the Go one) + python3, same TOML+yq approach and the same
+#     "malformed file fails the whole load, not just one bad entry"
+#     tradeoff as install-dev-stack.sh - see that script's header and
+#     CHEZMOI-GUIDE.md's "Registry files moved to TOML" section for the
+#     full comparison/rationale (this script's own history predates it -
+#     `git log` on this file shows the earlier pipe-delimited
+#     agent-skills.txt format if useful).
 #
 # Claude Code plugins: declared in settings.json, not a registry file
 # here (rewritten 2026-09-08, replacing claude-plugins.txt - see
@@ -99,7 +107,7 @@
 # just a new trust surface) ever stops being worth it.
 #
 # Which agents get each skill: SKILL_AGENTS below (currently Claude Code +
-# Codex). Add/remove slugs there to change it for every agent-skills.txt
+# Codex). Add/remove slugs there to change it for every agent-skills.toml
 # entry at once - see `npx skills add --help`'s agent table for valid
 # slugs (they're the CLI's own names, e.g. `claude-code` not `claude`).
 #
@@ -136,55 +144,88 @@ err()  { echo -e "\e[31m$*\e[0m" >&2; }
 FAILURES=()
 fail() { FAILURES+=("$1"); warn "$1 - FAILED (continuing)"; }
 
-# Agents every agent-skills.txt entry is installed for. Valid values are
+# Agents every agent-skills.toml entry is installed for. Valid values are
 # whatever `npx skills add --help` lists in its agent table (CLI slugs,
 # not display names) - currently just these two are things you actually
 # use day to day.
 SKILL_AGENTS=(claude-code codex)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-SKILLS_REGISTRY_FILE="${AGENT_SKILLS_REGISTRY_FILE:-$SCRIPT_DIR/agent-skills.txt}"
+SKILLS_REGISTRY_FILE="${AGENT_SKILLS_REGISTRY_FILE:-$SCRIPT_DIR/agent-skills.toml}"
 CLAUDE_SETTINGS_FILE="${CLAUDE_SETTINGS_FILE:-$HOME/.claude/settings.json}"
 
 require_cmd() { command -v "$1" >/dev/null 2>&1; }
 
 # ---------------------------------------------------------------------------
-# agent-skills.txt registry
+# agent-skills.toml registry - open/closed: the actual skill-repo list
+# lives in $SKILLS_REGISTRY_FILE, not here. See that file's header comment
+# for the [[skill]] table format. Reading it uses the exact same
+# yq(mikefarah)->JSON->python3(NUL/\x1f-delimited)->process-substitution
+# pattern as install-dev-stack.sh's load_registry() - see that script's
+# header comment for the full rationale (JSON over yq's own `-o tsv` to
+# avoid its CSV-style quote-doubling on fields containing `"`; process
+# substitution over a `$(...)` variable capture because bash variables
+# can't hold NUL bytes). A missing registry file is empty, not fatal -
+# unlike install-dev-stack.sh's software list, having zero registered
+# skills is a normal, supported state (you might only use this script for
+# its Claude Code plugins section).
 # ---------------------------------------------------------------------------
 SKILLS_REGISTRY=()
 
-# Generic N-field loader: reads $1 into the array named by $3 (via
-# nameref), skipping blank lines/comments and warning (not failing) on a
-# line whose '|'-count doesn't match $2. A missing file is a warning, not
-# an error.
-load_registry() {
-  local file="$1" expected_fields="$2"
-  local -n out_array="$3"
-  out_array=()
-
-  if [[ ! -f $file ]]; then
-    warn "No registry at $file - skipping that section (this is fine if you don't use it)."
-    return
+# Checks for mikefarah/yq specifically, not just "a binary named yq" -
+# see install-dev-stack.sh's require_yq() for the full kislyuk/yq
+# naming-collision writeup (confirmed live in this repo's own dev sandbox).
+require_yq() {
+  if ! command -v yq >/dev/null 2>&1; then
+    err "'yq' not found on \$PATH - needed to read $SKILLS_REGISTRY_FILE (TOML)."
+    err "Install it with: sudo pacman -S go-yq"
+    err "(NOT 'yq' from the AUR or pip - that's a different, unrelated tool. See CHEZMOI-GUIDE.md.)"
+    return 1
   fi
-
-  local lineno=0 line
-  while IFS= read -r line || [[ -n $line ]]; do
-    lineno=$((lineno + 1))
-    [[ -z ${line// } ]] && continue
-    [[ $line == \#* ]] && continue
-
-    local field_count
-    field_count=$(awk -F'|' '{print NF}' <<<"$line")
-    if [[ $field_count -ne $expected_fields ]]; then
-      warn "Skipping $file line $lineno - expected $expected_fields '|'-separated fields, found $field_count: $line"
-      continue
-    fi
-    out_array+=("$line")
-  done <"$file"
+  local version_line
+  version_line="$(yq --version 2>&1)"
+  if [[ $version_line != *mikefarah* ]]; then
+    err "The 'yq' on your \$PATH doesn't look like mikefarah/yq (got: $version_line)."
+    err "Install the right one with: sudo pacman -S go-yq"
+    return 1
+  fi
+  return 0
 }
 
-# agent-skills.txt is name|source|note - 3 fields.
-load_registry "$SKILLS_REGISTRY_FILE" 3 SKILLS_REGISTRY
+load_registry() {
+  if [[ ! -f $SKILLS_REGISTRY_FILE ]]; then
+    warn "No registry at $SKILLS_REGISTRY_FILE - skipping the skill-repo section (this is fine if you only use this script for Claude Code plugins)."
+    return
+  fi
+  require_yq || exit 1
+  if ! command -v python3 >/dev/null 2>&1; then
+    err "'python3' not found - needed alongside yq to safely read $SKILLS_REGISTRY_FILE."
+    exit 1
+  fi
+
+  local yq_err_file json
+  yq_err_file="$(mktemp)"
+  json="$(yq -p toml -o json "$SKILLS_REGISTRY_FILE" 2>"$yq_err_file")"
+  if [[ $? -ne 0 ]]; then
+    err "Failed to parse $SKILLS_REGISTRY_FILE as TOML:"
+    err "$(cat "$yq_err_file")"
+    rm -f "$yq_err_file"
+    exit 1
+  fi
+  rm -f "$yq_err_file"
+
+  while IFS= read -r -d $'\0' record; do
+    SKILLS_REGISTRY+=("$record")
+  done < <(python3 -c '
+import json, sys
+data = json.loads(sys.stdin.read() or "{}")
+for e in data.get("skill", []):
+    fields = [e.get("name", ""), e.get("source", ""), e.get("note", "")]
+    sys.stdout.write("\x1f".join(fields) + "\x00")
+' <<<"$json")
+}
+
+load_registry
 
 # ---------------------------------------------------------------------------
 # Third-party agentskills.io skill repos, via `npx skills` (vercel-labs/skills)
@@ -214,7 +255,7 @@ run_skill_installs() {
 
   local entry name source
   for entry in "${SKILLS_REGISTRY[@]}"; do
-    IFS='|' read -r name source _ <<<"$entry"
+    IFS=$'\x1f' read -r name source _ <<<"$entry"
     install_skill_repo "$name" "$source"
   done
 }
@@ -445,14 +486,14 @@ print_status() {
       warn "'npx' and/or 'python3' not found - can't check installed state, showing registry only."
       local entry name source
       for entry in "${SKILLS_REGISTRY[@]}"; do
-        IFS='|' read -r name source _ <<<"$entry"
+        IFS=$'\x1f' read -r name source _ <<<"$entry"
         printf "%-24s %-14s %s\n" "$name" "UNKNOWN" "$source"
       done
     else
       SKILLS_LIST_JSON_CACHE="$(skills_list_json)"
       local entry name source status
       for entry in "${SKILLS_REGISTRY[@]}"; do
-        IFS='|' read -r name source _ <<<"$entry"
+        IFS=$'\x1f' read -r name source _ <<<"$entry"
         status="$(skill_status "$name")"
         printf "%-24s %-14s %s\n" "$name" "$status" "$source"
       done

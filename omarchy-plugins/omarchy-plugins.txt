@@ -1,0 +1,39 @@
+# omarchy-plugins.txt
+#
+# Registry of third-party Omarchy shell plugins (Quickshell bar widgets/
+# panels, added via Omarchy 4's own `omarchy plugin` CLI - NOT a Claude
+# Code or Codex thing, see install-omarchy-plugins.sh's own header for
+# why this is a separate piece from agent-extensions/).
+#
+# Format (5 '|'-separated fields, one entry per line):
+#   id|source|section|deps|note
+#
+#   id      The plugin's own id, exactly as `omarchy plugin add` reports
+#           it and as every other `omarchy plugin`/`omarchy bar` command
+#           addresses it (verified convention: "<github-username>.<name>",
+#           e.g. jankeesvw.herdr - confirm against the plugin's own README
+#           if you add one from a different author, don't assume the
+#           pattern holds).
+#   source  Git URL passed straight to `omarchy plugin add <source>`.
+#   section Bar section to place the widget in via
+#           `omarchy bar move <id> --section <section>` - one of
+#           left|center|right, or blank/`-` to leave it at whatever
+#           default position the plugin's own install put it in (some
+#           plugins, like notification-center below, document their own
+#           preferred spot instead of needing this).
+#   deps    Comma-separated command names this plugin needs on $PATH to
+#           actually work (checked with a warning, not a hard failure -
+#           the plugin still gets installed either way, same failsafe
+#           style as the rest of this repo). `-` for none.
+#   note    Free text, shown in --status output and nowhere else.
+#
+# Verified 2026-09-10 against each repo's own README (WebFetch, not
+# assumed) - see CHEZMOI-GUIDE.md's "Omarchy shell plugins" section for
+# the full research writeup, including the one thing that ISN'T verified
+# yet: `omarchy plugin list --json`'s exact field names (the manual only
+# confirms the flag exists, not its schema) - install-omarchy-plugins.sh
+# guesses defensively and says so in its own header.
+
+jankeesvw.notification-center|https://github.com/jankeesvw/omarchy-notification-center.git|-|jq,inotifywait|Persistent, searchable notification archive with a bell indicator - installs pre-positioned at the far right of the bar per its own README, no bar move needed
+jankeesvw.herdr|https://github.com/jankeesvw/omarchy-herdr|right|herdr,jq,hyprctl,ss|Bar widget: live count/status of running herdr coding-agent sessions, click to focus one
+jankeesvw.downloads|https://github.com/jankeesvw/omarchy-downloads|right|-|Recent-downloads bar widget; opens as a real window (not a bar popup) so rows can be dragged out - needs Quickshell+Hyprland, which every Omarchy install already has

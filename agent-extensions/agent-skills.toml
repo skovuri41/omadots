@@ -1,0 +1,60 @@
+# agent-skills.toml
+#
+# Third-party agentskills.io SKILL.md skill repos for
+# install-agent-extensions.sh. This is the ONLY file you need to touch to
+# add or remove one; install-agent-extensions.sh never needs to change
+# for it.
+#
+# How this actually installs: each entry is handed straight to
+# `npx skills add <source> --agent <SKILL_AGENTS from the script> --global
+# --yes` - the `skills` CLI by Vercel Labs (github.com/vercel-labs/skills,
+# MIT, actively maintained). It walks the source repo up to 3 levels deep
+# to find SKILL.md itself (no manual "which subdirectory" field needed),
+# and installs straight into every requested agent's own native skills
+# directory in one call - including Claude Code. See
+# install-agent-extensions.sh's header comment and CHEZMOI-GUIDE.md for
+# the full history (why `npx skills`, and why this moved from
+# agent-skills.txt to this TOML file).
+#
+# Format: one [[skill]] table per repo.
+#
+# Fields:
+#   name    must match the skill's real name (the `name:` field in its own
+#           SKILL.md frontmatter) - it's what `npx skills list --json`
+#           reports back, and this script's --status uses it to check
+#           whether the entry is actually installed. Also what shows up
+#           as the /name command in any tool that exposes skills that way.
+#   source  anything `npx skills add` accepts as a source - verified
+#           forms (github.com/vercel-labs/skills' own source-parser):
+#             owner/repo                                   (default branch,
+#                                                            auto-finds SKILL.md)
+#             owner/repo#branch-or-tag
+#             owner/repo@skill-name                         (repo has >1 skill)
+#             https://github.com/owner/repo/tree/<ref>/<path/to/skill>
+#             git@host:owner/repo.git
+#           A plain `owner/repo` is enough unless the repo has more than
+#           one skill, or its SKILL.md sits deeper than 3 levels in, or
+#           you need a non-default branch.
+#   note    freeform, shown nowhere but here - just for you. Omit the key
+#           entirely if there's nothing to say.
+#
+# Personal, hand-authored skills (the ones you write yourself, like
+# clojure-style under home/dot_agents/skills/) do NOT belong in this file -
+# they're chezmoi-managed content, materialized directly and symlinked
+# into ~/.claude/skills by chezmoi itself (see CHEZMOI-GUIDE.md), same
+# bucket as settings.json. This file is only for cloning OTHER people's
+# skill repos, and none of that content is chezmoi-tracked - `npx skills`
+# owns and manages its own installed copies entirely outside this repo.
+#
+# Trust-surface tradeoff, disclosed: `npx skills` fetches and runs the
+# latest published `skills` npm package at install/update time - unpinned,
+# third-party code, not something this repo's git history can audit the
+# way a plain `git clone` of a skill repo could. Node/npx is already
+# required by this dev stack, so this isn't a new runtime dependency, just
+# a new trust surface. If that tradeoff isn't worth it for a given skill,
+# don't register it here - clone it by hand instead.
+
+[[skill]]
+name = "archify"
+source = "tt-a1i/archify"
+note = "Typed-JSON diagram generator (architecture/workflow/sequence/dataflow/lifecycle -> self-contained interactive HTML). MIT-licensed, no Claude-specific frontmatter/terminology - its own README documents Claude Code/Codex CLI/Cursor/OpenCode use via this same `npx skills` tool."

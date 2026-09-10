@@ -211,7 +211,7 @@ via `install_doom()`), `clojure-deps-edn` is pure configuration (a
 `deps.edn` plus alias definitions), and the Clojure CLI itself is already
 on the machine via the existing `mise`-managed registry entry. The upstream
 README's other "setup requirements" (Clojure CLI ≥ `1.11.1.xxxx`) are
-satisfied automatically since `dev-stack-software.txt` tracks
+satisfied automatically since `dev-stack-software.toml` tracks
 `clojure@latest`. First real use: `cd` into any `deps.edn` project and run
 one of the aliases this repo defines, e.g. `clojure -M:repl/rebel` for a
 Rebel-readline REPL — `clojure` resolves user-level aliases from
@@ -1022,3 +1022,279 @@ user's actual `claude` binary from this session (no live shell on the
 real machine) - the fake-CLI test above is a byte-for-byte match of the
 schema the user pasted back, which is as close to "real" as this session
 can get without device access to the real `claude` install.
+
+### Update (2026-09-10): new piece - `omarchy-plugins/install-omarchy-plugins.sh` for third-party Omarchy shell plugins
+
+Added a fourth top-level piece (see README.md's table), not folded into
+`agent-extensions/install-agent-extensions.sh` even though the shape of
+the problem looks similar (a text registry + a thin reconciliation script
+around a native, already-idempotent-ish CLI) - deliberately, because the
+domain is genuinely different: Omarchy 4 "Quattro" shell plugins are
+Quickshell bar widgets/panels, installed via Omarchy's own `omarchy
+plugin`/`omarchy bar` CLI, with nothing to do with Claude Code or Codex.
+Keeping this repo's established "one piece, one domain, one tool" rule
+(chezmoi never installs software, the dev-stack script never touches
+dotfiles, the agent-extensions script only knows about coding agents)
+meant a new script and registry, not a branch inside the existing one.
+
+**What it manages, verified against real sources before writing anything**
+(WebFetch against each repo's actual README and Omarchy's own manual
+pages - `omarchy.org/manual/shell-plugins/` and
+`.../manual/the-top-bar/` - not assumed from naming conventions):
+
+- Omarchy's plugin CLI is real and documented: `omarchy plugin
+  add|remove|enable|disable|list|update|clone`, with third-party plugins
+  landing at `~/.config/omarchy/plugins/<id>/` (confirmed both from the
+  manual and from every one of the three example repos' own install
+  instructions matching it). Bar positioning is a separate command,
+  `omarchy bar move <id> --section left|center|right [--index N]`.
+- The three requested plugins, all from github.com/jankeesvw, all
+  confirmed to exist and read directly (not guessed from the repo name):
+  `omarchy-notification-center` (id `jankeesvw.notification-center`,
+  persistent searchable notification archive, needs `jq`+`inotifywait`
+  which Omarchy already ships), `omarchy-herdr` (id `jankeesvw.herdr`,
+  bar widget showing live herdr coding-agent session count/status with
+  click-to-focus, needs `herdr`+`jq`+`hyprctl`+`ss` on `$PATH` - `herdr`
+  itself is an external dependency this script can't install, only warn
+  about if missing), `omarchy-downloads` (id `jankeesvw.downloads`,
+  recent-downloads bar widget that opens as a real draggable window since
+  layer-shell surfaces can't be drag sources on Hyprland/Quickshell).
+
+**Registry format** (`omarchy-plugins.txt`, same `|`-separated-fields
+style as `agent-skills.txt`): `id|source|section|deps|note` - 5 fields,
+`section` and `deps` both accept `-`/blank for "not applicable" (e.g.
+notification-center doesn't need repositioning, downloads has no real
+runtime deps beyond what Omarchy itself ships).
+
+**One thing NOT verified, disclosed in both the script's own header and
+here**: the exact JSON field names `omarchy plugin list --json` returns.
+The manual confirms the flag exists and what plain-text `list` shows
+(id, enabled state, first/third-party, kinds, display name) but not the
+JSON schema. `plugin_state()` guesses `id` (near-certain, every
+`omarchy` subcommand addresses plugins by that exact string) and tries
+`enabled` then `isEnabled` for the on/off flag. This is exactly the same
+class of bug `install-agent-extensions.sh`'s `plugin_installed()` had for
+`claude plugin list --json` (see the update above this one) - learned
+from that mistake this time by disclosing the risk up front instead of
+shipping it silently. Once a plugin is actually installed on the real
+machine, run `omarchy plugin list --json` for real and compare against
+what `--status` reports - a mismatch is a quick, contained fix to
+`plugin_state()`'s python snippet, same as last time.
+
+**Removal is deliberately shallow.** `--remove <id>` runs `omarchy
+plugin disable <id>` then `omarchy plugin remove <id>` and stops - it
+does NOT delete any state/cache directory a plugin created on its own
+(notification-center's own README is explicit that it keeps its archive
+under `~/.local/state/omarchy-notification-center` "by design" even
+after `plugin remove`, until you `rm -rf` it yourself). The script prints
+a reminder instead of guessing what you want kept - matches this
+session's broader pattern of never deleting user data without being
+asked, and specifically avoids the failure mode of silently wiping a
+notification archive someone actually wanted to keep.
+
+Tested end-to-end with a fake `omarchy` CLI (a small Python shim, not a
+bash string-matching stub) exercising: fresh install of all three,
+idempotent re-run (no duplicate `add` calls), a manually-disabled plugin
+correctly reporting `DISABLED` rather than `NOT INSTALLED` and getting
+re-enabled (not reinstalled) on the next plain run, `--remove` taking a
+plugin back to `NOT INSTALLED`, and the no-id-given error path. Could not
+test against the real `omarchy` binary - no Omarchy machine in this
+session's own container - so the fake CLI's behavior is built strictly
+from the documented/README-verified command shapes above, same caveat
+`install-agent-extensions.sh` disclosed for its own plugin section before
+a real bug turned up there.
+
+### Update (2026-09-10): `install-omarchy-plugins.sh` blocked on a safety prompt it couldn't answer - `--yes` was missing
+
+Real failure from the user's own machine: the script failed to install any
+plugin, but running the exact same `omarchy plugin add ...` by hand
+prompted for permission. Root cause: `omarchy plugin add` shows a
+mandatory safety warning before cloning a third-party plugin ("plugins
+run as unsandboxed code inside your long-lived shell process") and waits
+on stdin for a yes/no answer. The script wasn't passing anything to
+answer that prompt, and its own `>/dev/null 2>&1` redirect on the command
+was also hiding the prompt text itself - so a script run didn't visibly
+hang asking a question nobody could see, it just sat blocked (or failed,
+depending on what stdin resolved to when launched) with no visible cause.
+
+**Finding the fix took real double-checking, worth recording as a
+process note, not just the fix itself.** The first WebFetch against
+Omarchy's public manual page claimed a `--yes` flag existed with a
+suspiciously polished quote ("the path for scripts and agents") and also
+claimed add/clone/remove "open a terminal" to stay interactive even with
+arguments. A literal-substring re-check against that same page (and the
+manual's own markdown source file in the Omarchy repo) found `--yes`
+does NOT appear in either - the first fetch had fabricated a
+plausible-sounding but false answer. Rather than shipping that, a
+different, more technical doc was checked next - `shell/README.md` in
+omacom/omarchy's `quattro` branch - and confirmed genuinely, three times
+in a row across independently-phrased fetches including a verbatim code
+example:
+
+```
+omarchy plugin add https://github.com/acme/omarchy-weather.git --enable --yes
+omarchy plugin update --yes
+```
+
+So the real situation: Omarchy's user-facing manual doesn't document
+`--yes` at all (it's written for humans clicking through prompts
+interactively); the developer-facing `shell/README.md` does, explicitly
+calling it out as "the path for scripts and AI agents." Worth remembering
+for any future Omarchy CLI research in this repo - check the technical
+README, not just the polished manual page, and don't trust a single
+fetch's claim on something this consequential without a literal re-check.
+
+**Fix applied:** `ensure_plugin_installed()`'s `add` call now passes
+`--yes` alongside `--enable`. Also improved failure diagnostics
+generally while in there: every `omarchy` call in this script now
+captures real stderr (via `2>&1 >/dev/null` inside a `$(...)` capture,
+rather than throwing both streams at `/dev/null`) and includes it in the
+`fail`/`err` message, so a future failure shows the actual CLI error
+instead of just "failed - re-run by hand to see why." `enable`/
+`disable`/`remove` were left without `--yes` - no documented example
+shows it needed there, and the general rule ("fully non-interactive when
+given arguments") plausibly already covers them since they take the
+plugin id as a required argument, unlike `add`'s safety warning which
+persists regardless of arguments given.
+
+Verified with an updated fake `omarchy` CLI that actively rejects `add`
+without `--yes` (mirroring the real safety gate) - confirmed both that
+the fixed script now succeeds cleanly, and that reverting the fix
+reproduces the user's exact failure with a real, useful captured error
+message instead of a silent block.
+
+### Update (2026-09-10): Registry files moved to TOML (yq)
+
+All three registries - `dev-stack-software.txt`, `agent-skills.txt`, and
+`omarchy-plugins.txt` - are now `dev-stack-software.toml`,
+`agent-skills.toml`, and `omarchy-plugins.toml`. Same idea (one entry per
+line/table, one file per script, script never hardcodes what to install),
+different serialization. Requested explicitly: the pipe-delimited format
+had reached its limit as both scripts and registries grew (`deps` in
+`omarchy-plugins.txt` was already a comma-separated string crammed into
+one pipe field, a real array pretending to be a string), and the ask was
+to evaluate alternatives - JSON if it's the "industry standard" - rather
+than just patch around it again.
+
+**Options considered, and why TOML+yq won:**
+
+- **JSON.** Ruled out on one concrete test, not a vibe: `jq empty` on a
+  file with a `//`-comment or a `#`-comment both fail with a parse error -
+  confirmed hands-on, not assumed. Every registry file here leans heavily
+  on comments (field docs, verification dates, "why" notes) as much as
+  data; a format that can't hold them at all was disqualifying regardless
+  of how "standard" JSON is elsewhere.
+- **TOML + dasel.** `dasel` (`github.com/TomWright/dasel`) is real and
+  actively maintained (confirmed a June 2026 release, v3.11.2) - but it's
+  AUR-only on Arch, no official-repo package. Every other tool this repo
+  depends on for a `pacman -S`-installable prerequisite (chezmoi,
+  bitwarden-cli, now yq) comes from the official repos; introducing the
+  one AUR-only link in that chain for a bootstrap-critical dependency
+  (registries can't even be read without it) was the deciding factor
+  against it, not a knock on the tool itself.
+- **Refining the pipe format further, or key=value stanzas.** Both
+  considered and set aside - neither solves the actual problem (no real
+  array type, comments still bolted on as a separate convention rather
+  than native syntax) as cleanly as adopting a format that already has
+  both.
+- **TOML + yq (mikefarah/yq, the Go one) - chosen.** Official Arch package
+  (`go-yq`), native comments, a real array type (used for `deps` below),
+  and - concretely, not just "it's popular" - this exact repo already
+  leans on TOML for the identical "list of things to fetch, with
+  comments" problem: `.chezmoiexternal.toml` (chezmoi's own external-repo
+  manifest, already in `home/`) is TOML for the same reason. Adopting it
+  here is consistent with a pattern already in the codebase, not a new
+  one introduced for its own sake.
+
+**The mikefarah/yq vs. kislyuk/yq trap, confirmed hands-on before writing
+any script code:** there are two, unrelated command-line tools both
+called `yq`. `kislyuk/yq` (Python, wraps `jq`) is what a stock
+`/usr/bin/yq` turned out to be in this repo's own dev sandbox - confirmed
+live: `yq --version` printed `yq 0.0.0` with no "mikefarah" anywhere in
+its output, and it does not support this repo's `-p toml -o json` usage
+at all. Every script that reads a `.toml` registry now checks `yq
+--version` for the literal substring "mikefarah" before trusting
+whatever's on `$PATH`, and fails with an explicit `sudo pacman -S go-yq`
+hint (and an explicit "NOT the AUR/pip one" warning) if the check comes
+back wrong or `yq` is missing entirely - a confusing downstream TOML
+"parse error" on a tool that isn't even the right tool is a worse failure
+mode than catching it here, one call in.
+
+**Reading pattern, the same in all three scripts:** `yq -p toml -o json
+$REGISTRY_FILE` converts TOML to JSON, then a `python3 -c` one-liner
+walks the relevant array-of-tables key (`software` / `skill` / `plugin`)
+and writes one NUL-terminated, unit-separator (`\x1f`)-delimited record
+per entry to stdout, piped straight into the script's registry array via
+process substitution (`< <(...)`). Two choices there are deliberate, both
+caught and fixed before they became real bugs, not after:
+
+- **JSON as the yq→python handoff, not yq's own `-o tsv`.** Tested by
+  hand first: yq's TSV writer applies CSV-style quoting to any field
+  containing a `"` (doubles it, wraps the whole field in quotes) - exactly
+  what several existing notes have (e.g. the JetBrains Mono Nerd Font
+  entry's `\"JetBrains Mono\"`). Fine for a spreadsheet, wrong for a note
+  field meant to come back out exactly as written. JSON's escaping is
+  unambiguous and python's stdlib `json` module round-trips it exactly, so
+  swapping to `-o json` removed the quoting problem entirely rather than
+  working around it.
+- **`\x1f`/NUL delimiters via process substitution, not a
+  `records="$(...)"` variable capture.** Caught by reasoning it through
+  before writing the real script: bash variables are C strings internally
+  and cannot hold a NUL byte at all - capturing NUL-delimited output into
+  a variable silently truncates at the first NUL. Piping the python3
+  process's stdout directly into `while IFS= read -r -d $'\0' record; do
+  ...; done < <(python3 ...)` avoids an intermediate variable altogether,
+  so no field value, however many commas/quotes/pipes it contains, can
+  ever corrupt the split. Verified against every real note in
+  `dev-stack-software.toml`, including embedded quotes and
+  apostrophes+semicolons.
+
+**Deliberate behavior change, disclosed rather than hidden:** the old
+per-line pipe parser skipped just the one bad line on a field-count
+mismatch and kept going. A TOML syntax error now fails the *whole*
+registry load - `yq`'s own parse error is surfaced via `err()` and the
+script exits, it doesn't try to salvage the rest of the file. Traded
+deliberately: TOML's syntax makes a genuinely-malformed file much rarer
+in practice than a stray extra `|` ever was, and "half your software list
+silently didn't load" is a worse failure mode to debug than a script that
+refuses to run at all until the one syntax error is fixed.
+
+**`omarchy-plugins.toml`'s one format upgrade beyond the others:** `deps`
+is now a real TOML array (`deps = ["jq", "inotifywait"]`) instead of a
+comma-separated string crammed into one pipe field. The python extraction
+step joins it back to a comma-separated string at read time
+(`",".join(e.get("deps") or [])`), so `check_deps()` in
+`install-omarchy-plugins.sh` needed zero changes - the upgrade is entirely
+in the registry file's expressiveness, not in any consumer's logic.
+
+**Bootstrap chicken-and-egg, and how it's handled:** `install-dev-stack.sh`
+needs `yq` to read `dev-stack-software.toml` - but `yq` (as `go-yq`) is
+also *listed inside* that same registry, the same way chezmoi and
+`bitwarden-cli` already were. Solved the same way those two are: a manual
+`sudo pacman -S chezmoi bitwarden-cli go-yq` pre-step in README.md's
+"Setting up a brand new laptop" Step 1 (now updated to include `go-yq`,
+with the reasoning spelled out there), *and* a registry entry, for the
+redundant benefit of `--status`/upgrade-detection once it's installed
+either way.
+
+**Verification, all three scripts:** `bash -n` and `shellcheck -s bash -S
+warning` clean on every edited script. Each script's `load_registry()`
+was functionally tested in isolation against its real `.toml` file with
+the real mikefarah/yq binary - every entry in every registry loads with
+exact, byte-correct field values (including the ones with embedded
+quotes/apostrophes/semicolons/commas noted above) - plus the missing-file
+path (warns, continues with zero entries - a supported state, not an
+error) and the malformed-TOML path (fails loudly with yq's real parse
+error, per the disclosed behavior change above). Beyond that, all three
+full scripts were run end-to-end - `--status`, a plain install/reconcile
+run, and (for `install-omarchy-plugins.sh`) `--remove` - against fake
+`omarchy`/`npx`/`mise`/`omarchy-pkg-add` CLIs standing in for the real
+ones, confirming the new `\x1f`-delimited consumer sites in
+`run_install()`/`run_skill_installs()`/`run_plugin_installs()`/
+`print_status()`/`remove_plugin()` (including the `--remove`-with-no-id
+error path's registered-id listing, which also switched from
+`cut -d'|'` to `cut -d$'\x1f'`) all behave correctly against real data,
+not just in the load step.
+
+Old `.txt` registries deleted once the `.toml` replacements and rewritten
+scripts were confirmed working.

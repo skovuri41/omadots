@@ -2,15 +2,16 @@
 
 *(renamed from `archdots` on 2026-08-20 - same repo, same content, new name. If you have an old clone lying around, `git remote -v` still points at whatever URL you cloned; nothing here depends on the local folder being named any particular thing.)*
 
-Personal Omarchy Linux (Arch-based) setup, split into two independent, composable pieces:
+Personal Omarchy Linux (Arch-based) setup, split into four independent, composable pieces:
 
 | Piece | What it manages | Tool |
 |---|---|---|
 | `home/` (chezmoi source state) | dotfiles: shell, git, tmux, readline, zathura, doom.d, clojure-deps-edn, the Emacs daemon's systemd unit + launcher entry | [chezmoi](https://www.chezmoi.io/) + [Bitwarden CLI](https://bitwarden.com/help/cli/) |
-| `install-dev-stack.sh` + `dev-stack-software.txt` | dev tools: Java, Clojure, Maven, Node, Emacs, Doom Emacs (as a systemd --user daemon), Polylith, uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace, chezmoi, Bitwarden CLI, GitHub CLI | `mise`, pacman, AUR, self-updating hook |
-| `agent-extensions/install-agent-extensions.sh` | coding-agent config: Codex-and-Claude-agnostic skill repos (`agent-skills.txt`, installed via [`npx skills`](https://github.com/vercel-labs/skills)) and Claude Code plugins (declared in `~/.claude/settings.json`'s `extraKnownMarketplaces`/`enabledPlugins`, reconciled via `claude plugin marketplace add`/`install`) | Node/`npx`, `claude` CLI |
+| `install-dev-stack.sh` + `dev-stack-software.toml` | dev tools: Java, Clojure, Maven, Node, Emacs, Doom Emacs (as a systemd --user daemon), Polylith, uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace, chezmoi, Bitwarden CLI, GitHub CLI | `mise`, pacman, AUR, self-updating hook |
+| `agent-extensions/install-agent-extensions.sh` | coding-agent config: Codex-and-Claude-agnostic skill repos (`agent-skills.toml`, installed via [`npx skills`](https://github.com/vercel-labs/skills)) and Claude Code plugins (declared in `~/.claude/settings.json`'s `extraKnownMarketplaces`/`enabledPlugins`, reconciled via `claude plugin marketplace add`/`install`) | Node/`npx`, `claude` CLI |
+| `omarchy-plugins/install-omarchy-plugins.sh` | Omarchy 4 shell plugins: third-party Quickshell bar widgets/panels (`omarchy-plugins.toml`, installed/tracked/removed via Omarchy's own `omarchy plugin`/`omarchy bar` CLI) - currently jankeesvw's notification-center, herdr, and downloads widgets | `omarchy` CLI (ships with Omarchy) |
 
-They're deliberately decoupled: chezmoi never installs software, `install-dev-stack.sh` never touches your dotfiles, and `install-agent-extensions.sh` is a separate manual step from both - it needs `claude` (and optionally `codex`) already installed *and* logged in via at least one interactive run, which `install-dev-stack.sh`'s unattended bootstrap can't assume. Personal, hand-authored skills (as opposed to other people's skill repos) aren't run through this script at all - they're plain chezmoi-managed files under `home/dot_agents/skills/`, symlinked into `~/.claude/skills` - see `CHEZMOI-GUIDE.md`'s "agent-agnostic skills" section.
+They're deliberately decoupled: chezmoi never installs software, `install-dev-stack.sh` never touches your dotfiles, and `install-agent-extensions.sh`/`install-omarchy-plugins.sh` are separate manual steps from both and from each other - different domains (coding-agent config vs. Omarchy desktop-shell plugins), different CLIs, different registries. `install-agent-extensions.sh` needs `claude` (and optionally `codex`) already installed *and* logged in via at least one interactive run, which `install-dev-stack.sh`'s unattended bootstrap can't assume; `install-omarchy-plugins.sh` just needs Omarchy's own `omarchy` CLI, which every Omarchy install already has. Personal, hand-authored skills (as opposed to other people's skill repos) aren't run through either script - they're plain chezmoi-managed files under `home/dot_agents/skills/`, symlinked into `~/.claude/skills` - see `CHEZMOI-GUIDE.md`'s "agent-agnostic skills" section.
 
 **Browsable docs.** `docs/index.html` is this README, `README-dev-stack.md`, and `CHEZMOI-GUIDE.md` rendered as one Tailwind-styled page (sidebar nav, per-doc outline, dark mode) - open it directly in a browser, no server needed. It's fully self-contained (no CDN calls at load time). Regenerate it after editing any of the three source `.md` files:
 
@@ -25,13 +26,13 @@ This is the full sequence for a laptop that already has **Omarchy 4** installed 
 
 **0. Prerequisites.** You're logged into a normal (non-root) user account, connected to the internet, and have a terminal open. That's it - everything else below is installed as part of the sequence.
 
-**1. Install chezmoi and the Bitwarden CLI.**
+**1. Install chezmoi, the Bitwarden CLI, and yq.**
 
 ```sh
-sudo pacman -S chezmoi bitwarden-cli
+sudo pacman -S chezmoi bitwarden-cli go-yq
 ```
 
-These two have to exist *before* anything else, since step 3 uses chezmoi to lay down every other dotfile. (`install-dev-stack.sh` also installs both later, as part of its normal registry-driven pass - that's fine, `pacman -S` on an already-installed package is a no-op. This manual step just breaks the chicken-and-egg problem of needing chezmoi to bootstrap, before the script that chezmoi's own tree points you at can run.)
+These three have to exist *before* anything else, since step 3 uses chezmoi to lay down every other dotfile, and every `install-*.sh` script in this repo (starting with step 5, below) reads its own `*.toml` registry via `yq` (mikefarah/yq, the Go one - `go-yq` is the correct Arch package; there's a different, unrelated `yq` on the AUR/pip that doesn't support what these scripts need, see `CHEZMOI-GUIDE.md`'s "Registry files moved to TOML" section). (`install-dev-stack.sh` also installs all three later, as part of its normal registry-driven pass - that's fine, `pacman -S` on an already-installed package is a no-op. This manual step just breaks the chicken-and-egg problem of needing chezmoi/yq to bootstrap, before the scripts that chezmoi's own tree points you at can run.)
 
 **2. Log into Bitwarden.**
 
@@ -57,7 +58,7 @@ chezmoi diff        # should print nothing - a fresh apply has nothing left to c
 ls ~/.config/doom    # your real Doom config, not a placeholder
 ```
 
-**4. Find the dev-stack installer.** `chezmoi init` cloned the *entire* repo, not just the `home/` subtree it applies to `$HOME` - `install-dev-stack.sh`, `dev-stack-software.txt`, and this README all live at the top of that same clone, one level up from where `chezmoi cd` drops you:
+**4. Find the dev-stack installer.** `chezmoi init` cloned the *entire* repo, not just the `home/` subtree it applies to `$HOME` - `install-dev-stack.sh`, `dev-stack-software.toml`, and this README all live at the top of that same clone, one level up from where `chezmoi cd` drops you:
 
 ```sh
 cd ~/.local/share/chezmoi
@@ -72,7 +73,7 @@ Check what's installed and what's upgradable any time:
 ./install-dev-stack.sh --status
 ```
 
-The actual software list lives in `dev-stack-software.txt`, not in the script - add/remove/change a tool there and the script never needs to change for it. Not sure how a new tool should be installed? `./install-dev-stack.sh --check <name>` probes pacman/AUR/mise for it and suggests a line to add. See `README-dev-stack.md` for the full tool-by-tool rationale, the file format, and verification steps.
+The actual software list lives in `dev-stack-software.toml`, not in the script - add/remove/change a tool there and the script never needs to change for it. Not sure how a new tool should be installed? `./install-dev-stack.sh --check <name>` probes pacman/AUR/mise for it and suggests a line to add. See `README-dev-stack.md` for the full tool-by-tool rationale, the file format, and verification steps.
 
 **6. Pick up new PATH entries.** Open a new terminal, or `source ~/.bashrc` in your current one - this loads anything the dev-stack script's custom installs added (currently Doom Emacs's `bin/`) via its idempotent PATH mechanism (see `README-dev-stack.md`).
 

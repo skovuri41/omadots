@@ -3,15 +3,29 @@
 #
 # Bootstrap AND ongoing-maintenance script for a fresh Omarchy install.
 # What it installs is NOT in this file - it's declared in
-# dev-stack-software.txt (same directory), one line per tool. To add,
-# remove, or change a piece of software, edit that file; this script never
-# needs to change for that (open/closed - see below). Currently that list
-# covers Java, Maven, Clojure CLI, Babashka (bb), Polylith (poly), Node/npm
+# dev-stack-software.toml (same directory), one [[software]] table per
+# tool. To add, remove, or change a piece of software, edit that file;
+# this script never needs to change for that (open/closed - see below).
+# Currently that list covers yq itself (go-yq - see "Needs yq" below),
+# Java, Maven, Clojure CLI, Babashka (bb), Polylith (poly), Node/npm
 # (LTS), Emacs + Doom Emacs, JetBrains Mono Nerd Font, Overpass, Maple Mono
 # Nerd Font, uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace,
 # chezmoi, the Bitwarden CLI (bw, for ad hoc personal-vault access), bws
 # (Bitwarden Secrets Manager CLI - chezmoi's actual secret backend as of
 # 2026-08-31, see CHEZMOI-GUIDE.md), and the GitHub CLI.
+#
+# Needs yq (mikefarah/yq, the Go one - Arch package `go-yq`, NOT the
+# unrelated Python/jq-wrapper tool that also happens to be called "yq") to
+# read dev-stack-software.toml. On a genuinely fresh machine this is a
+# real chicken-and-egg step - README.md's "Setting up a brand new laptop"
+# lists `go-yq` in step 1, right alongside chezmoi/bitwarden-cli, for
+# exactly this reason (same problem those two already solved). This
+# script also checks for it itself below and fails with a clear
+# `pacman -S go-yq` hint rather than a confusing yq/parse error if it's
+# missing. See CHEZMOI-GUIDE.md's "Registry files moved to TOML" section
+# for the full rationale (JSON was considered and rejected - no comment
+# support; TOML matches chezmoi's own .chezmoiexternal.toml for the same
+# "list of things to fetch" problem).
 #
 # Also enables the Emacs daemon as a systemd --user service, once chezmoi
 # has put its unit file in place (see below) - emacsclient (ec/emax/semacs/
@@ -31,17 +45,17 @@
 #                                       what's newer upstream, with no changes
 #   ./install-dev-stack.sh --check NAME help decide how to install something new:
 #                                       probes pacman/AUR/mise for NAME and
-#                                       prints a suggested dev-stack-software.txt
-#                                       line - makes no changes
+#                                       prints a suggested dev-stack-software.toml
+#                                       block - makes no changes
 #   ./install-dev-stack.sh -h           this help
 #
 # Design principles:
-#   - Open/closed: the software list lives in dev-stack-software.txt, not in
-#     this script. Adding pacman/AUR/mise-installable software is a one-line
-#     text edit, never a script edit. Only a genuinely new *bespoke* install
-#     (like Doom or Polylith below) needs a new function here - see "custom
-#     entries" in dev-stack-software.txt's header comment for why that one
-#     case is intentionally not made pluggable.
+#   - Open/closed: the software list lives in dev-stack-software.toml, not
+#     in this script. Adding pacman/AUR/mise-installable software is a
+#     small TOML-block edit, never a script edit. Only a genuinely new
+#     *bespoke* install (like Doom or Polylith below) needs a new function
+#     here - see "custom entries" in dev-stack-software.toml's header
+#     comment for why that one case is intentionally not made pluggable.
 #   - Prefer the same install method Omarchy/Arch would use for everything:
 #     official pacman package first, AUR (via yay) second, and only a raw
 #     GitHub-release download as a last resort (Polylith - see below).
@@ -52,10 +66,17 @@
 #     step is wrapped so failures are logged and collected into a summary
 #     at the end, never a hard abort. (Citrix Workspace is the one item
 #     here that's genuinely likely to fail on a fully unattended run - it's
-#     flagged aur-fragile in dev-stack-software.txt and handled by
-#     step_aur_fragile below, not a hard failure.)
+#     flagged aur-fragile in dev-stack-software.toml and handled by
+#     step_aur_fragile below, not a hard failure.) Malformed TOML is the
+#     one failure mode that's NOT failsafe in this way, deliberately: a
+#     syntax error stops the whole registry from loading (yq/TOML parses
+#     the file as one document, unlike the old line-by-line pipe format
+#     which could skip just the bad line) - load_registry() surfaces that
+#     loudly with yq's own error message rather than silently discarding
+#     entries, since a partially-loaded software list is a worse failure
+#     mode than a stopped one.
 #   - "Same script" maintenance: this file copies itself (and
-#     dev-stack-software.txt alongside it) to
+#     dev-stack-software.toml alongside it) to
 #     ~/.local/share/dev-stack/ on first run and registers that copy as an
 #     Omarchy post-update hook. So `omarchy update` re-runs this exact
 #     script against this exact software list (install is idempotent, so a
@@ -66,7 +87,7 @@
 #     chezmoi-managed file - chezmoi overwrites its managed files from its
 #     own source state on every `chezmoi apply`, so anything this script
 #     appended directly to one of them would silently vanish on the next
-#     apply. dev-stack-software.txt's chezmoi-tracked counterpart
+#     apply. dev-stack-software.toml's chezmoi-tracked counterpart
 #     (home/dot_bash_exports) sources env.sh once, unconditionally; this
 #     script only ever writes inside env.sh after that.
 #
@@ -98,41 +119,100 @@ PATH_ENV_FILE="$HOME/.config/dev-stack/env.sh"
 # $DEV_STACK_DIR, where install_hook() also copies the software list; when
 # run directly from a checkout, that's the checkout directory.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-REGISTRY_FILE="${DEV_STACK_REGISTRY_FILE:-$SCRIPT_DIR/dev-stack-software.txt}"
+REGISTRY_FILE="${DEV_STACK_REGISTRY_FILE:-$SCRIPT_DIR/dev-stack-software.toml}"
 
 mkdir -p "$DEV_STACK_DIR" "$HOME/.local/bin"
 
 # ---------------------------------------------------------------------------
 # Tool registry - open/closed: the actual software list lives in
-# $REGISTRY_FILE (dev-stack-software.txt), not here. See that file's header
-# comment for the name|method|spec|status_pkg|note format. This script only
+# $REGISTRY_FILE (dev-stack-software.toml), not here. See that file's
+# header comment for the [[software]] table format. This script only
 # knows how to READ that format and dispatch on `method` - adding a new
-# pacman/AUR/mise-installable tool is a one-line edit there, never here.
+# pacman/AUR/mise-installable tool is a small edit there, never here.
+#
+# Reading it: `yq` (mikefarah/yq) converts the TOML to JSON, then python3
+# turns each entry into a single NUL-terminated, unit-separator
+# (\x1f)-delimited record on stdout, fed straight into REGISTRY via
+# process substitution. Two format choices here are deliberate, not
+# arbitrary:
+#   - JSON as the yq->python handoff, not yq's own `-o tsv`: yq's TSV
+#     writer applies CSV-style quoting to any field containing a `"`
+#     (doubles it and wraps the whole field in quotes) - fine for a
+#     spreadsheet, wrong for a note field meant to be read back verbatim
+#     by this script. JSON's escaping is unambiguous and python's stdlib
+#     `json` module round-trips it exactly, so the TOML->JSON step is a
+#     plain format conversion with no quoting quirks to work around.
+#   - \x1f/\x00 delimiters, and process substitution rather than a
+#     `records="$(...)"` variable capture: bash variables cannot contain
+#     NUL bytes at all (they're C strings internally) - capturing
+#     NUL-delimited output into a variable silently truncates it at the
+#     first NUL. Piping the python3 process's stdout directly into the
+#     `while read -d $'\0'` loop via `< <(...)` avoids that entirely, so
+#     no field value (however many commas, quotes, or pipes it contains)
+#     can ever corrupt the split. Verified against every existing note in
+#     dev-stack-software.toml, including ones with embedded quotes
+#     (JetBrains Mono Nerd Font) and apostrophes+semicolons (GitHub CLI).
 # ---------------------------------------------------------------------------
 REGISTRY=()
+
+# Checks for mikefarah/yq specifically, not just "a binary named yq" -
+# there's a different, unrelated tool (kislyuk/yq, a Python/jq wrapper)
+# that answers to the same name and does NOT support `-p toml -o json`
+# the way this script needs. Confirmed live in this repo's own dev
+# sandbox: a stock `/usr/bin/yq` there was kislyuk's tool, printing
+# `yq 0.0.0` to `--version` with no "mikefarah" anywhere in its output -
+# exactly the collision this check exists to catch before it causes a
+# confusing downstream parse failure instead of a clear one here.
+require_yq() {
+  if ! command -v yq >/dev/null 2>&1; then
+    err "'yq' not found on \$PATH - needed to read $REGISTRY_FILE (TOML)."
+    err "Install it with: sudo pacman -S go-yq"
+    err "(NOT 'yq' from the AUR or pip - that's a different, unrelated tool. See CHEZMOI-GUIDE.md.)"
+    return 1
+  fi
+  local version_line
+  version_line="$(yq --version 2>&1)"
+  if [[ $version_line != *mikefarah* ]]; then
+    err "The 'yq' on your \$PATH doesn't look like mikefarah/yq (got: $version_line)."
+    err "Install the right one with: sudo pacman -S go-yq"
+    return 1
+  fi
+  return 0
+}
 
 load_registry() {
   if [[ ! -f $REGISTRY_FILE ]]; then
     err "Software list not found: $REGISTRY_FILE"
-    err "Expected dev-stack-software.txt next to install-dev-stack.sh (or set"
+    err "Expected dev-stack-software.toml next to install-dev-stack.sh (or set"
     err "DEV_STACK_REGISTRY_FILE to point at it explicitly)."
     exit 1
   fi
+  require_yq || exit 1
+  if ! command -v python3 >/dev/null 2>&1; then
+    err "'python3' not found - needed alongside yq to safely read $REGISTRY_FILE."
+    exit 1
+  fi
 
-  local lineno=0 line
-  while IFS= read -r line || [[ -n $line ]]; do
-    lineno=$((lineno + 1))
-    [[ -z ${line// } ]] && continue      # blank (or whitespace-only) line
-    [[ $line == \#* ]] && continue       # comment
+  local yq_err_file json
+  yq_err_file="$(mktemp)"
+  json="$(yq -p toml -o json "$REGISTRY_FILE" 2>"$yq_err_file")"
+  if [[ $? -ne 0 ]]; then
+    err "Failed to parse $REGISTRY_FILE as TOML:"
+    err "$(cat "$yq_err_file")"
+    rm -f "$yq_err_file"
+    exit 1
+  fi
+  rm -f "$yq_err_file"
 
-    local field_count
-    field_count=$(awk -F'|' '{print NF}' <<<"$line")
-    if [[ $field_count -ne 5 ]]; then
-      warn "Skipping $REGISTRY_FILE line $lineno - expected 5 '|'-separated fields, found $field_count: $line"
-      continue
-    fi
-    REGISTRY+=("$line")
-  done <"$REGISTRY_FILE"
+  while IFS= read -r -d $'\0' record; do
+    REGISTRY+=("$record")
+  done < <(python3 -c '
+import json, sys
+data = json.loads(sys.stdin.read() or "{}")
+for e in data.get("software", []):
+    fields = [e.get("name", ""), e.get("method", ""), e.get("spec", ""), e.get("status_pkg", ""), e.get("note", "")]
+    sys.stdout.write("\x1f".join(fields) + "\x00")
+' <<<"$json")
 
   if [[ ${#REGISTRY[@]} -eq 0 ]]; then
     err "$REGISTRY_FILE has no usable entries - nothing to do."
@@ -194,7 +274,7 @@ step_mise() {
 # it's marked with a per-tool marker file (so --status can show "ACTION
 # NEEDED" instead of "NOT INSTALLED") and given more actionable guidance
 # than a generic AUR failure would. $note comes straight from the tool's
-# dev-stack-software.txt line. A few status_pkg values get extra, more
+# dev-stack-software.toml line. A few status_pkg values get extra, more
 # specific guidance below (currently just icaclient/Citrix) - everything
 # else still gets a useful generic message, no script change required.
 step_aur_fragile() {
@@ -207,7 +287,7 @@ step_aur_fragile() {
   fi
 
   warn "$pkg didn't build via AUR. This package is flagged 'aur-fragile' in"
-  warn "dev-stack-software.txt - it's known to sometimes need a manual step"
+  warn "dev-stack-software.toml - it's known to sometimes need a manual step"
   warn "makepkg can't do unattended (a login/EULA-gated download is the most"
   warn "common cause)."
   [[ -n $note ]] && warn "Note: $note"
@@ -554,10 +634,10 @@ install_bws() {
 
 # install_citrix_manual() - DISABLED, reference only.
 #
-# dev-stack-software.txt still lists Citrix Workspace as method=aur-fragile
+# dev-stack-software.toml still lists Citrix Workspace as method=aur-fragile
 # (see step_aur_fragile() above), and that stays the intended long-term
 # install path - this function is NOT wired into dispatch_custom() below, so
-# it never runs, and nothing in dev-stack-software.txt points at it. It's
+# it never runs, and nothing in dev-stack-software.toml points at it. It's
 # left here, commented out, purely as a live copy of
 # CITRIX-WORKSPACE-MANUAL-INSTALL.md's steps so a future "make this
 # automatic" pass has real shell to start from instead of re-deriving it.
@@ -571,7 +651,7 @@ install_bws() {
 #
 # To bring this back once you want it automated: uncomment the body,
 # add `citrix-manual) install_citrix_manual ;;` to dispatch_custom() below,
-# and either add a new `method=custom` line for it to dev-stack-software.txt
+# and either add a new `method=custom` line for it to dev-stack-software.toml
 # or swap the existing Citrix Workspace line's method - whichever you'd
 # rather maintain once the AUR package is fixed and this is no longer needed
 # at all.
@@ -612,7 +692,7 @@ install_bws() {
 #   log "Citrix Workspace (manual) installed"
 # }
 
-# Fixed dispatch table for method=custom entries - see dev-stack-software.txt's
+# Fixed dispatch table for method=custom entries - see dev-stack-software.toml's
 # header for why this is intentionally NOT a pluggable/external mechanism.
 # A status_pkg with no case here fails loudly (not silently skipped), so a
 # typo'd or genuinely new custom entry is obvious in the run's summary
@@ -631,14 +711,14 @@ dispatch_custom() {
   esac
 }
 
-# Generic, registry-driven install loop - every entry in dev-stack-software.txt
+# Generic, registry-driven install loop - every entry in dev-stack-software.toml
 # is installed by dispatching on its `method` field. This is the one place
 # that has to change if a genuinely new *method* is ever needed; adding new
-# *software* never touches this function - see dev-stack-software.txt.
+# *software* never touches this function - see dev-stack-software.toml.
 run_install() {
   local entry name method spec status_pkg note
   for entry in "${REGISTRY[@]}"; do
-    IFS='|' read -r name method spec status_pkg note <<<"$entry"
+    IFS=$'\x1f' read -r name method spec status_pkg note <<<"$entry"
     case "$method" in
       pacman)
         # spec may be multiple space-separated package names (e.g. "zathura
@@ -678,8 +758,8 @@ install_hook() {
     cp "$0" "$SELF_COPY"
     chmod +x "$SELF_COPY"
   fi
-  if [[ "$(readlink -f "$REGISTRY_FILE" 2>/dev/null || echo "$REGISTRY_FILE")" != "$DEV_STACK_DIR/dev-stack-software.txt" ]]; then
-    cp "$REGISTRY_FILE" "$DEV_STACK_DIR/dev-stack-software.txt"
+  if [[ "$(readlink -f "$REGISTRY_FILE" 2>/dev/null || echo "$REGISTRY_FILE")" != "$DEV_STACK_DIR/dev-stack-software.toml" ]]; then
+    cp "$REGISTRY_FILE" "$DEV_STACK_DIR/dev-stack-software.toml"
   fi
 
   local hook_dir="$HOME/.config/omarchy/hooks/post-update.d"
@@ -729,7 +809,7 @@ print_status() {
 
   local entry name method spec status_pkg
   for entry in "${REGISTRY[@]}"; do
-    IFS='|' read -r name method spec status_pkg _ <<<"$entry"
+    IFS=$'\x1f' read -r name method spec status_pkg _ <<<"$entry"
     local installed="" latest="" status=""
 
     case "$method" in
@@ -862,7 +942,7 @@ print_status() {
 #
 # Probes pacman (official/Omarchy repos), the AUR (via yay), and mise's
 # registry for NAME and prints what it found, plus a suggested
-# dev-stack-software.txt line using this precedence: pacman > mise > AUR >
+# dev-stack-software.toml line using this precedence: pacman > mise > AUR >
 # custom. Rationale: pacman is simplest and best-maintained; mise gives
 # per-project version control for dev tools where that matters; AUR is
 # community-maintained (more to go wrong, see step_aur_fragile above) and
@@ -914,19 +994,31 @@ check_availability() {
   echo
   echo "-- Suggestion --"
   if [[ -n $pac_hit ]]; then
-    echo "Add to dev-stack-software.txt:"
-    echo "  <Display Name>|pacman|$pac_hit|$pac_hit|"
+    echo "Add to dev-stack-software.toml:"
+    echo "  [[software]]"
+    echo "  name = \"<Display Name>\""
+    echo "  method = \"pacman\""
+    echo "  spec = \"$pac_hit\""
+    echo "  status_pkg = \"$pac_hit\""
   elif [[ -n $mise_hit ]]; then
-    echo "Add to dev-stack-software.txt:"
-    echo "  <Display Name>|mise|$mise_hit@latest|$mise_hit|"
+    echo "Add to dev-stack-software.toml:"
+    echo "  [[software]]"
+    echo "  name = \"<Display Name>\""
+    echo "  method = \"mise\""
+    echo "  spec = \"$mise_hit@latest\""
+    echo "  status_pkg = \"$mise_hit\""
   elif [[ -n $aur_hit ]]; then
-    echo "Add to dev-stack-software.txt:"
-    echo "  <Display Name>|aur|$aur_hit|$aur_hit|"
+    echo "Add to dev-stack-software.toml:"
+    echo "  [[software]]"
+    echo "  name = \"<Display Name>\""
+    echo "  method = \"aur\""
+    echo "  spec = \"$aur_hit\""
+    echo "  status_pkg = \"$aur_hit\""
   else
     echo "No exact match anywhere. Check the fuzzy matches above for a"
     echo "different package name, or - if this is a real one-off (like Doom"
     echo "or Polylith) - it needs a dedicated function in install-dev-stack.sh"
-    echo "(a 'custom' entry always does; see dev-stack-software.txt's header)."
+    echo "(a 'custom' entry always does; see dev-stack-software.toml's header)."
   fi
 }
 

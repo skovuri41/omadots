@@ -1,0 +1,246 @@
+# dev-stack-software.toml
+#
+# The software list for install-dev-stack.sh. This is the ONLY file you
+# need to touch to add, remove, or change a piece of software - the script
+# itself (install-dev-stack.sh) never needs to change for that.
+#
+# Format: one [[software]] table per tool. Read via `yq` (mikefarah/yq,
+# the Go one - see the "Why yq" note below), never hand-parsed.
+#
+# Fields:
+#   name        display name, shown in --status and log output
+#   method      one of: "pacman" | "aur" | "aur-fragile" | "mise" | "custom"
+#   spec        method-specific "what to install" (omit the key entirely
+#               for a custom entry - see below):
+#                 pacman        one or more pacman package names, space
+#                               separated in a single string (installed via
+#                               omarchy-pkg-add, which word-splits it)
+#                 aur           one AUR package name (installed via yay,
+#                               via omarchy-pkg-aur-add)
+#                 aur-fragile   like aur, but known to need manual steps
+#                               sometimes - installed the same way as aur,
+#                               but a failed build is treated as "needs a
+#                               manual step" (marked ACTION NEEDED in
+#                               --status) instead of a plain failure. See
+#                               step_aur_fragile() in install-dev-stack.sh.
+#                 mise          a mise tool@version spec, e.g. "java@latest"
+#                 custom        omit this key - custom entries are wired to
+#                               a specific function inside
+#                               install-dev-stack.sh by their status_pkg
+#                               value (see dispatch_custom() there). Adding
+#                               a genuinely new bespoke install still means
+#                               adding a case + function to the script -
+#                               this format only removes the need to edit
+#                               the script for anything pacman/AUR/mise can
+#                               install, which is nearly everything.
+#   status_pkg  the single package/tool name used to look up an installed/
+#               available version for the --status table (for custom
+#               entries, one of the fixed keys the script recognizes: doom,
+#               poly, bws, emacs-daemon, keyd)
+#   note        freeform, shown nowhere but here - just for you. Omit the
+#               key entirely if there's nothing to say (don't write `note =
+#               ""` - same effect, just noisier).
+#
+# Not sure how to install something new? Run:
+#   ./install-dev-stack.sh --check <name>
+# It probes pacman, the AUR, and mise for that name and prints a suggested
+# [[software]] block to paste in below.
+#
+# Why yq, and why this replaced the old pipe-delimited dev-stack-
+# software.txt (2026-09-11): see CHEZMOI-GUIDE.md's "Registry files moved
+# to TOML" section for the full comparison (JSON was considered and
+# rejected - it can't hold these comments at all, confirmed jq enforces
+# strict RFC 8259 with zero comment support; TOML is also what chezmoi
+# itself already uses for the same "list of things to fetch" problem in
+# .chezmoiexternal.toml). `yq` here specifically means mikefarah/yq (the Go
+# one, Arch package `go-yq`) - there is a different, unrelated tool also
+# called `yq` (kislyuk/yq, a Python/jq wrapper) that does NOT support this
+# script's `-p toml -o tsv` usage; every script that reads a .toml registry
+# checks `yq --version` for the string "mikefarah" before trusting it, and
+# fails with an explicit pacman hint if the wrong one (or none) is found.
+
+[[software]]
+name = "yq (via go-yq)"
+method = "pacman"
+spec = "go-yq"
+status_pkg = "go-yq"
+note = "mikefarah/yq (Go) - what every script in this repo uses to read .toml registries, including this file. Also needed to bootstrap: if you're setting up a brand new machine, install this BEFORE anything else reads a .toml file here (same chicken-and-egg reason chezmoi/bitwarden-cli are a manual pre-step in README.md's step 1, not just a registry entry)."
+
+[[software]]
+name = "Java"
+method = "mise"
+spec = "java@latest"
+status_pkg = "java"
+note = "JDK, tracks latest via 'omarchy update'"
+
+[[software]]
+name = "Maven"
+method = "mise"
+spec = "maven@latest"
+status_pkg = "maven"
+
+[[software]]
+name = "rlwrap"
+method = "pacman"
+spec = "rlwrap"
+status_pkg = "rlwrap"
+note = "for the Clojure REPL, no version tracking needed"
+
+[[software]]
+name = "Clojure CLI"
+method = "mise"
+spec = "clojure@latest"
+status_pkg = "clojure"
+note = "needs rlwrap, above"
+
+[[software]]
+name = "Babashka"
+method = "mise"
+spec = "babashka@latest"
+status_pkg = "babashka"
+note = "bb - fast-starting native Clojure scripting runtime, for bb scripts/tasks"
+
+[[software]]
+name = "Node.js + npm"
+method = "mise"
+spec = "node@lts"
+status_pkg = "node"
+note = "LTS only, not 'current'/latest"
+
+[[software]]
+name = "Emacs"
+method = "pacman"
+spec = "emacs-wayland ripgrep fd"
+status_pkg = "emacs-wayland"
+note = "30.2, native-comp + PGTK (Wayland); ripgrep/fd for Doom"
+
+[[software]]
+name = "Doom Emacs"
+method = "custom"
+status_pkg = "doom"
+
+[[software]]
+name = "JetBrains Mono Nerd Font"
+method = "pacman"
+spec = "ttf-jetbrains-mono-nerd"
+status_pkg = "ttf-jetbrains-mono-nerd"
+note = "doom-font/doom-big-font in doom.d/config.el (family \"JetBrains Mono\"); official extra repo pkg, patched with icon glyphs"
+
+[[software]]
+name = "Overpass"
+method = "pacman"
+spec = "ttf-overpass"
+status_pkg = "ttf-overpass"
+note = "doom-variable-pitch-font in doom.d/config.el; official extra repo pkg"
+
+[[software]]
+name = "Maple Mono Nerd Font"
+method = "aur"
+spec = "maplemono-nf-unhinted"
+status_pkg = "maplemono-nf-unhinted"
+note = "round-corner ligature monospace w/ built-in Nerd Font icons (family \"Maple Mono NF\" once installed - set via omarchy-font-set or doom-font/doom-big-font); AUR-only, \"unhinted\" is the plain (non-CN) NF variant's only AUR flavor per upstream's own font.subf.dev/en/download - aur.archlinux.org itself is unreachable from this sandbox to double check package currency, same limitation noted for bws-bin earlier"
+
+[[software]]
+name = "Emacs daemon"
+method = "custom"
+status_pkg = "emacs-daemon"
+note = "systemd --user service; unit file comes from chezmoi"
+
+[[software]]
+name = "Polylith (poly)"
+method = "custom"
+status_pkg = "poly"
+note = "GitHub-release jar, no Arch/AUR package exists"
+
+[[software]]
+name = "uv"
+method = "pacman"
+spec = "uv"
+status_pkg = "uv"
+note = "official Arch package, not AUR"
+
+[[software]]
+name = "curl"
+method = "pacman"
+spec = "curl"
+status_pkg = "curl"
+
+[[software]]
+name = "sqlite"
+method = "pacman"
+spec = "sqlite"
+status_pkg = "sqlite"
+
+[[software]]
+name = "tree"
+method = "pacman"
+spec = "tree"
+status_pkg = "tree"
+
+[[software]]
+name = "tre"
+method = "aur"
+spec = "tre-command"
+status_pkg = "tre-command"
+note = "Rust tree(1) alternative, AUR-only"
+
+[[software]]
+name = "jq"
+method = "pacman"
+spec = "jq"
+status_pkg = "jq"
+note = "already in Omarchy's base packages"
+
+[[software]]
+name = "zathura"
+method = "pacman"
+spec = "zathura zathura-pdf-mupdf"
+status_pkg = "zathura"
+note = "+ mupdf backend for PDF support"
+
+[[software]]
+name = "Spotify"
+method = "aur"
+spec = "spotify"
+status_pkg = "spotify"
+note = "native desktop client, AUR-only (licensing); SUPER+SHIFT+U in bindings.lua, workspace-4-assigned in windowrules.lua. Distinct from Omarchy's own SUPER+SHIFT+M Quickshell mini-player toggle - that one's a panel, not a window"
+
+[[software]]
+name = "Citrix Workspace"
+method = "aur-fragile"
+spec = "icaclient"
+status_pkg = "icaclient"
+note = "AUR-only; Citrix gates the download, see below. AUR was out of date as of 2026-08-23 - installed manually instead, see CITRIX-WORKSPACE-MANUAL-INSTALL.md ('--status' detects this too)"
+
+[[software]]
+name = "chezmoi"
+method = "pacman"
+spec = "chezmoi"
+status_pkg = "chezmoi"
+note = "dotfiles manager, see omadots/home"
+
+[[software]]
+name = "Bitwarden CLI"
+method = "pacman"
+spec = "bitwarden-cli"
+status_pkg = "bitwarden-cli"
+note = "bw - ad hoc personal-vault access only, see CHEZMOI-GUIDE.md"
+
+[[software]]
+name = "Bitwarden Secrets Manager CLI"
+method = "custom"
+status_pkg = "bws"
+note = "bws - chezmoi's actual secret backend as of 2026-08-31 (no Arch/AUR pkg verified, GitHub-release binary instead, see install_bws())"
+
+[[software]]
+name = "GitHub CLI"
+method = "pacman"
+spec = "github-cli"
+status_pkg = "github-cli"
+note = "provides the 'gh' command; run 'gh auth login' once after install"
+
+[[software]]
+name = "Keyd"
+method = "custom"
+status_pkg = "keyd"
+note = "kernel-level key remapper; installs the keyd pkg, deploys keyd/default.conf to /etc/keyd/default.conf, enables the systemd service - see install_keyd()"
