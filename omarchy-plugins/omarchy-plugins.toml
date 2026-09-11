@@ -71,3 +71,10 @@ id = "jankeesvw.downloads"
 source = "https://github.com/jankeesvw/omarchy-downloads"
 section = "right"
 note = "Recent-downloads bar widget; opens as a real window (not a bar popup) so rows can be dragged out - needs Quickshell+Hyprland, which every Omarchy install already has"
+
+[[plugin]]
+id = "jankeesvw.nag"
+source = "https://github.com/jankeesvw/omarchy-nag.git"
+section = "right"
+deps = ["jq", "dd", "date", "systemd-run", "pw-play"]
+note = "Disposable bar alarms - type a time+message (e.g. '15:15 pick up the kids'), get a countdown, visual alert, and a persistent notification until dismissed/snoozed. Uses systemd user timers against wall-clock time (not monotonic), so alarms survive suspend/restart per its own README. Verified 2026-09-11 against two independent fetches of the repo's README (summarized + raw markdown), matching exactly. One dependency NOT in the deps array above since it's a package, not a $PATH command check_deps() can probe: 'sound-theme-freedesktop' (provides the sound files pw-play plays) - install it manually if alarm audio doesn't play (sudo pacman -S sound-theme-freedesktop)."
