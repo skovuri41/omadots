@@ -32,6 +32,21 @@
 #            no more manual comma-splitting on either side.
 #   note     Free text, shown in --status output and nowhere else. Omit
 #            the key entirely if there's nothing to say.
+#   disabled A real TOML boolean (disabled = true) marking this entry as
+#            registered-but-inactive. install-omarchy-plugins.sh's default
+#            run then skips it entirely - no `omarchy plugin add`/`enable`/
+#            `bar move` attempted, no dependency check either - and
+#            `--status` reports it as SKIPPED without even querying
+#            `omarchy plugin list --json` for it. This is the structured
+#            alternative to commenting out the whole [[plugin]] block (see
+#            omamail below, which predates this field and still uses the
+#            old comment-out approach - left as-is, not migrated, since
+#            that was the user's own edit): `disabled = true` keeps the
+#            entry live for yq/editors to validate and keeps its
+#            deps/note documentation intact and visible in --status,
+#            instead of the entry silently vanishing from the registry
+#            entirely. Omit the key (or `disabled = false`) for a normal
+#            active entry - that's the default.
 #
 # Verified 2026-09-10 against each repo's own README (WebFetch, not
 # assumed) - see CHEZMOI-GUIDE.md's "Omarchy shell plugins" section for
@@ -78,3 +93,28 @@ source = "https://github.com/jankeesvw/omarchy-nag.git"
 section = "right"
 deps = ["jq", "dd", "date", "systemd-run", "pw-play"]
 note = "Disposable bar alarms - type a time+message (e.g. '15:15 pick up the kids'), get a countdown, visual alert, and a persistent notification until dismissed/snoozed. Uses systemd user timers against wall-clock time (not monotonic), so alarms survive suspend/restart per its own README. Verified 2026-09-11 against two independent fetches of the repo's README (summarized + raw markdown), matching exactly. One dependency NOT in the deps array above since it's a package, not a $PATH command check_deps() can probe: 'sound-theme-freedesktop' (provides the sound files pw-play plays) - install it manually if alarm audio doesn't play (sudo pacman -S sound-theme-freedesktop)."
+
+[[plugin]]
+id = "omamail"
+source = "https://github.com/huacnlee/omamail.git"
+deps = ["secret-tool", "xdg-open", "python3"]
+note = "Full Omarchy email client (not a small bar widget like the others above) - a real tiled Hyprland window for Gmail, Outlook, HEY, JMAP, and IMAP/SMTP mailboxes, opened by clicking the envelope icon the install adds to the bar. NOT from jankeesvw, and its id genuinely breaks the '<github-username>.<name>' pattern the other entries follow - confirmed bare 'omamail' (no author prefix) directly from its own README's removal commands ('omarchy plugin remove omamail', 'secret-tool clear service omamail'), not assumed. No bar-move/section needed - the README never mentions omarchy bar move at all. Requires Omarchy 4. The listed deps are what its own README states as required on $PATH (secret-tool for GNOME-Keyring-backed credential storage, xdg-open for mailto: link handling, python3 for keyring/desktop integration) - its mail-networking/rendering backend is a separately-versioned Rust binary the plugin downloads and pins on first run (prompted inside the app, not a system package), so that's deliberately not in deps. A HEY mailbox additionally needs the separate 'hey' CLI (github.com/basecamp/hey-cli, installable via 'omarchy-mise-install github:basecamp/hey-cli hey') - not added to deps since it's conditional on using HEY specifically, not needed for Gmail/Outlook/IMAP. Flagging for future-you: two verbatim fetches of this README taken minutes apart (2026-09-12) already disagreed on the exact deps list (an earlier version mentioned socat/openssl/curl instead of python3) - this project's docs appear to be actively evolving, so re-check against the real README if something here doesn't match what you see on first install."
+disabled = true
+
+[[plugin]]
+id = "bibek.focusd"
+source = "https://github.com/BibekBhusal0/omarchy-focusd.git"
+deps = ["focusd"]
+note = "Pomodoro-timer bar widget integrating with the separate Focusd TUI (github.com/BibekBhusal0/focusd) - shows session state/remaining time with a state icon, opens a control panel for pause/skip/stop plus streaks/daily goal/sessions/history. Id 'bibek.focusd' confirmed verbatim from its README's own removal command and config-override example, not assumed from the '<author>.<name>' pattern. No bar-move/section documented - the only 'right' mention in the README is inside an icon-override JSON example, not a positioning instruction, so left unset. 'focusd' itself is the one dependency, and per the README it self-installs on first use (SHA256-verified) or via 'yay -S focusd' - listed in deps anyway since check_deps() only warns, never blocks, and 'not on PATH yet' is still accurate info before that first run. Requires 'Omarchy quattro' (its exact wording, not a numeric version). Config at ~/.config/omarchy/focusd.json, watched live. Verified 2026-09-14 via two independent raw-README fetches, matching."
+
+[[plugin]]
+id = "bibek.ytdl"
+source = "https://github.com/BibekBhusal0/omarchy-ytdl.git"
+deps = ["yt-dlp", "jq", "busctl", "ffmpeg", "wl-copy", "wl-paste"]
+note = "YouTube/yt-dlp downloader bar widget - parallel downloads (3 at once, rest queued), playlists, clipboard-link and MPRIS browser-tab auto-detect, download history, optional transcripts. Id 'bibek.ytdl' confirmed verbatim from its README's removal command and IPC command, not assumed. No bar-move/section documented at all. Deps are the README's own 'Requirements' list, adjusted for what check_deps() can actually probe: 'wl-clipboard' is the package name the README gives, not a real command, so listed as the two commands that package actually provides on $PATH instead ('wl-copy'/'wl-paste'); 'yt-dlp' self-installs from the panel if missing (kept in deps for the same reason as focusd's dep above); 'jq'/'busctl' are 'preinstalled on Omarchy' per the README (busctl ships with systemd, not a separate package); 'ffmpeg' is NOT claimed preinstalled and is a real requirement for merging video/audio. Deliberately left OUT of deps: 'sqlite3' - the README says it's only needed for cookie export from Firefox-based browsers (zen, glide), i.e. one optional feature path, not the plugin's baseline function - install it by hand (already on Omarchy per the README, but confirm with 'command -v sqlite3') if you hit that path and it's missing. Requires 'Omarchy quattro'. Config at ~/.config/omarchy/ytdl.json, watched live, panel writes back to it. Bot-detection workaround and MPRIS caveats (Chromium-based browsers can't expose the exact URL, falls back to title+duration matching) are in the README if this ever misbehaves. Verified 2026-09-14 via two independent raw-README fetches, matching."
+
+[[plugin]]
+id = "io.github.tyrichards.tray"
+source = "https://github.com/TyRichards/omarchy-tray.git"
+note = "Replacement system tray - everything the stock 'omarchy.tray' does (status notifier icons, pin/hide, slide-out chevron drawer, in-popup app menus) plus the one big upgrade: drag any bar widget (clock, workspaces, weather, third-party plugin widgets, etc.) onto the tray and it moves inside the drawer, freeing up bar space; works the same on vertical (left/right-edge) bars. Id 'io.github.tyrichards.tray' confirmed verbatim from the README's own shell.json id-swap example and its 'omarchy plugin remove io.github.tyrichards.tray' uninstall command, not assumed - note this breaks BOTH the usual '<github-username>.<name>' convention AND omamail's bare-id exception, using a third, reverse-DNS-style pattern instead; a second, independent fetch (separate agent) cross-checked this id and matched exactly. No $PATH command dependencies stated anywhere in the README (no Requirements/Dependencies section at all) - deps deliberately omitted, not overlooked. No required Omarchy version stated either (unlike bibek.focusd/bibek.ytdl's 'Omarchy quattro' - this README simply doesn't say). No section value set here since the README doesn't mandate one, only a positioning preference once you pick one: 'keep the tray at the inner edge of its section (first entry of right, or last of left)' for the smoothest drawer-reveal animation - worth setting 'omarchy bar move io.github.tyrichards.tray --section right' by hand afterward and then dragging it to be the first widget in that section, since this script's own bar-move call has no notion of index/ordering within a section. IMPORTANT manual step this script does NOT perform: the README recommends (as 'a strict superset') replacing the stock tray after install, either by running './install.sh' from the plugin's own directory or by hand-editing ~/.config/omarchy/shell.json to change the bar layout entry '{ \"id\": \"omarchy.tray\" }' to '{ \"id\": \"io.github.tyrichards.tray\" }' (shell.json hot-reloads on save, no restart needed) - install-omarchy-plugins.sh only runs 'omarchy plugin add --enable --yes' (+ bar move if a section is set), it has no mechanism to run a plugin's bundled install.sh or edit shell.json, so do this swap by hand after the script finishes. Uninstall is two-step and easy to get wrong: drag any captured widgets back out of the tray first (otherwise they get restored to the bar layout automatically when you remove their entries by hand), then 'omarchy plugin remove io.github.tyrichards.tray', then if you replaced the stock tray, restore it with 'omarchy bar put omarchy.tray --section right --index 0'. Verified 2026-09-14 via direct raw-README fetch plus an independent second fetch (separate agent), matching."
+

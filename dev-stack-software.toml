@@ -244,3 +244,17 @@ name = "Keyd"
 method = "custom"
 status_pkg = "keyd"
 note = "kernel-level key remapper; installs the keyd pkg, deploys keyd/default.conf to /etc/keyd/default.conf, enables the systemd service - see install_keyd()"
+
+[[software]]
+name = "Aspell (English dictionary)"
+method = "pacman"
+spec = "aspell-en"
+status_pkg = "aspell-en"
+note = "GNU Aspell's English wordlist - one of two spell-check dictionary backends added 2026-09-13 (see Hunspell entry below for the other); verified against Arch's own package database, not assumed, before adding"
+
+[[software]]
+name = "Hunspell (US English dictionary)"
+method = "pacman"
+spec = "hunspell-en_us"
+status_pkg = "hunspell-en_us"
+note = "Hunspell's US English wordlist. Package name is 'hunspell-en_us' - lowercase, underscore - NOT 'hunspell-en-us' (hyphen) or the older 'hunspell-en_US' (capital US), which Arch renamed away from at some point (still listed as a legacy 'provides'/'replaces' alias in the package metadata, but no longer installable under that name); confirmed directly against archlinux.org's package JSON, not guessed, since the naming looked easy to get wrong."

@@ -97,6 +97,12 @@
 #     files moved to TOML" section for the full comparison/rationale.
 #     `git log` on this file has the earlier pipe-delimited
 #     omarchy-plugins.txt format if useful.
+#   - Registry-level disable: an entry can carry `disabled = true` (see
+#     omarchy-plugins.toml's own header for the field) to opt out of a
+#     plain run entirely - no add/enable/move attempted, no dep check -
+#     without deleting or commenting out the entry. `--status` reports
+#     these as SKIPPED, distinct from omarchy's own OK/DISABLED/NOT
+#     INSTALLED states (see print_status()'s legend line).
 #
 # Known limitation, disclosed up front rather than discovered the hard
 # way (again - see install-agent-extensions.sh's own history with
@@ -127,6 +133,7 @@ set -uo pipefail
 log()  { echo -e "\e[32m\n==> $*\e[0m"; }
 warn() { echo -e "\e[33m$*\e[0m" >&2; }
 err()  { echo -e "\e[31m$*\e[0m" >&2; }
+skip() { echo -e "\e[36m--> $*\e[0m"; }
 
 FAILURES=()
 fail() { FAILURES+=("$1"); warn "$1 - FAILED (continuing)"; }
@@ -203,7 +210,8 @@ import json, sys
 data = json.loads(sys.stdin.read() or "{}")
 for e in data.get("plugin", []):
     deps = ",".join(e.get("deps") or [])
-    fields = [e.get("id", ""), e.get("source", ""), e.get("section", ""), deps, e.get("note", "")]
+    disabled = "true" if e.get("disabled") else "false"
+    fields = [e.get("id", ""), e.get("source", ""), e.get("section", ""), deps, e.get("note", ""), disabled]
     sys.stdout.write("\x1f".join(fields) + "\x00")
 ' <<<"$json")
 }
@@ -316,9 +324,13 @@ run_plugin_installs() {
   fi
 
   refresh_omarchy_json
-  local entry id source section deps
+  local entry id source section deps disabled
   for entry in "${PLUGINS_REGISTRY[@]}"; do
-    IFS=$'\x1f' read -r id source section deps _ <<<"$entry"
+    IFS=$'\x1f' read -r id source section deps _ disabled <<<"$entry"
+    if [[ $disabled == "true" ]]; then
+      skip "omarchy plugin: $id (skipped - disabled = true in registry, not attempting add/enable/move)"
+      continue
+    fi
     ensure_plugin_installed "$id" "$source" "$section" "$deps"
   done
 }
@@ -375,13 +387,19 @@ print_status() {
   refresh_omarchy_json
   printf "%-32s %-14s %-8s %s\n" "ID" "STATUS" "SECTION" "SOURCE"
   printf '%s\n' "--------------------------------------------------------------------------------------"
-  local entry id source section deps status
+  local entry id source section deps disabled status
   for entry in "${PLUGINS_REGISTRY[@]}"; do
-    IFS=$'\x1f' read -r id source section deps _ <<<"$entry"
-    status="$(plugin_state "$id")"
+    IFS=$'\x1f' read -r id source section deps _ disabled <<<"$entry"
+    if [[ $disabled == "true" ]]; then
+      # Registry-level disable - don't even bother asking omarchy about it.
+      status="SKIPPED"
+    else
+      status="$(plugin_state "$id")"
+    fi
     printf "%-32s %-14s %-8s %s\n" "$id" "$status" "${section:--}" "$source"
   done
   echo
+  echo "STATUS legend: OK = installed+enabled | DISABLED = installed via omarchy but turned off (this script re-enables it on next plain run) | NOT INSTALLED = not yet added | SKIPPED = 'disabled = true' in the registry itself, never attempted (different from DISABLED above - that's omarchy's own state, this is the registry's)"
 }
 
 # ---------------------------------------------------------------------------

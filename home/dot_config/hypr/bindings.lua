@@ -65,11 +65,14 @@ o.bind("SUPER + Q", "Close window", hl.dsp.window.close())
 -- H/J/K/L fix earlier: o.bind()-ing an already-bound key without unbinding
 -- throws and silently kills everything after it in the file.
 --
--- Two defaults got relocated rather than dropped (SUPER+ALT+<key>, same
--- convention as before) since they're independent apps, not being replaced
+-- One default got relocated rather than dropped (SUPER+ALT+<key>, same
+-- convention as before) since it's an independent app, not being replaced
 -- by anything in this list:
 --   Omawrite (was SUPER+SHIFT+W)     -> SUPER+ALT+W
---   Google Photos (was SUPER+SHIFT+P) -> SUPER+ALT+P
+-- Google Photos (was SUPER+SHIFT+P, then relocated here to SUPER+ALT+P) was
+-- dropped entirely on 2026-09-12 to free SUPER+ALT+P for Bitwarden - see
+-- that section below for why, and the SUPER+P/SUPER+SHIFT+P swap that
+-- triggered it.
 -- Signal (was SUPER+SHIFT+G) was briefly relocated to SUPER+ALT+G too, but
 -- dropped entirely per your request - no shortcut for Signal at all now,
 -- only reachable via the app launcher (SUPER+SPACE). For the record: that
@@ -98,11 +101,18 @@ hl.unbind("SUPER + SHIFT + Y") -- previously: YouTube (same key, adding focus=tr
 -- SUPER+SHIFT+R and SUPER+SHIFT+H had nothing bound - no unbind needed.
 
 o.bind("SUPER + ALT + W", "Omawrite", { launch = "omawrite" })
-o.bind("SUPER + ALT + P", "Google Photos", { webapp = "https://photos.google.com/", focus = true })
+
+-- Google Photos used to live here (SUPER+ALT+P) - dropped entirely on
+-- 2026-09-12, not relocated again, to free this key for Bitwarden (see
+-- Bitwarden's own section below for the full chain of moves this
+-- triggered). Still reachable via the app launcher (SUPER+SPACE) or a
+-- browser bookmark if you ever want it back.
 
 o.bind("SUPER + SHIFT + X", "X", { webapp = "https://x.com/", focus = true })
 o.bind("SUPER + SHIFT + W", "WhatsApp", { webapp = "https://web.whatsapp.com/", focus = true })
 o.bind("SUPER + SHIFT + Y", "YouTube", { webapp = "https://youtube.com/", focus = true })
+o.bind("SUPER", "Y", "exec, omarchy-shell shell summon bibek.ytdl")
+o.bind("SUPER + CTRL", "Y", "exec, omarchy shell ytdl autoDownload")
 o.bind("SUPER + SHIFT + A", "Amazon", { webapp = "https://www.amazon.com/", focus = true })
 o.bind("SUPER + SHIFT + H", "Robinhood", { webapp = "https://robinhood.com/", focus = true })
 o.bind("SUPER + SHIFT + G", "ChatGPT", { webapp = "https://chatgpt.com", focus = true })
@@ -129,7 +139,13 @@ o.bind("SUPER + SHIFT + C", "Claude desktop", { launch = "claude-desktop", focus
 -- "Bitwarden" (capitalized product name, common Electron convention) - not
 -- verified, and the executable name being bitwarden-desktop doesn't confirm
 -- it either way.
-o.bind("SUPER + SHIFT + P", "Bitwarden", { launch = "bitwarden-desktop", focus = "^Bitwarden$" })
+--
+-- Moved from SUPER+SHIFT+P to SUPER+ALT+P on 2026-09-12, to make room for
+-- the window back-and-forth toggle at SUPER+P and the workspace
+-- back-and-forth toggle at SUPER+SHIFT+P (see that section below for the
+-- full reasoning) - Google Photos, which used to hold this exact key, was
+-- dropped rather than relocated again (see its own note above).
+o.bind("SUPER + ALT + P", "Bitwarden", { launch = "bitwarden-desktop", focus = "^Bitwarden$" })
 
 -- Spotify (native desktop client, AUR - see dev-stack-software.txt). This
 -- replaces Omarchy's own default SUPER+SHIFT+M ({ omarchy = "spotify" }),
@@ -224,28 +240,59 @@ hl.config({
   },
 })
 
--- Workspace back-and-forth toggle, on SUPER + P as requested. This is
--- different from H/L above: e-1/e+1 step sequentially through workspaces in
--- order, while Hyprland's "previous" workspace keyword is a true
--- back-and-forth toggle - jump to whichever workspace was last active, press
--- again to jump right back, regardless of workspace number/order.
+-- Workspace back-and-forth toggle - originally SUPER + P, moved to
+-- SUPER + SHIFT + P on 2026-09-12 to make room for the window
+-- back-and-forth toggle below (see that section for why SUPER + P was
+-- worth taking over). This is different from H/L above: e-1/e+1 step
+-- sequentially through workspaces in order, while Hyprland's "previous"
+-- workspace keyword is a true back-and-forth toggle - jump to whichever
+-- workspace was last active, press again to jump right back, regardless
+-- of workspace number/order.
 --
 -- Turns out Omarchy already ships exactly this dispatcher by default -
 -- hl.dsp.focus({ workspace = "previous" }) - just bound to the easy-to-miss
 -- SUPER+CTRL+TAB chord as "Former workspace" (default/hypr/bindings/
 -- tiling.lua). That tracks with "I don't think it's enabled" - it was there,
 -- just not on a key you'd stumble onto. Left that default binding in place
--- (harmless to have two paths to the same toggle) and added this second,
--- easier one on SUPER + P.
+-- (harmless to have two paths to the same toggle).
+--
+-- SUPER+SHIFT+P is free at this point in the file: Google Photos held it
+-- as an Omarchy default, was unbound above, then relocated to SUPER+ALT+P,
+-- and Bitwarden (which had since taken this key over) was itself moved to
+-- SUPER+ALT+P above too - so no further hl.unbind() is needed here, this
+-- key has had nothing bound to it since that original unbind ran.
+o.bind("SUPER + SHIFT + P", "Former workspace (back and forth)", hl.dsp.focus({ workspace = "previous" }))
+
+-- Window back-and-forth toggle, on SUPER + P - the window equivalent of the
+-- workspace toggle just above, added 2026-09-12. Jump to whichever window
+-- was focused immediately before this one, press again to jump right back
+-- - same "true toggle" behavior as workspace previous, just one level down
+-- (windows instead of workspaces).
+--
+-- Verified directly against Hyprland's own source before binding this
+-- (same standard as the group-cycling dispatchers below), not the wiki's
+-- dispatcher table alone: `hl.dsp.focus({ last = true })` resolves to
+-- dsp_focusCurrentOrLast() in src/config/lua/bindings/
+-- LuaBindingsDispatchers.cpp, which calls Actions::focusCurrentOrLast()
+-- (src/config/shared/actions/ConfigActions.cpp) - that function reads the
+-- window focus history and switches to the second-to-last entry, a pure
+-- current<->last toggle with no side conditions. Deliberately NOT
+-- `{ urgent_or_last = true }` (dsp_focusUrgentOrLast /
+-- Actions::focusUrgentOrLast()) - that one preferentially jumps to an
+-- urgent window over the last-focused one if any window has raised the
+-- urgent flag, which would make the toggle occasionally jump somewhere
+-- other than "back," breaking the back-and-forth guarantee this key is
+-- for.
 --
 -- SUPER + P wasn't free: Omarchy's default has it as "Pseudo window"
 -- (hl.dsp.window.pseudo(), dwindle-layout-only pseudo-tiling, same
--- tiling.lua) - unbound below per your instruction. Still reachable via the
--- root menu / 'omarchy-menu-keybindings' if you ever want it back on
--- another key - say the word.
+-- tiling.lua) - unbound below, same as when this key briefly held the
+-- workspace toggle above. Still reachable via the root menu /
+-- 'omarchy-menu-keybindings' if you ever want it back on another key -
+-- say the word.
 hl.unbind("SUPER + P") -- previously: Pseudo window
 
-o.bind("SUPER + P", "Former workspace (back and forth)", hl.dsp.focus({ workspace = "previous" }))
+o.bind("SUPER + P", "Former window (back and forth)", hl.dsp.focus({ last = true }))
 
 -- Notes on this approach:
 --
