@@ -58,10 +58,10 @@ chezmoi diff        # should print nothing - a fresh apply has nothing left to c
 ls ~/.config/doom    # your real Doom config, not a placeholder
 ```
 
-**4. Find the dev-stack installer.** `chezmoi init` cloned the *entire* repo, not just the `home/` subtree it applies to `$HOME` - `install-dev-stack.sh`, `dev-stack-software.toml`, and this README all live at the top of that same clone, one level up from where `chezmoi cd` drops you:
+**4. Find the dev-stack installer.** `chezmoi init` cloned the *entire* repo, not just the `home/` subtree it applies to `$HOME` - this README lives at the top of that same clone, one level up from where `chezmoi cd` drops you, and `install-dev-stack.sh` + `dev-stack-software.toml` live in its `dev-stack/` subfolder (moved there from the repo root on 2026-09-21 to keep the top level clean):
 
 ```sh
-cd ~/.local/share/chezmoi
+cd ~/.local/share/chezmoi/dev-stack
 ./install-dev-stack.sh
 ```
 
@@ -99,8 +99,8 @@ chezmoi diff      # preview what would change
 chezmoi apply     # apply local edits under ~/.local/share/chezmoi
 chezmoi update    # git pull + apply, picks up changes pushed from another machine
 chezmoi cd        # cd into the source directory's home/ subtree (see step 4 above for
-                   # the repo-root-level files, like install-dev-stack.sh, that chezmoi
-                   # cd doesn't take you to)
+                   # the repo-root-level dev-stack/ folder, like install-dev-stack.sh
+                   # inside it, that chezmoi cd doesn't take you to)
 ```
 
 Per-host differences (multiple machines): use chezmoi's built-in

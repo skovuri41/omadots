@@ -13,8 +13,10 @@ One-time setup (already done if node_modules/ exists in the repo root):
 Usage:
     python3 docs/build_docs.py [--out PATH]
 
-Defaults assume this script lives at <repo-root>/docs/build_docs.py and
-the three source markdown files live at <repo-root>/*.md.
+Defaults assume this script lives at <repo-root>/docs/build_docs.py.
+README.md and CHEZMOI-GUIDE.md live at <repo-root>/*.md; README-dev-stack.md
+moved into <repo-root>/dev-stack/ on 2026-09-21 alongside install-dev-stack.sh
+and dev-stack-software.toml (see DOCS below for each file's actual path).
 """
 import argparse
 import html
@@ -35,7 +37,7 @@ REPO_ROOT = SCRIPT_DIR.parent
 # (nav label, slug, source markdown path relative to repo root, short description)
 DOCS = [
     ("Overview", "overview", "README.md", "Repo layout & brand-new-laptop setup"),
-    ("Dev Stack Guide", "dev-stack", "README-dev-stack.md", "install-dev-stack.sh, tool by tool"),
+    ("Dev Stack Guide", "dev-stack", "dev-stack/README-dev-stack.md", "install-dev-stack.sh, tool by tool"),
     ("Chezmoi Guide", "chezmoi", "CHEZMOI-GUIDE.md", "Day-to-day dotfiles workflow"),
 ]
 

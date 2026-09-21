@@ -783,7 +783,9 @@ so `add` left it alone rather than duplicating it).
 The *other* half of agent-config management — skill repos you didn't write
 yourself, and Claude Code plugins — is deliberately kept separate from
 this personal-skills setup, via `agent-extensions/install-agent-extensions.sh`
-(repo root, sibling to `install-dev-stack.sh`). See that script's own
+(repo root, alongside the `dev-stack/` and `omarchy-plugins/` folders -
+`install-dev-stack.sh` itself moved into `dev-stack/` on 2026-09-21 to keep
+the repo root clean). See that script's own
 header comment for the full reasoning; short version: those are other
 people's code, fetched from a registry, not something to fork into this
 repo the way a hand-written skill is.

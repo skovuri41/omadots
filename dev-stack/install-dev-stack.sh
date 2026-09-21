@@ -445,9 +445,12 @@ install_keyd() {
 
   # chezmoi source-path returns the .chezmoiroot-adjusted dir (this repo's
   # home/, per .chezmoiroot: home) - NOT the git repo root. keyd/default.conf
-  # lives one level up, alongside install-dev-stack.sh, so resolve the real
-  # repo root via git instead of assuming a fixed number of '..' hops (keeps
-  # working even if .chezmoiroot ever changes).
+  # lives at the repo root itself (install-dev-stack.sh moved into dev-stack/
+  # on 2026-09-21 to keep the repo root clean, but keyd/ stayed put - it's
+  # not this script's dependency, just something it deploys), so resolve the
+  # real repo root via git instead of assuming a fixed number of '..' hops
+  # (keeps working regardless of where either one lives, or if .chezmoiroot
+  # ever changes).
   repo_root=$(git -C "$source_path" rev-parse --show-toplevel 2>/dev/null)
   if [[ -z $repo_root ]]; then
     fail "keyd - couldn't resolve the dotfiles repo root from $source_path (not a git checkout?)"
@@ -477,11 +480,37 @@ install_keyd() {
     return
   fi
 
+  # REAL BUG FOUND 2026-09-21, confirmed against rvaiya/keyd's own source
+  # and issue tracker, not assumed: this used to run `sudo keyd reload` here
+  # whenever keyd was already active - which is every run after the first,
+  # since this whole block runs unconditionally on every install-dev-stack.sh
+  # pass (i.e. every `omarchy update`), regardless of whether the config
+  # actually changed. Two independent problems with that:
+  #   1. `keyd reload` is purely in-process (src/daemon.c: free_configs() +
+  #      load_configs(), no re-exec) - it keeps running the OLD binary code
+  #      already loaded into memory, so it does NOT pick up a keyd package
+  #      binary that pacman just upgraded as part of the same update. A
+  #      `systemctl restart` starts a fresh process and actually picks up
+  #      the new binary.
+  #   2. There's an open, unpatched upstream bug (rvaiya/keyd#1320,
+  #      still open as of 2026-09-21): free_configs() frees keyboard structs
+  #      without clearing the global active_kbd pointer, so a chord/overload
+  #      timer firing during that window dereferences freed memory and can
+  #      segfault the daemon. keyd.service ships as Type=simple with no
+  #      Restart= directive, so systemd does NOT bring it back up after that
+  #      - it just sits dead until someone notices and restarts it by hand.
+  #      This is the actual mechanism behind "keyd is stopped after every
+  #      software update": we were the ones unconditionally triggering the
+  #      reload that can crash it.
+  # `systemctl restart` avoids both: no in-process free/reload race, and a
+  # genuinely fresh process every time. Confirmed no pacman hook touches the
+  # keyd service either (Arch's keyd package ships no libalpm hooks), so
+  # this script's own reload call was the sole cause, not pacman.
   if systemctl is-active --quiet keyd; then
-    if sudo keyd reload; then
-      log "keyd already running, reloaded new config"
+    if sudo systemctl restart keyd; then
+      log "keyd already running, restarted with new config"
     else
-      fail "keyd - reload failed"
+      fail "keyd - restart failed"
     fi
   elif sudo systemctl enable --now keyd; then
     log "keyd enabled and started ('sudo systemctl status keyd' to check)"

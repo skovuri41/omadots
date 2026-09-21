@@ -258,3 +258,10 @@ method = "pacman"
 spec = "hunspell-en_us"
 status_pkg = "hunspell-en_us"
 note = "Hunspell's US English wordlist. Package name is 'hunspell-en_us' - lowercase, underscore - NOT 'hunspell-en-us' (hyphen) or the older 'hunspell-en_US' (capital US), which Arch renamed away from at some point (still listed as a legacy 'provides'/'replaces' alias in the package metadata, but no longer installable under that name); confirmed directly against archlinux.org's package JSON, not guessed, since the naming looked easy to get wrong."
+
+[[software]]
+name = "Syncthing"
+method = "pacman"
+spec = "syncthing"
+status_pkg = "syncthing"
+note = "official extra repo pkg (confirmed via archlinux.org, not AUR). The package only ships the systemd unit - it does NOT auto-enable/start anything, so after install run: systemctl --user enable --now syncthing.service (per-user; there's also a syncthing@<user>.service system-level unit if you'd rather run it that way). Web GUI is localhost-only by default at 127.0.0.1:8384; sync traffic is TCP/UDP 22000 plus UDP 21027 for local discovery - open those if syncing across a LAN/WAN, per docs.syncthing.net/users/firewall.html. No official tray/GUI companion package in extra; syncthingtray (AUR, Qt-based) is the common pairing if a systray icon is wanted later - not installed here."

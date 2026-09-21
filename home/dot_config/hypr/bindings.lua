@@ -111,13 +111,41 @@ o.bind("SUPER + ALT + W", "Omawrite", { launch = "omawrite" })
 o.bind("SUPER + SHIFT + X", "X", { webapp = "https://x.com/", focus = true })
 o.bind("SUPER + SHIFT + W", "WhatsApp", { webapp = "https://web.whatsapp.com/", focus = true })
 o.bind("SUPER + SHIFT + Y", "YouTube", { webapp = "https://youtube.com/", focus = true })
-o.bind("SUPER", "Y", "exec, omarchy-shell shell summon bibek.ytdl")
-o.bind("SUPER + CTRL", "Y", "exec, omarchy shell ytdl autoDownload")
 o.bind("SUPER + SHIFT + A", "Amazon", { webapp = "https://www.amazon.com/", focus = true })
 o.bind("SUPER + SHIFT + H", "Robinhood", { webapp = "https://robinhood.com/", focus = true })
 o.bind("SUPER + SHIFT + G", "ChatGPT", { webapp = "https://chatgpt.com", focus = true })
 o.bind("SUPER + SHIFT + E", "Fastmail", { webapp = "https://app.fastmail.com/", focus = true })
 o.bind("SUPER + SHIFT + R", "Reddit", { webapp = "https://www.reddit.com/", focus = true })
+
+-- Ytdl (bibek.ytdl plugin, added 2026-09-14): two bindings adapted from the
+-- plugin's own README, converted to this file's "MODS + KEY" combined-string
+-- o.bind() convention instead of the README's separate-args example style.
+-- Both keys confirmed free directly against every default/hypr/bindings/*.lua
+-- file plus this file's own existing binds - no SUPER+Y or SUPER+CTRL+Y
+-- anywhere, so no hl.unbind() needed for either.
+--
+-- SUPER+Y opens the panel via the shell's own `summon` IPC method - confirmed
+-- real, not assumed: shell/shell.qml's target="shell" IpcHandler defines
+-- `function summon(id, payloadJson)`.
+--
+-- SUPER+CTRL+Y triggers a one-shot auto-download (checks MPRIS for a playing
+-- YouTube tab first, then falls back to the clipboard) without opening the
+-- panel at all. This one looked like a typo at first - the README literally
+-- reads "omarchy shell ytdl autoDownload", missing the hyphen you'd expect
+-- for "omarchy-shell" - but it's correct as written: `omarchy <group> ...` is
+-- a generic router (bin/omarchy) that forwards to bin/omarchy-<group>, and
+-- omarchy-shell's own header documents exactly this equivalence
+-- ("omarchy:examples=omarchy shell shell ping | omarchy-shell -q ..."), so
+-- "omarchy shell ytdl autoDownload" == "omarchy-shell ytdl autoDownload" -
+-- target "ytdl", method "autoDownload", both confirmed straight from the
+-- plugin's own Service.qml (`IpcHandler { target: "ytdl" ...
+-- function autoDownload() }`).
+--
+-- Descriptions below deliberately differ ("Ytdl panel" / "Ytdl
+-- auto-download") instead of both saying "Ytdl" - keeps
+-- `omarchy menu keybindings --print` unambiguous between the two.
+o.bind("SUPER + Y", "Ytdl panel", "exec, omarchy-shell shell summon bibek.ytdl")
+o.bind("SUPER + CTRL + Y", "Ytdl auto-download", "exec, omarchy shell ytdl autoDownload")
 
 -- These two are native apps, not webapps - `launch` is the command to run,
 -- `focus` is a regex matched against the window's *class* to detect an
@@ -263,36 +291,117 @@ hl.config({
 -- key has had nothing bound to it since that original unbind ran.
 o.bind("SUPER + SHIFT + P", "Former workspace (back and forth)", hl.dsp.focus({ workspace = "previous" }))
 
--- Window back-and-forth toggle, on SUPER + P - the window equivalent of the
--- workspace toggle just above, added 2026-09-12. Jump to whichever window
--- was focused immediately before this one, press again to jump right back
--- - same "true toggle" behavior as workspace previous, just one level down
--- (windows instead of workspaces).
+-- Window back-and-forth NAVIGATION, on SUPER + P (back) / SUPER + N
+-- (forward) - upgraded 2026-09-20 from the single-step toggle this used to
+-- be (added 2026-09-12: `hl.dsp.focus({ last = true })`, a pure current<->
+-- last swap with no memory beyond one step). You asked whether Hyprland has
+-- a built-in "browser-style" N-deep back/forward through focus history,
+-- walking multiple windows back then multiple forward in the exact order
+-- you visited them - verified directly against Hyprland's own C++ source
+-- (not the wiki) that it does NOT:
+--   Desktop::History::CWindowHistoryTracker (src/desktop/history/
+--   WindowHistoryTracker.hpp) only exposes fullHistory()/
+--   historyForWorkspace() - a flat, append-only, oldest->newest log with no
+--   cursor/position concept - and the only two dispatchers that read it
+--   (focusCurrentOrLast/focusUrgentOrLast, src/config/shared/actions/
+--   ConfigActions.cpp) each just peek at the single most-recent entry, same
+--   as the old binding here.
+-- So this is built here in Lua instead, on two real Hyprland Lua APIs
+-- confirmed straight from source, not assumed:
+--   hl.on("window.active", fn) - fires on every real focus change
+--     (src/config/lua/LuaEventHandler.cpp); confirmed to accept a plain Lua
+--     function, not just a fixed dispatcher.
+--   hl.dispatch(hl.dsp.focus({ window = "stableid:<id>" })) - focuses a
+--     window by selector, run immediately instead of being bound to a key.
+--     hl.dsp.focus(...) only ever BUILDS a dispatcher object - calling it
+--     directly with () throws "dispatcher objects cannot be called
+--     directly; use hl.dispatch(dispatcher)" (confirmed verbatim from
+--     src/config/lua/bindings/LuaBindingsDispatcherUtils.cpp - this bit me
+--     on the first pass, fixed here). o.bind()/hl.bind() don't need this
+--     wrapper because Hyprland's own keypress dispatch machinery calls the
+--     dispatcher object internally; hl.dispatch() is the one call that lets
+--     Lua code do the same thing on demand, which is what firing focus from
+--     inside this plain function (not a key-triggered dispatcher slot)
+--     needs. "stableid:" (MODE_STABLE_ID in src/desktop/state/ViewQuery.cpp)
+--     is used rather than "address:" deliberately: window.address is a raw
+--     memory pointer that could theoretically get reused by a new window
+--     once the old one closes and its memory is freed (confirmed this risk
+--     exists, not assumed), while window.stable_id
+--     (w->metadata().stableID()) is a monotonic id that's never reused for
+--     the life of the Hyprland session - the safer choice for something
+--     sitting in a history list for a while.
 --
--- Verified directly against Hyprland's own source before binding this
--- (same standard as the group-cycling dispatchers below), not the wiki's
--- dispatcher table alone: `hl.dsp.focus({ last = true })` resolves to
--- dsp_focusCurrentOrLast() in src/config/lua/bindings/
--- LuaBindingsDispatchers.cpp, which calls Actions::focusCurrentOrLast()
--- (src/config/shared/actions/ConfigActions.cpp) - that function reads the
--- window focus history and switches to the second-to-last entry, a pure
--- current<->last toggle with no side conditions. Deliberately NOT
--- `{ urgent_or_last = true }` (dsp_focusUrgentOrLast /
--- Actions::focusUrgentOrLast()) - that one preferentially jumps to an
--- urgent window over the last-focused one if any window has raised the
--- urgent flag, which would make the toggle occasionally jump somewhere
--- other than "back," breaking the back-and-forth guarantee this key is
--- for.
+-- SUPER + N is confirmed free (checked every default/hypr/bindings/*.lua
+-- file - only SUPER+SHIFT+N "Editor" and SUPER+CTRL+N "Toggle nightlight"
+-- exist, neither is plain SUPER+N) - no hl.unbind() needed for it.
+-- SUPER + P wasn't free before this file touched it (Omarchy's default has
+-- it as "Pseudo window") - already unbound below from when the single-step
+-- toggle first took this key over on 2026-09-12; nothing further needed
+-- here.
 --
--- SUPER + P wasn't free: Omarchy's default has it as "Pseudo window"
--- (hl.dsp.window.pseudo(), dwindle-layout-only pseudo-tiling, same
--- tiling.lua) - unbound below, same as when this key briefly held the
--- workspace toggle above. Still reachable via the root menu /
--- 'omarchy-menu-keybindings' if you ever want it back on another key -
--- say the word.
+-- Known limitation, not engineered around: this history lives in the Lua
+-- VM's own memory, not on disk. `hyprctl reload` (theme switches, config
+-- edits) tears down and re-runs the whole Lua config - confirmed via the
+-- "config.unload"/"config.reloaded" events firing on every reload - which
+-- wipes this table back to empty. Same tradeoff as a browser tab's back/
+-- forward history resetting on an app restart; fine for a short-lived
+-- navigation aid, called out here rather than silently swallowed.
 hl.unbind("SUPER + P") -- previously: Pseudo window
 
-o.bind("SUPER + P", "Former window (back and forth)", hl.dsp.focus({ last = true }))
+local windowHistory = {}
+local historyCursor = 0
+local navigatingWindowHistory = false
+
+-- REAL BUG FOUND 2026-09-20, confirmed straight from source, not assumed:
+-- window.stable_id is exposed to Lua as a plain decimal integer -
+--   src/config/lua/objects/LuaWindow.cpp:
+--     else if (key == "stable_id") lua_pushinteger(L, sc<lua_Integer>(w->m_stableID));
+-- - but the "stableid:<id>" window-selector match on the OTHER end compares
+-- against a HEX-formatted string -
+--   src/desktop/state/ViewQuery.cpp, MODE_STABLE_ID:
+--     std::string stableID = std::format("{:x}", w->m_stableID);
+--     if (matchCheck != stableID) continue;
+-- - so storing win.stable_id and later doing "stableid:" .. id concatenates
+-- Lua's decimal string form of the integer, which only happens to match the
+-- hex form for ids 0-9. Any window whose stable id is >= 10 (i.e. needs an
+-- a-f digit in hex) would silently fail to match anything - no error, the
+-- dispatcher just finds zero windows and does nothing. This alone explained
+-- "nope nothing happens in keybinds": most of the time the id in play needed
+-- an a-f digit and the focus call was a quiet no-op. Fixed below by hex-
+-- encoding the id with string.format("%x", ...) at the point it's stored, so
+-- it already matches the selector's own format. Confirmed fixed 2026-09-20.
+hl.on("window.active", function(win)
+  if navigatingWindowHistory or not win then return end
+
+  local id = win.stable_id
+  if not id then return end
+
+  local hexId = string.format("%x", id)
+  if hexId == windowHistory[historyCursor] then return end
+
+  -- Browser-style: focusing a *new* window while parked back in history
+  -- drops whatever was ahead of the cursor, rather than leaving a stale
+  -- "forward" branch dangling.
+  for i = #windowHistory, historyCursor + 1, -1 do
+    table.remove(windowHistory, i)
+  end
+
+  table.insert(windowHistory, hexId)
+  historyCursor = #windowHistory
+end)
+
+local function navigate_window_history(step)
+  local target = historyCursor + step
+  if target < 1 or target > #windowHistory then return end
+
+  historyCursor = target
+  navigatingWindowHistory = true
+  hl.dispatch(hl.dsp.focus({ window = "stableid:" .. windowHistory[historyCursor] }))
+  navigatingWindowHistory = false
+end
+
+o.bind("SUPER + P", "Focus back in window history", function() navigate_window_history(-1) end)
+o.bind("SUPER + N", "Focus forward in window history", function() navigate_window_history(1) end)
 
 -- Notes on this approach:
 --
