@@ -1,0 +1,5 @@
+#!/bin/bash
+# Opens a GUI frame on the running Emacs daemon (systemd --user emacs.service),
+# blocking until the frame is closed (C-x 5 0) so callers like herdr/git that
+# wait on $EDITOR see it as done.
+exec emacsclient -c -a "" "$@"
