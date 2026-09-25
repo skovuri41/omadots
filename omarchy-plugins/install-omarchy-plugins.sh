@@ -48,7 +48,7 @@
 #
 # The `--yes` matters and was missing from this script's first version
 # (fixed 2026-09-10, found from a real failure on the user's machine -
-# see CHEZMOI-GUIDE.md): `omarchy plugin add` shows a mandatory safety
+# see README.md): `omarchy plugin add` shows a mandatory safety
 # warning before cloning ("plugins run as unsandboxed code inside your
 # long-lived shell process") and waits on stdin for a yes/no - documented
 # in Omarchy's shell/README.md (a different, more technical doc than the
@@ -93,7 +93,7 @@
 #     (comma-separated string -> real TOML array), and the same
 #     "malformed file fails the whole load, not just one bad entry"
 #     tradeoff as the other two install-*.sh scripts - see
-#     install-dev-stack.sh's header and CHEZMOI-GUIDE.md's "Registry
+#     install-dev-stack.sh's header and README.md's "Registry
 #     files moved to TOML" section for the full comparison/rationale.
 #     `git log` on this file has the earlier pipe-delimited
 #     omarchy-plugins.txt format if useful.
@@ -168,7 +168,7 @@ require_yq() {
   if ! command -v yq >/dev/null 2>&1; then
     err "'yq' not found on \$PATH - needed to read $PLUGINS_REGISTRY_FILE (TOML)."
     err "Install it with: sudo pacman -S go-yq"
-    err "(NOT 'yq' from the AUR or pip - that's a different, unrelated tool. See CHEZMOI-GUIDE.md.)"
+    err "(NOT 'yq' from the AUR or pip - that's a different, unrelated tool. See README.md.)"
     return 1
   fi
   local version_line

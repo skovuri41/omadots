@@ -46,13 +46,10 @@
 # It probes pacman, the AUR, and mise for that name and prints a suggested
 # [[software]] block to paste in below.
 #
-# Why yq, and why this replaced the old pipe-delimited dev-stack-
-# software.txt (2026-09-11): see CHEZMOI-GUIDE.md's "Registry files moved
-# to TOML" section for the full comparison (JSON was considered and
-# rejected - it can't hold these comments at all, confirmed jq enforces
-# strict RFC 8259 with zero comment support; TOML is also what chezmoi
-# itself already uses for the same "list of things to fetch" problem in
-# .chezmoiexternal.toml). `yq` here specifically means mikefarah/yq (the Go
+# TOML (read via yq) was chosen over JSON for these registries because
+# JSON can't hold comments at all; TOML is also what chezmoi itself
+# already uses for the same "list of things to fetch" problem in
+# .chezmoiexternal.toml. `yq` here specifically means mikefarah/yq (the Go
 # one, Arch package `go-yq`) - there is a different, unrelated tool also
 # called `yq` (kislyuk/yq, a Python/jq wrapper) that does NOT support this
 # script's `-p toml -o tsv` usage; every script that reads a .toml registry
@@ -210,7 +207,7 @@ name = "Citrix Workspace"
 method = "aur-fragile"
 spec = "icaclient"
 status_pkg = "icaclient"
-note = "AUR-only; Citrix gates the download, see below. AUR was out of date as of 2026-08-23 - installed manually instead, see CITRIX-WORKSPACE-MANUAL-INSTALL.md ('--status' detects this too)"
+note = "AUR-only; Citrix gates the download, see below. AUR was out of date as of 2026-08-23 - installed manually instead, see README.md ('--status' detects this too)"
 
 [[software]]
 name = "chezmoi"
@@ -224,7 +221,7 @@ name = "Bitwarden CLI"
 method = "pacman"
 spec = "bitwarden-cli"
 status_pkg = "bitwarden-cli"
-note = "bw - ad hoc personal-vault access only, see CHEZMOI-GUIDE.md"
+note = "bw - ad hoc personal-vault access only, see README.md"
 
 [[software]]
 name = "Bitwarden Secrets Manager CLI"

@@ -55,7 +55,7 @@ alias fix-wifi='sudo systemctl restart NetworkManager && echo "Restarted Network
 alias wifi-restart='sudo systemctl restart NetworkManager && echo "Restarted NetworkManager"'
 
 # emacsclient shortcuts - all talk to the single systemd-managed Emacs
-# daemon (see CHEZMOI-GUIDE.md and ~/.config/systemd/user/emacs.service).
+# daemon (see README.md and ~/.config/systemd/user/emacs.service).
 # ec/emax used to pass emacsclient's own `-a ''` auto-start flag directly,
 # which turned out to be the cause of "a second daemon sometimes appears" -
 # see the emacsclient_safe() comment in dot_bash_functions for the full

@@ -8,7 +8,7 @@
 -- recommendation to set XDG vars before anything else Hyprland launches.
 --
 -- Why this exists alongside `dot_bash_exports`'s own `XDG_CONFIG_HOME`
--- export (added the same day, see CHEZMOI-GUIDE.md's XDG_CONFIG_HOME
+-- export (added the same day, see README.md's XDG_CONFIG_HOME
 -- section): that export only reaches bash-launched processes. Anything
 -- Hyprland spawns *directly* - the app launcher, keybinding `exec`
 -- commands, autostart entries, a GTK/Qt app that isn't going through a

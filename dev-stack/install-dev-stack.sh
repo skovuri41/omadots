@@ -12,7 +12,7 @@
 # Nerd Font, uv, curl, sqlite, tree, tre, jq, zathura, Citrix Workspace,
 # chezmoi, the Bitwarden CLI (bw, for ad hoc personal-vault access), bws
 # (Bitwarden Secrets Manager CLI - chezmoi's actual secret backend as of
-# 2026-08-31, see CHEZMOI-GUIDE.md), and the GitHub CLI.
+# 2026-08-31, see README.md), and the GitHub CLI.
 #
 # Needs yq (mikefarah/yq, the Go one - Arch package `go-yq`, NOT the
 # unrelated Python/jq-wrapper tool that also happens to be called "yq") to
@@ -22,14 +22,13 @@
 # exactly this reason (same problem those two already solved). This
 # script also checks for it itself below and fails with a clear
 # `pacman -S go-yq` hint rather than a confusing yq/parse error if it's
-# missing. See CHEZMOI-GUIDE.md's "Registry files moved to TOML" section
-# for the full rationale (JSON was considered and rejected - no comment
-# support; TOML matches chezmoi's own .chezmoiexternal.toml for the same
-# "list of things to fetch" problem).
+# missing. TOML (read via yq) was chosen over JSON for these registries
+# because JSON can't hold comments at all - TOML matches chezmoi's own
+# .chezmoiexternal.toml for the same "list of things to fetch" problem.
 #
 # Also enables the Emacs daemon as a systemd --user service, once chezmoi
 # has put its unit file in place (see below) - emacsclient (ec/emax/semacs/
-# ekill aliases, see CHEZMOI-GUIDE.md) then always has a running daemon to
+# ekill aliases, see README.md) then always has a running daemon to
 # talk to, and the app launcher gets an emacsclient-backed .desktop entry.
 #
 # Pairs with the chezmoi source state in omadots/home (see
@@ -92,7 +91,7 @@
 #     script only ever writes inside env.sh after that.
 #
 # Verified against Omarchy 4.0.0 "Quattro" (tag v4.0.0, 2026-08-14). See
-# README-dev-stack.md for the full source list and reasoning per tool.
+# README.md for the full source list and reasoning per tool.
 
 set -uo pipefail
 
@@ -167,7 +166,7 @@ require_yq() {
   if ! command -v yq >/dev/null 2>&1; then
     err "'yq' not found on \$PATH - needed to read $REGISTRY_FILE (TOML)."
     err "Install it with: sudo pacman -S go-yq"
-    err "(NOT 'yq' from the AUR or pip - that's a different, unrelated tool. See CHEZMOI-GUIDE.md.)"
+    err "(NOT 'yq' from the AUR or pip - that's a different, unrelated tool. See README.md.)"
     return 1
   fi
   local version_line
@@ -300,7 +299,7 @@ step_aur_fragile() {
       warn "     will let you point it at the file you just downloaded."
       warn "  If the AUR package itself is out of date (not just download-gated -"
       warn "  yay retry above still fails after step 2), see"
-      warn "  CITRIX-WORKSPACE-MANUAL-INSTALL.md in this repo for the full manual"
+      warn "  README.md in this repo for the full manual"
       warn "  tarball install that's known to work instead. --status detects that"
       warn "  install too, so it won't keep reporting NOT INSTALLED once you're done."
       ;;
@@ -668,7 +667,7 @@ install_bws() {
 # install path - this function is NOT wired into dispatch_custom() below, so
 # it never runs, and nothing in dev-stack-software.toml points at it. It's
 # left here, commented out, purely as a live copy of
-# CITRIX-WORKSPACE-MANUAL-INSTALL.md's steps so a future "make this
+# README.md's steps so a future "make this
 # automatic" pass has real shell to start from instead of re-deriving it.
 #
 # Why it exists at all: the AUR icaclient package was out of date enough
@@ -687,7 +686,7 @@ install_bws() {
 #
 # install_citrix_manual() {
 #   log "Citrix Workspace (manual tarball install)"
-#   warn "This is disabled - see CITRIX-WORKSPACE-MANUAL-INSTALL.md and the"
+#   warn "This is disabled - see README.md and the"
 #   warn "comment above install_citrix_manual() in this script before enabling it."
 #   return
 #
@@ -711,12 +710,12 @@ install_bws() {
 #   mkdir -p "$extract_dir"
 #   tar xzf "$tarball" -C "$extract_dir"
 #   # ./setupwfc lives somewhere under $extract_dir - run it, answer its
-#   # prompts (1, Enter, y, y/n, 3) same as CITRIX-WORKSPACE-MANUAL-INSTALL.md.
+#   # prompts (1, Enter, y, y/n, 3) same as README.md.
 #
 #   # 4. ICAROOT - wire via dev_stack_path_add-style env.sh, not dot_bash_exports.
 #   # dev_stack_path_add "$HOME/ICAClient/linuxx64" "Citrix Workspace ICAROOT"
 #
-#   # 5. Certs - see CITRIX-WORKSPACE-MANUAL-INSTALL.md step 5, same commands.
+#   # 5. Certs - see README.md step 5, same commands.
 #
 #   log "Citrix Workspace (manual) installed"
 # }
@@ -809,11 +808,11 @@ EOF
 # ---------------------------------------------------------------------------
 
 # Detects a Citrix Workspace install that pacman doesn't know about - see
-# CITRIX-WORKSPACE-MANUAL-INSTALL.md and install_citrix_manual() above. Echoes
+# README.md and install_citrix_manual() above. Echoes
 # the first Citrix binary found (wfica or selfservice) and returns non-zero
 # if none exist. Checked in a few plausible install dirs since the exact
 # subdirectory name (e.g. "linuxx64" vs "platform") varies by version/build -
-# see the note in CITRIX-WORKSPACE-MANUAL-INSTALL.md's step 3.
+# see the note in README.md's step 3.
 citrix_manual_bin() {
   local dir bin
   for dir in "$HOME"/ICAClient/*/ "$HOME/ICAClient/"; do
@@ -846,17 +845,17 @@ print_status() {
         installed=$(pacman -Q "$status_pkg" 2>/dev/null | awk '{print $2}')
         if [[ -z $installed && $status_pkg == icaclient ]] && citrix_manual_bin >/dev/null; then
           # pacman doesn't know about this - it's the manual tarball install
-          # from CITRIX-WORKSPACE-MANUAL-INSTALL.md, done because the AUR
+          # from README.md, done because the AUR
           # package was out of date. Report it as installed instead of
           # false-alarming NOT INSTALLED every run.
           installed="manual install"
           latest="-"
-          status="OK (manual - see CITRIX-WORKSPACE-MANUAL-INSTALL.md; switch back to AUR once it's current)"
+          status="OK (manual - see README.md; switch back to AUR once it's current)"
         elif [[ -z $installed ]]; then
           status="NOT INSTALLED"
           latest="-"
           [[ $status_pkg == icaclient ]] &&
-            status="NOT INSTALLED (see CITRIX-WORKSPACE-MANUAL-INSTALL.md if AUR keeps failing)"
+            status="NOT INSTALLED (see README.md if AUR keeps failing)"
         else
           local upline
           if [[ $method == pacman ]]; then

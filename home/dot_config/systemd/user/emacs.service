@@ -1,5 +1,5 @@
 # Runs Emacs as a persistent daemon under systemd --user, so `emacsclient`
-# always has something to connect to - see CHEZMOI-GUIDE.md for the
+# always has something to connect to - see README.md for the
 # emacsclient aliases/functions (ec/emax/semacs/ekill, estart/erestart/
 # estop/estatus/elog) and the .desktop launcher entry that this pairs with.
 #

@@ -54,15 +54,14 @@
 #   - Registry format: agent-skills.toml is read via `yq` (mikefarah/yq,
 #     the Go one) + python3, same TOML+yq approach and the same
 #     "malformed file fails the whole load, not just one bad entry"
-#     tradeoff as install-dev-stack.sh - see that script's header and
-#     CHEZMOI-GUIDE.md's "Registry files moved to TOML" section for the
-#     full comparison/rationale (this script's own history predates it -
-#     `git log` on this file shows the earlier pipe-delimited
+#     tradeoff as install-dev-stack.sh - see that script's header comment
+#     for the full TOML/yq rationale (this script's own history predates
+#     it - `git log` on this file shows the earlier pipe-delimited
 #     agent-skills.txt format if useful).
 #
 # Claude Code plugins: declared in settings.json, not a registry file
 # here (rewritten 2026-09-08, replacing claude-plugins.txt - see
-# CHEZMOI-GUIDE.md for the full writeup of why). Anthropic's own docs
+# README.md for the full writeup of why). Anthropic's own docs
 # describe exactly this as the recommended way to check plugin config
 # into version control: declare `extraKnownMarketplaces` and
 # `enabledPlugins` directly in settings.json
@@ -92,7 +91,7 @@
 # declared `subpath`, to handle repos where SKILL.md isn't at the repo
 # root. That worked, but it never created the separate, Claude-specific
 # ~/.claude/skills/<name> symlink hand-authored skills get (see
-# CHEZMOI-GUIDE.md's "agent-agnostic skills" section) - so a skill
+# README.md's "Agent skills and Claude Code plugins" section) - so a skill
 # installed this way was invisible to Claude Code entirely. Chasing that
 # bug led to `npx skills` (github.com/vercel-labs/skills, MIT, actively
 # maintained) - verified against its actual source: it auto-finds a
@@ -179,7 +178,7 @@ require_yq() {
   if ! command -v yq >/dev/null 2>&1; then
     err "'yq' not found on \$PATH - needed to read $SKILLS_REGISTRY_FILE (TOML)."
     err "Install it with: sudo pacman -S go-yq"
-    err "(NOT 'yq' from the AUR or pip - that's a different, unrelated tool. See CHEZMOI-GUIDE.md.)"
+    err "(NOT 'yq' from the AUR or pip - that's a different, unrelated tool. See README.md.)"
     return 1
   fi
   local version_line

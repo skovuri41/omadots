@@ -12,7 +12,7 @@
 # to find SKILL.md itself (no manual "which subdirectory" field needed),
 # and installs straight into every requested agent's own native skills
 # directory in one call - including Claude Code. See
-# install-agent-extensions.sh's header comment and CHEZMOI-GUIDE.md for
+# install-agent-extensions.sh's header comment and README.md for
 # the full history (why `npx skills`, and why this moved from
 # agent-skills.txt to this TOML file).
 #
@@ -41,7 +41,7 @@
 # Personal, hand-authored skills (the ones you write yourself, like
 # clojure-style under home/dot_agents/skills/) do NOT belong in this file -
 # they're chezmoi-managed content, materialized directly and symlinked
-# into ~/.claude/skills by chezmoi itself (see CHEZMOI-GUIDE.md), same
+# into ~/.claude/skills by chezmoi itself (see README.md), same
 # bucket as settings.json. This file is only for cloning OTHER people's
 # skill repos, and none of that content is chezmoi-tracked - `npx skills`
 # owns and manages its own installed copies entirely outside this repo.
