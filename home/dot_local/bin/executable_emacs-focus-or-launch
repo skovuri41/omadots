@@ -1,0 +1,25 @@
+#!/bin/bash
+# SUPER+E (bindings.lua): focus the existing plain Emacs GUI frame if one is
+# already open, otherwise launch a new one via the daemon.
+#
+# Can't use Omarchy's own o.bind({ launch = ..., focus = "..." })/
+# omarchy-launch-or-focus for this (as used for e.g. Spotify above) - it
+# matches a single pattern against window class OR title, and this build's
+# emacs-float (SUPER+ALT+E) and doom-capture (SUPER+X) popups share Emacs's
+# own "emacs" window class, so any class-matching pattern would also catch
+# those transient popups. Exclude them by title explicitly instead - the
+# same class+title pairing windowrules.lua already uses to float only those
+# two, not plain Emacs windows.
+set -euo pipefail
+
+address=$(hyprctl clients -j | jq -r '
+  map(select(.class == "emacs" and (.title | test("^(emacs-float|doom-capture)$") | not)))
+  | .[0].address // empty
+')
+
+if [[ -n "$address" ]]; then
+  hyprctl dispatch "hl.dsp.focus({ window = \"address:$address\" })" >/dev/null 2>&1 \
+    || hyprctl dispatch focuswindow "address:$address"
+else
+  exec emacsclient -cnqua ''
+fi

@@ -206,14 +206,25 @@ o.bind("SUPER + ALT + P", "Bitwarden", { launch = "bitwarden-desktop", focus = "
 -- desktop/Bitwarden above - check with hyprctl clients -j after first launch.
 o.bind("SUPER + SHIFT + U", "Spotify", { launch = "spotify", focus = "^[Ss]potify$" })
 
--- Emacs GUI frame via the daemon: -c new frame, -n don't block the shell,
--- -q skip the "waiting for emacs..." message, -a '' auto-starts the daemon
--- with 'emacs --daemon' if it isn't already running. Complements the
+-- Emacs GUI frame via the daemon. Focuses the existing frame if one's
+-- already open instead of always spawning a new one - see
+-- emacs-focus-or-launch (home/dot_local/bin) for why this needs its own
+-- script rather than Omarchy's { launch, focus } table form. Falls back to
+-- launching fresh via -c new frame, -n don't block the shell, -q skip the
+-- "waiting for emacs..." message, -a '' auto-starts the daemon with
+-- 'emacs --daemon' if it isn't already running. Complements the
 -- terminal-side emacsclient usage (ec/emax/ediff aliases, git core.editor)
 -- already in this repo - same daemon, this just adds a GUI-frame shortcut.
 -- Confirmed free at the plain SUPER level (checked every default binding
 -- file - only SUPER+CTRL+E "Emojis" exists, different combo).
-o.bind("SUPER + E", "Emacs", "emacsclient -cnqua ''")
+o.bind("SUPER + E", "Emacs", "emacs-focus-or-launch")
+
+-- Unbind default SUPER+CTRL+E (was: Emojis) - repurposed below for a forced
+-- new Emacs frame.
+hl.unbind("SUPER + CTRL + E")
+-- Always spawns a fresh frame, bypassing emacs-focus-or-launch's reuse
+-- logic above - same underlying emacsclient flags as plain SUPER+E.
+o.bind("SUPER + CTRL + E", "New Emacs window", "emacsclient -cnqua ''")
 
 -- SUPER+ALT+E: floating scratch Emacs popup - compose text, C-c C-c sends
 -- it back to whatever window was focused before (C-c C-k cancels). Auto-
