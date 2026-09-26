@@ -16,6 +16,29 @@ function mkd() {
   mkdir -p "$@" && cd "$_"
 }
 
+# Backs the `cd="zd"` alias in dot_bash_aliases - pinned copy of Omarchy's
+# own zd(), which is what makes that alias safe to keep as "cd, but smarter"
+# rather than a real behavior change: no args goes home, a real directory
+# gets a normal `builtin cd`, anything else falls through to zoxide's `z`
+# (frecency-based jump) and only errors if even that can't resolve it.
+if command -v zoxide &>/dev/null; then
+  function zd() {
+    if (( $# == 0 )); then
+      builtin cd ~ || return
+    elif [[ -d $1 ]]; then
+      builtin cd "$1" || return
+    else
+      if ! z "$@"; then
+        echo "Error: Directory not found"
+        return 1
+      fi
+
+      printf "\U000F17A9 "
+      pwd
+    fi
+  }
+fi
+
 # Determine size of a file or total size of a directory
 function fs() {
   local arg=-sbh
