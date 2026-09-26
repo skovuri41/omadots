@@ -144,8 +144,24 @@ o.bind("SUPER + SHIFT + R", "Reddit", { webapp = "https://www.reddit.com/", focu
 -- Descriptions below deliberately differ ("Ytdl panel" / "Ytdl
 -- auto-download") instead of both saying "Ytdl" - keeps
 -- `omarchy menu keybindings --print` unambiguous between the two.
-o.bind("SUPER + Y", "Ytdl panel", "exec, omarchy-shell shell summon bibek.ytdl")
-o.bind("SUPER + CTRL + Y", "Ytdl auto-download", "exec, omarchy shell ytdl autoDownload")
+--
+-- BUG FIXED 2026-09-23: both of these silently did nothing when pressed,
+-- confirmed straight from o.bind()'s own source (default/hypr/helpers.lua,
+-- basecamp/omarchy) - a plain-string dispatcher arg is NOT parsed as raw
+-- Hyprland "dispatcher, args" syntax (no comma-splitting/keyword-stripping
+-- anywhere in it or in command_from()); it's handed verbatim to
+-- hl.dsp.exec_cmd(), which wraps the WHOLE string as the exec dispatcher's
+-- own argument. So the leading "exec, " here wasn't being stripped - it was
+-- being run AS PART OF the shell command, i.e. `sh -c "exec, omarchy-shell
+-- ..."`, which tries to execute a program literally named `exec,` (comma
+-- included) and fails with "command not found" - invisibly, since Hyprland
+-- exec doesn't surface a spawned command's stderr anywhere. Confirmed by
+-- reproducing this exact error on the emacs-everywhere bind below. Fix is
+-- the same as that one: drop the "exec, " prefix entirely - the bare
+-- command is already everything hl.dsp.exec_cmd() needs (see this file's
+-- own working examples with no prefix, e.g. SUPER+E "Emacs" above).
+o.bind("SUPER + Y", "Ytdl panel", "omarchy-shell shell summon bibek.ytdl")
+o.bind("SUPER + CTRL + Y", "Ytdl auto-download", "omarchy shell ytdl autoDownload")
 
 -- These two are native apps, not webapps - `launch` is the command to run,
 -- `focus` is a regex matched against the window's *class* to detect an
@@ -198,6 +214,33 @@ o.bind("SUPER + SHIFT + U", "Spotify", { launch = "spotify", focus = "^[Ss]potif
 -- Confirmed free at the plain SUPER level (checked every default binding
 -- file - only SUPER+CTRL+E "Emojis" exists, different combo).
 o.bind("SUPER + E", "Emacs", "emacsclient -cnqua ''")
+
+-- SUPER+ALT+E: floating scratch Emacs popup - compose text, C-c C-c sends
+-- it back to whatever window was focused before (C-c C-k cancels). Auto-
+-- paste via `wtype` DOES work reliably here - an earlier attempt concluded
+-- otherwise from a flawed test (a `cat > file` terminal target checked
+-- without a trailing newline, which terminals never flush from their
+-- canonical-mode input buffer) - see doom.d config.el for the full
+-- writeup and the actual implementation (`+emacs-float' and friends).
+-- NOT bound to SUPER+CTRL+E as first suggested - that combo is already
+-- "Emojis" (see the SUPER+E comment above).
+-- All the logic lives in doom.d config.el's `+emacs-float' - this is a
+-- bare `--eval`, matching upstream emacs-everywhere's own invocation
+-- convention, since `+emacs-float' captures the origin window and spawns
+-- its own `emacsclient --create-frame` subprocess for the actual popup
+-- (naming the frame "emacs-float", matched by the windowrule in
+-- windowrules.lua to float+size it - matching class+title together there,
+-- not class alone, so it doesn't also float normal SUPER+E Emacs windows).
+o.bind("SUPER + ALT + E", "Emacs Float", "emacsclient -a '' --eval '(+emacs-float)'")
+
+-- SUPER+X: floating GTD capture popup - same architecture as SUPER+ALT+E
+-- above (Emacs Float): a bare `--eval`, all the logic lives in doom.d
+-- gtd.el's `+org-capture-float', which captures the origin window and
+-- calls Doom's own `+org-capture/open-frame' (frame named "doom-capture",
+-- matched by the windowrule in windowrules.lua) pointed at a capture menu
+-- covering both org-capture and org-roam-capture templates, then restores
+-- focus to the origin window once capture finishes or is aborted.
+o.bind("SUPER + X", "GTD Capture", "emacsclient -a '' --eval '(+org-capture-float)'")
 
 -- Vim-style directional movement: SUPER + J/K focus the window to the
 -- left/right, SUPER + H/L switch to the previous/next workspace. Deliberately
@@ -469,3 +512,39 @@ o.bind("SUPER + N", "Focus forward in window history", function() navigate_windo
 -- speculative mechanism.
 o.bind("SUPER + F11", "Previous window in group", hl.dsp.group.prev())
 o.bind("SUPER + F12", "Next window in group", hl.dsp.group.next())
+
+-- Herdr (SUPER+CTRL+RETURN, was: { omarchy = "terminal-herdr" } ->
+-- omarchy-launch-terminal-herdr -> omarchy-launch-terminal herdr) launches
+-- herdr directly from Hyprland, bypassing bash entirely - so it never sees
+-- dot_bash_exports' EDITOR="emacsclient -t" and instead inherits the global
+-- Hyprland-session EDITOR, which resolves through Omarchy's
+-- omarchy-launch-editor to this machine's chosen default editor,
+-- emacsclient-frame (home/dot_local/bin/executable_emacsclient-frame,
+-- `emacsclient -c` - a new GUI frame). omarchy-launch-editor only execs a
+-- chosen editor truly inline if its name is literally nvim/vim/nano/micro/
+-- hx/helix/fresh; anything else - including emacsclient-frame - always runs
+-- via `setsid uwsm-app`, i.e. always a new detached window, regardless of
+-- the --inline flag. That's the confirmed root cause of herdr's
+-- edit_scrollback (prefix+e) opening a new, smaller Emacs window instead of
+-- an inline terminal-mode frame in the herdr pane itself.
+--
+-- Fix: reuse Omarchy's own unmodified launch script (so any future Omarchy
+-- update to the uwsm-app/xdg-terminal-exec chain underneath it is still
+-- picked up automatically), just with EDITOR overridden in front of it -
+-- `exec` down that whole chain preserves it through to the final `herdr`
+-- process. Scoped to only this one binding, so the emacsclient-frame
+-- default stays untouched for git/other apps that still want a blocking
+-- new-window GUI editor.
+hl.unbind("SUPER + CTRL + RETURN") -- previously: { omarchy = "terminal-herdr" }
+o.bind("SUPER + CTRL + RETURN", "Herdr", "EDITOR='emacsclient -t' omarchy-launch-terminal-herdr")
+
+-- fathom: begin
+do
+  local fathom = os.getenv("HOME") .. "/.config/omarchy/plugins/io.github.mtolhuys.fathom/hypr/fathom.lua"
+  local file = io.open(fathom, "r")
+  if file then
+    file:close()
+    pcall(dofile, fathom)
+  end
+end
+-- fathom: end

@@ -105,6 +105,25 @@
 -- suffix), which is a needlessly fragile bet now that substring matching
 -- requires explicit .* wrapping anyway.
 
+-- Float the SUPER+ALT+E scratch Emacs frame (bindings.lua) - matching on
+-- both class and title, not class alone, since regular SUPER+E Emacs
+-- windows share the same "emacs" class and should stay tiled. Sized/
+-- centered explicitly - without it, this defaulted to Emacs's own
+-- default-frame-alist size (confirmed by hand: 1136x1117 on this
+-- 2880x1800 display), too big for a quick-note popup.
+o.window({ class = "^emacs$", title = "^emacs-float$" },
+         { float = true, size = { 900, 600 }, center = true })
+
+-- Float the SUPER+X GTD capture popup (bindings.lua, gtd.el's
+-- `+org-capture-float') - matching class+title together, same reason as
+-- the emacs-float rule above. Doom's own capture-frame feature names this
+-- frame "doom-capture" (not something we chose). Sized smaller than the
+-- emacs-float popup since this is a quick single-entry capture, not a
+-- scratch pad - was { 720, 380 }, scaled up ~1.4x keeping the same
+-- proportions - adjust to taste.
+o.window({ class = "^emacs$", title = "^doom-capture$" },
+         { float = true, size = { 1000, 530 }, center = true })
+
 -- Workspace 3: Amazon, Robinhood, WhatsApp, Bitwarden
 o.window({ initial_title = "(?i).*amazon.*" }, { workspace = "3" })
 o.window({ title = "(?i).*amazon.*" }, { workspace = "3" })
