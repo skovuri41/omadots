@@ -1,0 +1,52 @@
+#!/bin/bash
+# Bound to prefix+e in herdr/config.toml as a [[keys.command]] (type = "pane").
+# Herdr injects HERDR_ACTIVE_PANE_ID into custom command keybindings - no
+# session id needs to be passed in, this self-identifies the pane that had
+# focus when the key was pressed.
+#
+# Claude Code (and any other agent panes) render via the terminal alternate
+# screen buffer, so herdr's own captured scrollback for them is empty/near-
+# empty (confirmed: `herdr pane get` reports max_offset_from_bottom stuck at
+# 0 for agent panes, vs correctly tracking hundreds of lines for a plain
+# shell pane) - `herdr pane read`'s "recent" source can't recover history
+# that was never captured. So: for a Claude pane, read the real transcript
+# straight from its on-disk JSONL session log instead. For anything else
+# (plain shell, other agents), dump herdr's own captured scrollback exactly
+# like the stock edit_scrollback action would - both branches converge on
+# "open readable text in emacsclient -t" so the pane closes the same way
+# either path is taken.
+set -euo pipefail
+
+pane_id="${HERDR_ACTIVE_PANE_ID:?HERDR_ACTIVE_PANE_ID not set - run this via the herdr keybinding, not directly}"
+pane_info=$(herdr pane get "$pane_id")
+agent=$(jq -r '.result.pane.agent // empty' <<<"$pane_info")
+tmpfile=$(mktemp /tmp/herdr-scrollback.XXXXXX.txt)
+trap 'rm -f "$tmpfile"' EXIT
+
+if [[ "$agent" == "claude" ]]; then
+  session_id=$(jq -r '.result.pane.agent_session.value // empty' <<<"$pane_info")
+  jsonl=$(find ~/.claude/projects -mindepth 2 -maxdepth 2 -name "${session_id}.jsonl" -print -quit 2>/dev/null || true)
+
+  if [[ -z "$jsonl" ]]; then
+    echo "Couldn't find a transcript for Claude session $session_id" >"$tmpfile"
+  else
+    jq -r '
+      if .type == "user" and (.message.content | type) == "string" then
+        "--- you ---\n" + .message.content + "\n"
+      elif .type == "user" and (.message.content | type) == "array" then
+        "--- you ---\n" + ([.message.content[] | select(.type == "text") | .text] | join("\n")) + "\n"
+      elif .type == "assistant" then
+        ([.message.content[]? |
+          if .type == "text" then .text
+          elif .type == "tool_use" then "[tool: " + .name + "]"
+          else empty end
+        ] | join("\n")) as $body
+        | if ($body | length) > 0 then "--- claude ---\n" + $body + "\n" else empty end
+      else empty end
+    ' "$jsonl" >"$tmpfile" 2>/dev/null || cp "$jsonl" "$tmpfile"
+  fi
+else
+  herdr pane read "$pane_id" --source recent --lines 100000 >"$tmpfile" 2>/dev/null || true
+fi
+
+emacsclient -t "$tmpfile"
