@@ -262,3 +262,17 @@ method = "pacman"
 spec = "syncthing"
 status_pkg = "syncthing"
 note = "official extra repo pkg (confirmed via archlinux.org, not AUR). The package only ships the systemd unit - it does NOT auto-enable/start anything, so after install run: systemctl --user enable --now syncthing.service (per-user; there's also a syncthing@<user>.service system-level unit if you'd rather run it that way). Web GUI is localhost-only by default at 127.0.0.1:8384; sync traffic is TCP/UDP 22000 plus UDP 21027 for local discovery - open those if syncing across a LAN/WAN, per docs.syncthing.net/users/firewall.html. No official tray/GUI companion package in extra; syncthingtray (AUR, Qt-based) is the common pairing if a systray icon is wanted later - not installed here."
+
+[[software]]
+name = "wl-clipboard"
+method = "pacman"
+spec = "wl-clipboard"
+status_pkg = "wl-clipboard"
+note = "official extra repo pkg (confirmed via archlinux.org, not AUR). Provides wl-copy/wl-paste for the Wayland clipboard - works immediately in any Wayland session, no post-install step. Needs WAYLAND_DISPLAY set, i.e. run inside the session, not a bare TTY; wl-paste -w <cmd> is the common clipboard-watcher pattern in Hyprland configs."
+
+[[software]]
+name = "slurp"
+method = "pacman"
+spec = "slurp"
+status_pkg = "slurp"
+note = "official extra repo pkg (confirmed via archlinux.org, not AUR). Interactive region/point selector for Wayland (wlr-layer-shell based - Hyprland qualifies); no post-install step. It only selects a region, doesn't capture anything itself - pairs with grim to screenshot (grim -g \"$(slurp)\"); grim isn't tracked here."
