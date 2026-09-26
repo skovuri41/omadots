@@ -453,6 +453,29 @@ add another; set `disabled = true` on an entry to register it without
 installing it yet. `--remove` doesn't delete a plugin's own state/cache
 directory — clean that up by hand if you actually want it gone.
 
+## Known gaps / TODO
+
+- **`settings.json` split (2026-09-26).** `home/dot_claude/settings.json.tmpl`
+  currently tracks both the stable, deliberately-versioned bits (sha-pinned
+  `extraKnownMarketplaces`/`enabledPlugins` — see "Agent skills and Claude
+  Code plugins" above) and bits that get edited live and drift constantly
+  (`permissions`, `tui`/`theme`). Every drift reconciliation risks silently
+  clobbering a live change chezmoi doesn't know about yet (already happened
+  once with the `permissions.deny` block). Fix: move the volatile keys to
+  `~/.claude/settings.local.json` (Claude Code merges it automatically) and
+  keep `settings.json.tmpl` scoped to just the plugin/marketplace
+  declarations, so it stops drifting.
+- **General live-vs-source drift.** A `chezmoi diff` run the same day
+  surfaced several files that had been edited live and never synced back:
+  `.config/kitty/kitty.conf` (`allow_remote_control`), `.config/git/config`
+  (a `gh`-based credential helper), `.config/hypr/bindings.lua` (a "fathom"
+  Omarchy plugin block), `.config/chromium-flags.conf` (a feature flag),
+  `.claude/themes/omarchy.json` (color overrides) — none from this repo's
+  own tooling. There's currently no habit/mechanism that catches this
+  before it piles up. Worth deciding on something (a periodic `chezmoi
+  diff` review, a pre-commit/cron reminder, etc.) rather than discovering
+  it mid-unrelated-task like this time.
+
 ## Multi-machine notes
 
 Two repos live outside chezmoi's direct management but are pulled in via
