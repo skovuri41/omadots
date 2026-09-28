@@ -1,0 +1,55 @@
+#!/bin/bash
+# Non-interactive-shell counterpart to emacsclient_safe() in
+# dot_bash_functions. That function guards ec/emax against a real failure
+# mode: emacsclient's own -a/--alternate-editor "" fallback doesn't wait for
+# a slow-to-start daemon, it immediately self-forks a brand new, unmanaged
+# `emacs --daemon` - bypassing systemd entirely and inheriting whatever
+# environment the launching process happened to have. Confirmed live
+# 2026-09-28: a Hyprland keybinding firing emacsclient -a '' within the ~2s
+# window while `emacs.service` is still loading Doom's packages produces
+# exactly this - a second rogue daemon racing the real one for the server
+# socket, unpredictable stale/missing env (that day's actual symptom:
+# HYPRLAND_INSTANCE_SIGNATURE), and processes that don't get cleaned up by
+# `erestart` because it only ever knows about the systemd-tracked one.
+#
+# Hyprland's `bind` exec runs commands directly, not through an interactive
+# bash shell, so it can't just call emacsclient_safe() - hence this separate
+# script. Used by bindings.lua's SUPER+CTRL+E / SUPER+ALT+E / SUPER+X binds
+# and emacs-focus-or-launch's launch fallback.
+#
+# Separately, a second failure mode confirmed live 2026-09-28 after a fresh
+# reboot: `emacs.service` (systemd, ordered After=graphical-session.target)
+# can still start a beat before uwsm finishes exporting Hyprland's session
+# variables into systemd's user activation environment, even with correct
+# ordering - so the daemon's HYPRLAND_INSTANCE_SIGNATURE ends up genuinely
+# unset, not just stale. Only bites +org-capture-float/+emacs-float (both
+# call `hyprctl' as their first action, which then fails outright) - never
+# plain frame creation (SUPER+E/SUPER+CTRL+E), which is why those two work
+# fine right after a reboot while SUPER+SHIFT+E/SUPER+ALT+E don't. Readiness
+# alone (above) doesn't catch this - the daemon IS reachable, its env is
+# just wrong. This script always runs WITH Hyprland's own current, correct
+# environment (Hyprland execs bound commands directly), so unconditionally
+# pushing that env into the daemon on every call - cheap, harmless if
+# already correct - closes this off for good instead of needing another
+# manual `emacsclient --eval '(setenv ...)'` every time it recurs.
+#
+# Usage: emacsclient-safe <normal emacsclient args - -a/-a "" is harmless to
+# still pass, it just won't ever actually trigger once this has run>
+set -euo pipefail
+
+if ! emacsclient --eval '(+ 1 1)' &>/dev/null; then
+  systemctl --user start emacs.service
+  for _ in $(seq 1 20); do
+    emacsclient --eval '(+ 1 1)' &>/dev/null && break
+    sleep 0.5
+  done
+fi
+
+if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+  emacsclient --eval "(setenv \"HYPRLAND_INSTANCE_SIGNATURE\" \"$HYPRLAND_INSTANCE_SIGNATURE\")" &>/dev/null
+fi
+if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+  emacsclient --eval "(setenv \"WAYLAND_DISPLAY\" \"$WAYLAND_DISPLAY\")" &>/dev/null
+fi
+
+exec emacsclient "$@"

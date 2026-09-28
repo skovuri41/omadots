@@ -484,3 +484,51 @@ committable to their own repos: `doom.d` → `~/.config/doom`, and
 `clojure-deps-edn` (a personal fork of `practicalli/clojure-deps-edn`) →
 `~/.config/clojure`. Both are cloned/pulled automatically by `chezmoi
 apply`/`chezmoi update`, same as any other part of the source state.
+
+## Emacs/Hyprland daemon: issues hit and fixed
+
+Both traced back to the same root cause on 2026-09-28 — the long-running
+Emacs daemon's environment going stale relative to the *live* Hyprland/
+Wayland session, because nothing refreshes a running process's environment
+from the outside. If either symptom reappears on any machine (this one or a
+fresh install), `erestart` (`systemctl --user restart emacs.service`) always
+clears it: `PartOf=`/`After=graphical-session.target` in `emacs.service`
+guarantees the replacement daemon starts with a correct, current
+environment.
+
+1. **SUPER+X (GTD capture) or SUPER+ALT+E (`+emacs-float`) throws
+   `*ERROR*: JSON readtable error: 67`.** Both features shell out to
+   `hyprctl -j activewindow` from inside the daemon to capture the origin
+   window. If Hyprland's instance changes (reload, relogin, resume) without
+   the daemon restarting, the daemon's cached `HYPRLAND_INSTANCE_SIGNATURE`
+   no longer matches any live socket; `hyprctl` prints a connect-error
+   string instead of JSON, and `json-read-from-string` throws on it.
+   Fastest fix, no daemon restart / no lost buffers — from a shell in the
+   *current* session:
+   ```sh
+   emacsclient --eval "(setenv \"HYPRLAND_INSTANCE_SIGNATURE\" \"$HYPRLAND_INSTANCE_SIGNATURE\")"
+   ```
+   Documented inline at `+org-capture-hypr--active-window-address` in
+   `~/.config/doom/gtd.el` (tracked in `doom.d`, so it travels with the
+   external repo pull above) and in that repo's `CLAUDE.md` (gitignored
+   there — local-only, not portable; this README is the durable copy).
+2. **`wl-copy`/`wl-paste` (Emacs's Wayland clipboard integration in
+   `config.el`) silently stop working, historically fixed by `erestart`.**
+   Same root cause, different trigger:
+   `~/.local/share/applications/emacs.desktop`'s old
+   `Exec=emacsclient -c -a "" %F` — the `-a ""` flag makes `emacsclient`
+   self-fork a raw, unmanaged `emacs --daemon` if no server is reachable,
+   bypassing systemd entirely and inheriting whatever environment the
+   *launching* process happened to have (not necessarily a current
+   `WAYLAND_DISPLAY`). `ec`/`emax` were already guarded against this via
+   `emacsclient_safe()` in `dot_bash_functions`, but the `.desktop`
+   launcher wasn't.
+   **Permanently fixed**: `emacs.desktop`'s `Exec` now runs
+   `systemctl --user start emacs.service` before `emacsclient`, so it only
+   ever attaches to the systemd-managed daemon:
+   ```
+   Exec=sh -c 'systemctl --user start emacs.service; emacsclient -c -a "" "$@"' sh %F
+   ```
+   `systemctl --user start` on an already-running unit is a no-op, so this
+   changes nothing when the daemon's already healthy. Since the `.desktop`
+   file is chezmoi-managed, a fresh install gets this fix automatically.

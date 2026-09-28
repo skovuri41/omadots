@@ -21,5 +21,8 @@ if [[ -n "$address" ]]; then
   hyprctl dispatch "hl.dsp.focus({ window = \"address:$address\" })" >/dev/null 2>&1 \
     || hyprctl dispatch focuswindow "address:$address"
 else
-  exec emacsclient -cnqua ''
+  # emacsclient-safe (this same dir), not plain emacsclient - see its header
+  # for why: a bare `-a ''` racing a still-starting daemon self-forks an
+  # unmanaged second one.
+  exec emacsclient-safe -cnqua ''
 fi

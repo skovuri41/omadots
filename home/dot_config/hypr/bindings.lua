@@ -28,8 +28,12 @@
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
 -- o.bind("SUPER + PERIOD", nil, "omarchy-shell shell toggle omarchy.emojis")
 
+-- Was the quickshell Spotify player toggle; dropped 2026-09-28 to free this
+-- key for Fastmail (moved here from SUPER+SHIFT+E, which GTD Capture took
+-- over - see that section below). Spotify itself is still reachable via
+-- SUPER+SHIFT+U ("Spotify" bind further down) or the app launcher.
 hl.unbind("SUPER + SHIFT + M") -- previously: Music
-o.bind("SUPER + SHIFT + M", "Omarchy Spotify","omarchy shell -q quickshell.spotify.player togglePlayer")
+o.bind("SUPER + SHIFT + M", "Fastmail", { webapp = "https://app.fastmail.com/", focus = true })
 
 hl.unbind("SUPER + SLASH") -- previously monitor scaling
 o.bind("SUPER + SLASH", "Everything", "omarchy-shell shell toggle b.everything")
@@ -114,7 +118,9 @@ o.bind("SUPER + SHIFT + Y", "YouTube", { webapp = "https://youtube.com/", focus 
 o.bind("SUPER + SHIFT + A", "Amazon", { webapp = "https://www.amazon.com/", focus = true })
 o.bind("SUPER + SHIFT + H", "Robinhood", { webapp = "https://robinhood.com/", focus = true })
 o.bind("SUPER + SHIFT + G", "ChatGPT", { webapp = "https://chatgpt.com", focus = true })
-o.bind("SUPER + SHIFT + E", "Fastmail", { webapp = "https://app.fastmail.com/", focus = true })
+-- Fastmail moved off this key 2026-09-28, to SUPER+SHIFT+M - see there.
+-- SUPER+SHIFT+E is now GTD Capture instead (Emacs bindings section below);
+-- the unbind of the default Email (hey.com) above still applies.
 o.bind("SUPER + SHIFT + R", "Reddit", { webapp = "https://www.reddit.com/", focus = true })
 
 -- Ytdl (bibek.ytdl plugin, added 2026-09-14): two bindings adapted from the
@@ -224,7 +230,10 @@ o.bind("SUPER + E", "Emacs", "emacs-focus-or-launch")
 hl.unbind("SUPER + CTRL + E")
 -- Always spawns a fresh frame, bypassing emacs-focus-or-launch's reuse
 -- logic above - same underlying emacsclient flags as plain SUPER+E.
-o.bind("SUPER + CTRL + E", "New Emacs window", "emacsclient -cnqua ''")
+-- Routed through emacsclient-safe (home/dot_local/bin) rather than plain
+-- emacsclient - see that script's header for why: a bare `-a ''` racing a
+-- still-starting daemon self-forks an unmanaged second one.
+o.bind("SUPER + CTRL + E", "New Emacs window", "emacsclient-safe -cnqua ''")
 
 -- SUPER+ALT+E: floating scratch Emacs popup - compose text, C-c C-c sends
 -- it back to whatever window was focused before (C-c C-k cancels). Auto-
@@ -242,16 +251,29 @@ o.bind("SUPER + CTRL + E", "New Emacs window", "emacsclient -cnqua ''")
 -- (naming the frame "emacs-float", matched by the windowrule in
 -- windowrules.lua to float+size it - matching class+title together there,
 -- not class alone, so it doesn't also float normal SUPER+E Emacs windows).
-o.bind("SUPER + ALT + E", "Emacs Float", "emacsclient -a '' --eval '(+emacs-float)'")
+-- Routed through emacsclient-safe (home/dot_local/bin), same reasoning as
+-- SUPER+CTRL+E above.
+o.bind("SUPER + ALT + E", "Emacs Float", "emacsclient-safe -a '' --eval '(+emacs-float)'")
 
--- SUPER+X: floating GTD capture popup - same architecture as SUPER+ALT+E
--- above (Emacs Float): a bare `--eval`, all the logic lives in doom.d
--- gtd.el's `+org-capture-float', which captures the origin window and
--- calls Doom's own `+org-capture/open-frame' (frame named "doom-capture",
--- matched by the windowrule in windowrules.lua) pointed at a capture menu
--- covering both org-capture and org-roam-capture templates, then restores
--- focus to the origin window once capture finishes or is aborted.
-o.bind("SUPER + X", "GTD Capture", "emacsclient -a '' --eval '(+org-capture-float)'")
+-- SUPER+X freed back to Omarchy's default "Universal cut" 2026-09-28 (no
+-- code needed here - this repo never unbound it, our old GTD Capture bind
+-- just shadowed it; removing that bind lets the default in clipboard.lua
+-- take effect again on its own).
+
+-- GTD capture popup - moved here from SUPER+X 2026-09-28. Same architecture
+-- as SUPER+ALT+E above (Emacs Float): a bare `--eval`, all the logic lives
+-- in doom.d gtd.el's `+org-capture-float', which captures the origin window
+-- and calls Doom's own `+org-capture/open-frame' (frame named
+-- "doom-capture", matched by the windowrule in windowrules.lua) pointed at
+-- a capture menu covering both org-capture and org-roam-capture templates,
+-- then restores focus to the origin window once capture finishes or is
+-- aborted. SUPER+SHIFT+E's default (Email/hey.com) was already unbound
+-- above when Fastmail lived here; Fastmail has since moved to
+-- SUPER+SHIFT+M, freeing this key for capture.
+-- Routed through emacsclient-safe (home/dot_local/bin), same reasoning as
+-- SUPER+CTRL+E above - this is the bind whose flakiness (stale
+-- HYPRLAND_INSTANCE_SIGNATURE via a self-forked rogue daemon) prompted it.
+o.bind("SUPER + SHIFT + E", "GTD Capture", "emacsclient-safe -a '' --eval '(+org-capture-float)'")
 
 -- Vim-style directional movement: SUPER + J/K focus the window to the
 -- left/right, SUPER + H/L switch to the previous/next workspace. Deliberately
