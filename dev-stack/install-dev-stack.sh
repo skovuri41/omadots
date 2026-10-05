@@ -518,6 +518,36 @@ install_keyd() {
   fi
 }
 
+install_tailscale() {
+  log "Tailscale (mesh VPN, via Omarchy's own installer)"
+
+  if ! command -v omarchy-installed-service-tailscale >/dev/null 2>&1; then
+    fail "Tailscale - omarchy-installed-service-tailscale not found (expected on Omarchy)"
+    return
+  fi
+  if omarchy-installed-service-tailscale >/dev/null 2>&1; then
+    log "Tailscale already installed and running"
+    return
+  fi
+
+  if ! command -v omarchy-install-service-tailscale >/dev/null 2>&1; then
+    fail "Tailscale - omarchy-install-service-tailscale not found (expected on Omarchy)"
+    return
+  fi
+
+  # Not fully unattended: 'tailscale up --accept-routes' inside this prints
+  # a login URL and blocks until you authenticate in a browser the first
+  # time - same caveat as Citrix Workspace above, just without the AUR
+  # flakiness. Safe to re-run: omarchy-installed-service-tailscale above
+  # already short-circuits once logged in and running, so a later
+  # `omarchy update` hook pass won't re-trigger the login prompt.
+  if omarchy-install-service-tailscale; then
+    log "Tailscale installed"
+  else
+    fail "Tailscale - omarchy-install-service-tailscale failed"
+  fi
+}
+
 poly_latest_tag() {
   curl -fsSL -o /dev/null -w '%{url_effective}' \
     https://github.com/polyfy/polylith/releases/latest 2>/dev/null | sed -E 's#.*/tag/##'
@@ -733,6 +763,7 @@ dispatch_custom() {
     bws) install_bws ;;
     emacs-daemon) enable_emacs_daemon ;;
     keyd) install_keyd ;;
+    tailscale) install_tailscale ;;
     *)
       fail "$desc - no custom install handler registered for status_pkg '$status_pkg' (add a case to dispatch_custom() in install-dev-stack.sh)"
       ;;
@@ -950,6 +981,23 @@ print_status() {
               installed="installed, not running"
               latest="-"
               status="NOT ENABLED"
+            else
+              installed=""
+              latest="-"
+              status="NOT INSTALLED"
+            fi
+            ;;
+          tailscale)
+            if command -v omarchy-installed-service-tailscale >/dev/null 2>&1 &&
+              omarchy-installed-service-tailscale >/dev/null 2>&1; then
+              installed=$(pacman -Q tailscale 2>/dev/null | awk '{print $2}')
+              [[ -z $installed ]] && installed="running"
+              latest="$installed"
+              status="OK"
+            elif pacman -Qq tailscale >/dev/null 2>&1; then
+              installed="installed, not logged in"
+              latest="-"
+              status="ACTION NEEDED (sudo tailscale up)"
             else
               installed=""
               latest="-"

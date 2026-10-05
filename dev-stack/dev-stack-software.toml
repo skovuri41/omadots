@@ -36,7 +36,7 @@
 #   status_pkg  the single package/tool name used to look up an installed/
 #               available version for the --status table (for custom
 #               entries, one of the fixed keys the script recognizes: doom,
-#               poly, bws, emacs-daemon, keyd)
+#               poly, bws, emacs-daemon, keyd, tailscale)
 #   note        freeform, shown nowhere but here - just for you. Omit the
 #               key entirely if there's nothing to say (don't write `note =
 #               ""` - same effect, just noisier).
@@ -269,6 +269,12 @@ method = "pacman"
 spec = "wl-clipboard"
 status_pkg = "wl-clipboard"
 note = "official extra repo pkg (confirmed via archlinux.org, not AUR). Provides wl-copy/wl-paste for the Wayland clipboard - works immediately in any Wayland session, no post-install step. Needs WAYLAND_DISPLAY set, i.e. run inside the session, not a bare TTY; wl-paste -w <cmd> is the common clipboard-watcher pattern in Hyprland configs."
+
+[[software]]
+name = "Tailscale"
+method = "custom"
+status_pkg = "tailscale"
+note = "mesh VPN - wired to Omarchy's own omarchy-install-service-tailscale (package + systemd tailscaled service + 'tailscale up --accept-routes' + operator perms + Taildrop receive service + bar plugin + webapp shortcut to the admin console), not a plain pacman entry, so a fresh machine gets the fully working setup in one step instead of just the binary. 'tailscale up' needs an interactive browser login the first time - not fully unattended, same caveat as Citrix Workspace above, just without the AUR flakiness. See install_tailscale() in install-dev-stack.sh."
 
 [[software]]
 name = "slurp"
