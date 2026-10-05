@@ -26,5 +26,40 @@
       "Read(/mnt/**)",
       "Edit(/mnt/**)"
     ]
+  },
+  {{/* Claude Code's own Auto Mode environment profile - pulled in from a
+  live settings.json that had it but this template didn't (found via
+  `chezmoi diff`, 2026-10-05). Not hand-written here; preserved verbatim so
+  a future `chezmoi apply` doesn't silently delete it. If Claude Code
+  regenerates this on its own (e.g. via some setup/env-profile flow), re-pull
+  it the same way rather than hand-editing out of sync with what's live. */}}
+  "autoMode": {
+    "environment": [
+      "### Org-wide",
+      "**Organization**: None configured",
+      "**Cloud provider(s)**: None configured",
+      "**Repository visibility**: not queryable here via gh — assume private (default posture: personal config repo, no public indicators found)",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: Bitwarden Secrets Manager (bws) — secret UUIDs stored as defconsts in config.el are safe to commit; actual values require BWS_ACCESS_TOKEN which lives outside this repo; an older bw/BW_SESSION approach was deprecated and should not be reintroduced",
+      "**Default / protected branches**: main (default); 1 protected branch listed via gh but its name is outside the display charset and was redacted — treat main as protected",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Host containment**: None configured — assume Claude Code runs on an ordinary developer machine (Hyprland/Wayland desktop) with open internet",
+      "**Source control**: The trusted repo (github.com:skovuri41/doom.d.git) and its remote only — no additional orgs configured",
+      "**Trusted internal domains**: None configured",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: None configured",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar; note ~/Documents/org/snippets/ (outside this repo) is explicitly reserved for personal snippet content and never reaches a remote",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries prod or production as a whole word or name segment",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries prod or production as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: personal Doom Emacs configuration maintenance (dotfiles/hobby)",
+      "**Trusted repo**: /home/shyam/.config/doom (this repo, its working directory) and its remote github.com:skovuri41/doom.d.git — assume private; confidential personal material is fine here, but secrets/credentials are never cleared into it by visibility alone",
+      "**Org-specific CLIs**: None configured — project-specific tools observed: doom (Doom Emacs CLI), bws (Bitwarden Secrets Manager CLI), chezmoi (dotfiles manager), hyprctl (Hyprland IPC), emacsclient/emacs",
+      "**routine under this repo's config/ and lisp/ prefix**: editing config.el, init.el, packages.el, gtd.el, and lisp/*.el is routine day-to-day work in this trusted repo"
+    ]
   }
 }
