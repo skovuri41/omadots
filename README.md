@@ -37,8 +37,9 @@ the sequence.
 sudo pacman -S chezmoi bitwarden-cli go-yq
 ```
 
-These three have to exist before anything else: step 3 uses chezmoi to lay
-down every other dotfile, and every `install-*.sh` script in this repo
+These three have to exist before anything else: step 3 clones via chezmoi
+and step 5 uses it to lay down every other dotfile, and every
+`install-*.sh` script in this repo
 reads its own `.toml` registry via `yq` — specifically **mikefarah/yq**
 (the Go one; `go-yq` is the correct Arch package). There's a different,
 unrelated `yq` on the AUR/pip (kislyuk/yq, a Python/jq wrapper) that does
@@ -62,26 +63,29 @@ Manager** (`bws`), a separate, token-based mechanism with no interactive
 unlock step (see "Secrets" below). Log into `bw` anyway; it's the fastest
 way to browse your vault by hand later.
 
-**3. Bootstrap dotfiles from this repo.**
+**3. Clone this repo — without applying anything yet.**
 
 ```sh
-chezmoi init --apply git@github.com:skovuri41/omadots.git
+chezmoi init https://github.com/skovuri41/omadots.git
 ```
 
-This one command clones the full repo into `~/.local/share/chezmoi`,
+Deliberately `chezmoi init`, not `chezmoi init --apply`, and deliberately
+the HTTPS URL. This clones the full repo into `~/.local/share/chezmoi` and
 prompts once for your git name/email (cached after this, never asked again
-on this machine), applies every `dot_*`/`dot_config/*` file to your real
-`$HOME` — including exporting `XDG_CONFIG_HOME="$HOME/.config"` globally —
-and, via `.chezmoiexternal.toml`, clones your `doom.d` config into
-`~/.config/doom` (in place before Doom Emacs itself is installed in step 5)
-and your `clojure-deps-edn` config into `~/.config/clojure`.
+on this machine) — but doesn't touch `$HOME` yet. Two things later in this
+repo aren't ready for an apply this early:
 
-Confirm it landed cleanly:
-
-```sh
-chezmoi diff        # should print nothing - a fresh apply has nothing left to change
-ls ~/.config/doom    # your real Doom config, not a placeholder
-```
+- `.chezmoiexternal.toml`'s `doom.d`/`clojure-deps-edn` clones and this
+  repo itself are all public, so the HTTPS URL needs no auth at all; the
+  equivalent `git@github.com:...` SSH form would fail outright on a fresh
+  machine ("Permission denied (publickey)") — SSH to GitHub always
+  authenticates as a user, there's no anonymous SSH, even for a public
+  repo.
+- If you've already done the "Worked example" SSH keypair in the Secrets
+  section on a previous machine, this repo now also contains a
+  `private_dot_ssh/*.tmpl` file that calls `bitwardenSecrets` — which needs
+  `bws` and a `BWS_ACCESS_TOKEN`, neither of which exist yet (see step 4a
+  below). Applying now, before those exist, would fail trying to render it.
 
 **4. Install the dev stack.** `chezmoi init` cloned the entire repo, not
 just the `home/` subtree it applies to `$HOME` — `install-dev-stack.sh` and
@@ -94,28 +98,61 @@ cd ~/.local/share/chezmoi/dev-stack
 
 Idempotent and safe to re-run. It registers itself as an `omarchy update`
 post-update hook, so everything it installs stays current on every future
-`omarchy update` — no separate maintenance step from here on. See "Dev
-stack" below for the full tool list and how to add more.
+`omarchy update` — no separate maintenance step from here on. Among
+everything else, this is what installs `bws` (no pacman/AUR package - see
+"Secrets" below). See "Dev stack" below for the full tool list and how to
+add more.
 
-**5. Pick up new PATH entries.** Open a new terminal, or `source
+**4a. Set up the Bitwarden Secrets Manager access token**, if you haven't
+on this machine yet — see "Per-machine setup" under "Secrets" below
+(`~/.config/bws/access-token`). Skip this only if the repo has no
+`private_*.tmpl` secrets yet (true the very first time you ever do this
+setup, before the Secrets section's worked example exists).
+
+**5. Now apply.**
+
+```sh
+chezmoi apply
+```
+
+Applies every `dot_*`/`dot_config/*` file to your real `$HOME` — including
+exporting `XDG_CONFIG_HOME="$HOME/.config"` globally and, via
+`.chezmoiexternal.toml`, your `doom.d` config into `~/.config/doom` (in
+place before Doom Emacs itself is installed by step 4 — applied here, so
+technically *after* step 4 ran; see "Why the order matters" below for why
+that's still fine) and `clojure-deps-edn` into `~/.config/clojure`. Any
+`private_*.tmpl` secret, if present, resolves now that step 4a covered its
+prerequisites.
+
+Confirm it landed cleanly:
+
+```sh
+chezmoi diff        # should print nothing - a fresh apply has nothing left to change
+ls ~/.config/doom    # your real Doom config, not a placeholder
+```
+
+**6. Pick up new PATH entries.** Open a new terminal, or `source
 ~/.bashrc` in your current one.
 
-**6. Authenticate the GitHub CLI.** `gh auth login` once — the package
+**7. Authenticate the GitHub CLI.** `gh auth login` once — the package
 installs the `gh` binary, but interactive OAuth login is deliberately not
-automated by the script.
+automated by the script. This also sets up a credential helper that covers
+pushing over HTTPS later - e.g. from `~/.config/doom` or this repo itself -
+without needing an SSH key at all, if you'd rather skip the Secrets
+section's SSH keypair entirely.
 
-**7. Spot-check the pieces that talk to each other.**
+**8. Spot-check the pieces that talk to each other.**
 
 ```sh
 ./install-dev-stack.sh --status      # everything should read OK (or NOT ENABLED for
-                                      # the Emacs daemon if step 3 didn't apply first)
+                                      # the Emacs daemon if step 5 didn't apply first)
 doom doctor                          # Doom's own health check
 systemctl --user status emacs        # daemon should be "active (running)"
 emacsclient -e '(+ 1 2)'             # => 3, confirms a client can actually reach it
-gh auth status                       # confirms step 6 took
+gh auth status                       # confirms step 7 took
 ```
 
-**8. Optional: agent config and shell plugins**, once you're ready for
+**9. Optional: agent config and shell plugins**, once you're ready for
 them (see their own sections below for what each installs):
 
 ```sh
@@ -128,14 +165,24 @@ That's the whole sequence. From here on, day-to-day maintenance is just
 `omarchy update` (covers the dev stack) plus `chezmoi update` (covers your
 dotfiles) whenever you've pushed a change from another machine.
 
-**Why the order matters.** `install-dev-stack.sh` runs `doom install`. If
-chezmoi already placed your real config at `~/.config/doom` (step 3), Doom
-finds it there and leaves it alone; skip step 3 first and Doom generates
-its own default config, which chezmoi's external then overwrites on the
-next `apply` anyway — the documented order just avoids a throwaway config
-existing on disk even briefly. Same reasoning applies to the Emacs daemon:
-its systemd unit file comes from chezmoi, not the script, so the script's
-daemon-enable step needs step 3 to have already run.
+**Why the order matters.** Steps 4 and 5 are in tension and there's no
+clean way to avoid it: `install-dev-stack.sh` runs `doom install`, which
+wants chezmoi to have already placed your real config at `~/.config/doom`
+(step 5) - otherwise Doom generates its own throwaway default config first.
+But step 5's apply wants `bws` already installed first for step 4a, and
+`bws` only comes from step 4 (no pacman/AUR package exists for it - see
+"Secrets" below, and `install-dev-stack.sh` has no flag to install just one
+tool ahead of the rest). Given that choice, this order picks the one that
+fails loudly over the one that doesn't: running step 4 before step 5 just
+means Doom's default config briefly exists on disk before chezmoi's
+external overwrites it on the next `apply` anyway - cosmetic, self-healing,
+no real breakage. The other order (apply before installing the dev stack)
+breaks harder: if the repo already has a `private_*.tmpl` secret from a
+previous machine, that apply fails outright trying to render it before
+`bws`/the access token exist. Same reasoning covers the Emacs daemon - its
+systemd unit file comes from chezmoi, not the script, so the script's
+daemon-enable step (step 4) technically wants step 5 to have already run
+too, with the same harmless brief-gap-then-self-heals shape.
 
 ## Day-to-day chezmoi commands
 

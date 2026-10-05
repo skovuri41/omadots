@@ -1,6 +1,14 @@
+# HTTPS, not SSH - this clones during the very first `chezmoi init --apply`
+# on a fresh machine, before any SSH key exists or is registered with
+# GitHub (see README's "Setting up a new machine" step 3). The repo is
+# public, so an anonymous HTTPS clone needs no auth; `git@github.com:...`
+# would fail outright ("Permission denied (publickey)") on a fresh machine
+# regardless of visibility - SSH to GitHub always authenticates as a user,
+# there's no anonymous SSH. Only pushing from this clone later needs real
+# auth (gh's credential helper, set up in step 6, covers that over HTTPS).
 [".config/doom"]
     type = "git-repo"
-    url = "git@github.com:skovuri41/doom.d.git"
+    url = "https://github.com/skovuri41/doom.d.git"
     clone.args = ["--depth", "1"]
 
 # Personal fork of practicalli/clojure-deps-edn - user-level Clojure CLI
@@ -10,7 +18,8 @@
 # repo exports `XDG_CONFIG_HOME="$HOME/.config"` globally
 # (`home/dot_bash_exports`), so `.config/clojure` is what the CLI actually
 # reads. Installing Clojure CLI via `mise` doesn't change this resolution.
+# HTTPS for the same reason as the doom.d external above.
 [".config/clojure"]
     type = "git-repo"
-    url = "git@github.com:skovuri41/clojure-deps-edn.git"
+    url = "https://github.com/skovuri41/clojure-deps-edn.git"
     clone.args = ["--depth", "1"]
