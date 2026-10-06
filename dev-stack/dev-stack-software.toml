@@ -40,7 +40,13 @@
 #   note        freeform, shown nowhere but here - just for you. Omit the
 #               key entirely if there's nothing to say (don't write `note =
 #               ""` - same effect, just noisier).
+#   skip_hosts  optional list of hostnames (as `hostname` prints them) to
+#               skip this entry on - e.g. `skip_hosts = ["shakti"]`. For a
+#               tool you don't want installed on one machine yet, not a
+#               tool you never want anywhere (just delete the entry for
+#               that). Omit the key entirely when every host should get it.
 #
+
 # Not sure how to install something new? Run:
 #   ./install-dev-stack.sh --check <name>
 # It probes pacman, the AUR, and mise for that name and prints a suggested
@@ -240,7 +246,8 @@ note = "provides the 'gh' command; run 'gh auth login' once after install"
 name = "Keyd"
 method = "custom"
 status_pkg = "keyd"
-note = "kernel-level key remapper; installs the keyd pkg, deploys keyd/default.conf to /etc/keyd/default.conf, enables the systemd service - see install_keyd()"
+skip_hosts = ["shakti"]
+note = "kernel-level key remapper; installs the keyd pkg, deploys keyd/default.conf to /etc/keyd/default.conf, enables the systemd service - see install_keyd(). Skipped on shakti for now (2026-10-05) - new host, not ready for a kernel-level remapper there yet."
 
 [[software]]
 name = "Aspell (English dictionary)"

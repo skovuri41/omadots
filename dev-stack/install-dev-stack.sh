@@ -209,7 +209,7 @@ load_registry() {
 import json, sys
 data = json.loads(sys.stdin.read() or "{}")
 for e in data.get("software", []):
-    fields = [e.get("name", ""), e.get("method", ""), e.get("spec", ""), e.get("status_pkg", ""), e.get("note", "")]
+    fields = [e.get("name", ""), e.get("method", ""), e.get("spec", ""), e.get("status_pkg", ""), e.get("note", ""), ",".join(e.get("skip_hosts", []))]
     sys.stdout.write("\x1f".join(fields) + "\x00")
 ' <<<"$json")
 
@@ -775,9 +775,14 @@ dispatch_custom() {
 # that has to change if a genuinely new *method* is ever needed; adding new
 # *software* never touches this function - see dev-stack-software.toml.
 run_install() {
-  local entry name method spec status_pkg note
+  local this_host entry name method spec status_pkg note skip_hosts
+  this_host=$(hostname)
   for entry in "${REGISTRY[@]}"; do
-    IFS=$'\x1f' read -r name method spec status_pkg note <<<"$entry"
+    IFS=$'\x1f' read -r name method spec status_pkg note skip_hosts <<<"$entry"
+    if [[ ,"$skip_hosts", == *,"$this_host",* ]]; then
+      log "Skipping '$name' - excluded on this host ($this_host) via skip_hosts in $REGISTRY_FILE"
+      continue
+    fi
     case "$method" in
       pacman)
         # spec may be multiple space-separated package names (e.g. "zathura
@@ -866,9 +871,14 @@ print_status() {
   printf "\n%-20s %-12s %-14s %-14s %s\n" "SOFTWARE" "METHOD" "INSTALLED" "LATEST" "STATUS"
   printf '%s\n' "----------------------------------------------------------------------------------"
 
-  local entry name method spec status_pkg
+  local this_host entry name method spec status_pkg skip_hosts
+  this_host=$(hostname)
   for entry in "${REGISTRY[@]}"; do
-    IFS=$'\x1f' read -r name method spec status_pkg _ <<<"$entry"
+    IFS=$'\x1f' read -r name method spec status_pkg _ skip_hosts <<<"$entry"
+    if [[ ,"$skip_hosts", == *,"$this_host",* ]]; then
+      printf "%-20s %-12s %-14s %-14s %s\n" "$name" "$method" "-" "-" "SKIPPED (excluded on $this_host)"
+      continue
+    fi
     local installed="" latest="" status=""
 
     case "$method" in

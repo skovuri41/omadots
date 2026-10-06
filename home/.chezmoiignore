@@ -10,6 +10,13 @@
 .config/foot/foot.ini
 {{- end }}
 
+# ~/.ssh, host "shakti" only: new host, not ready for SSH keys to land
+# there yet - temporary, unlike aditya's exclusion above. Remove this block
+# once shakti is ready for them.
+{{- if eq .chezmoi.hostname "shakti" }}
+.ssh
+{{- end }}
+
 # ~/.config/bws/access-token holds the live Bitwarden Secrets Manager
 # machine-account token (see README.md's "Secrets" section) - never
 # chezmoi-managed, on any host. Second-layer backstop in the root
