@@ -203,19 +203,24 @@ load_registry() {
   fi
   rm -f "$yq_err_file"
 
-  # Per-host software selection lives entirely in the registry's skip_hosts
-  # field (data), but *applying* it needs the current hostname, which only
-  # bash knows here - this loop is the one and only place that reads it.
-  # Once a record clears this check, it's trimmed back down to the
-  # original 5 fields and pushed onto REGISTRY - run_install/print_status
-  # stay completely host-agnostic, same as before skip_hosts existed.
+  # Per-host software selection lives entirely in the registry's skip_hosts/
+  # only_hosts fields (data), but *applying* them needs the current
+  # hostname, which only bash knows here - this loop is the one and only
+  # place that reads it. Once a record clears this check, it's trimmed
+  # back down to the original 5 fields and pushed onto REGISTRY -
+  # run_install/print_status stay completely host-agnostic, same as before
+  # either field existed.
   local this_host
   this_host=$(hostname)
-  local record name method spec status_pkg note skip_hosts
+  local record name method spec status_pkg note skip_hosts only_hosts
   while IFS= read -r -d $'\0' record; do
-    IFS=$'\x1f' read -r name method spec status_pkg note skip_hosts <<<"$record"
+    IFS=$'\x1f' read -r name method spec status_pkg note skip_hosts only_hosts <<<"$record"
     if [[ ,"$skip_hosts", == *,"$this_host",* ]]; then
       log "Skipping '$name' - excluded on this host ($this_host) via skip_hosts in $REGISTRY_FILE"
+      continue
+    fi
+    if [[ -n $only_hosts && ,"$only_hosts", != *,"$this_host",* ]]; then
+      log "Skipping '$name' - only_hosts in $REGISTRY_FILE doesn't include this host ($this_host)"
       continue
     fi
     REGISTRY+=("$(printf '%s\x1f%s\x1f%s\x1f%s\x1f%s' "$name" "$method" "$spec" "$status_pkg" "$note")")
@@ -223,7 +228,7 @@ load_registry() {
 import json, sys
 data = json.loads(sys.stdin.read() or "{}")
 for e in data.get("software", []):
-    fields = [e.get("name", ""), e.get("method", ""), e.get("spec", ""), e.get("status_pkg", ""), e.get("note", ""), ",".join(e.get("skip_hosts", []))]
+    fields = [e.get("name", ""), e.get("method", ""), e.get("spec", ""), e.get("status_pkg", ""), e.get("note", ""), ",".join(e.get("skip_hosts", [])), ",".join(e.get("only_hosts", []))]
     sys.stdout.write("\x1f".join(fields) + "\x00")
 ' <<<"$json")
 
@@ -532,17 +537,13 @@ install_keyd() {
   fi
 }
 
-# Hosts that run Tailscale SSH (`tailscale set --ssh`), so other tailnet
-# machines can `herdr --remote <host>` into them - auth is the tailnet
-# identity, no sshd or authorized_keys involved (which is why shakti, with
-# ~/.ssh excluded in .chezmoiignore, can still be a target). Only shakti
-# for now: aditya -> shakti is the one direction wanted so far.
-TAILSCALE_SSH_HOSTS=(shakti)
-
+# Which hosts run Tailscale SSH (`tailscale set --ssh`) is registry data
+# now - see dev-stack-software.toml's "Tailscale SSH" entry's only_hosts.
+# load_registry already filters this function out of REGISTRY entirely on
+# any other host, so no hostname check belongs here anymore.
 enable_tailscale_ssh() {
   local this_host
   this_host=$(hostname)
-  [[ " ${TAILSCALE_SSH_HOSTS[*]} " == *" $this_host "* ]] || return 0
 
   if tailscale debug prefs 2>/dev/null | jq -e '.RunSSH' >/dev/null; then
     log "Tailscale SSH already enabled on $this_host"
@@ -802,6 +803,7 @@ dispatch_custom() {
     emacs-daemon) enable_emacs_daemon ;;
     keyd) install_keyd ;;
     tailscale) install_tailscale ;;
+    tailscale-ssh) enable_tailscale_ssh ;;
     *)
       fail "$desc - no custom install handler registered for status_pkg '$status_pkg' (add a case to dispatch_custom() in install-dev-stack.sh)"
       ;;
@@ -1007,6 +1009,19 @@ print_status() {
             else
               installed="enabled, not running"
               status="ACTION NEEDED (systemctl --user start emacs)"
+            fi
+            ;;
+          tailscale-ssh)
+            latest="-"
+            if ! command -v tailscale >/dev/null 2>&1; then
+              installed=""
+              status="NOT INSTALLED (needs Tailscale)"
+            elif tailscale debug prefs 2>/dev/null | jq -e '.RunSSH' >/dev/null; then
+              installed="enabled"
+              status="OK"
+            else
+              installed="disabled"
+              status="ACTION NEEDED (sudo tailscale set --ssh)"
             fi
             ;;
           keyd)

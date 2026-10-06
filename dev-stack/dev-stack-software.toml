@@ -36,15 +36,23 @@
 #   status_pkg  the single package/tool name used to look up an installed/
 #               available version for the --status table (for custom
 #               entries, one of the fixed keys the script recognizes: doom,
-#               poly, bws, emacs-daemon, keyd, tailscale)
+#               poly, bws, emacs-daemon, keyd, tailscale, tailscale-ssh)
 #   note        freeform, shown nowhere but here - just for you. Omit the
 #               key entirely if there's nothing to say (don't write `note =
 #               ""` - same effect, just noisier).
-#   skip_hosts  optional list of hostnames (as `hostname` prints them) to
+#   skip_hosts  optional deny-list: hostnames (as `hostname` prints them) to
 #               skip this entry on - e.g. `skip_hosts = ["shakti"]`. For a
 #               tool you don't want installed on one machine yet, not a
 #               tool you never want anywhere (just delete the entry for
 #               that). Omit the key entirely when every host should get it.
+#   only_hosts  the inverse: an allow-list, e.g. `only_hosts = ["shakti"]`
+#               installs ONLY on that host, skipped everywhere else. For
+#               something that's a per-host policy choice rather than
+#               "every machine eventually gets this" - e.g. enabling
+#               Tailscale SSH only on the one machine meant to be remoted
+#               into. Mutually exclusive with skip_hosts on the same entry
+#               (pick whichever reads clearer for that entry; don't set
+#               both). Omit the key entirely when every host should get it.
 #
 
 # Not sure how to install something new? Run:
@@ -289,6 +297,13 @@ name = "Tailscale"
 method = "custom"
 status_pkg = "tailscale"
 note = "mesh VPN - wired to Omarchy's own omarchy-install-service-tailscale (package + systemd tailscaled service + 'tailscale up --accept-routes' + operator perms + Taildrop receive service + bar plugin + webapp shortcut to the admin console), not a plain pacman entry, so a fresh machine gets the fully working setup in one step instead of just the binary. 'tailscale up' needs an interactive browser login the first time - not fully unattended, same caveat as Citrix Workspace above, just without the AUR flakiness. See install_tailscale() in install-dev-stack.sh."
+
+[[software]]
+name = "Tailscale SSH"
+method = "custom"
+status_pkg = "tailscale-ssh"
+only_hosts = ["shakti"]
+note = "'tailscale set --ssh' - lets other tailnet machines 'herdr --remote shakti' in, auth'd by tailnet identity rather than sshd/authorized_keys (which is why shakti, with ~/.ssh excluded in .chezmoiignore, can still be a target). Separate entry from Tailscale above rather than folded into install_tailscale() - this is a per-host policy choice (aditya -> shakti is the one direction wanted so far), not something every Tailscale install should do. See enable_tailscale_ssh() in install-dev-stack.sh."
 
 [[software]]
 name = "slurp"
