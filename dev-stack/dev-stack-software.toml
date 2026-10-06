@@ -111,6 +111,13 @@ status_pkg = "node"
 note = "LTS only, not 'current'/latest"
 
 [[software]]
+name = "Bun"
+method = "mise"
+spec = "bun@latest"
+status_pkg = "bun"
+note = "JS runtime/bundler/package manager - via mise like Node above (also in pacman's extra repo, but mise matches this repo's convention for JS/dev-tool runtimes, no distinct LTS track the way Node has)"
+
+[[software]]
 name = "Emacs"
 method = "pacman"
 spec = "emacs-wayland ripgrep fd"
