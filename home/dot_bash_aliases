@@ -24,6 +24,9 @@ alias g="git"
 # was `history`/`history|grep -i` - renamed to hist/hists, `h` is now
 # herdr (Laravel Herd CLI), same reasoning as the gh -> ghist rename below
 alias h="herdr"
+# attach to shakti's herdr server over Tailscale SSH (see install_tailscale
+# in dev-stack/install-dev-stack.sh)
+alias hs="herdr --remote shakti"
 alias hist="history"
 alias hists="history|grep -i "
 alias j="jobs"

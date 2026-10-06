@@ -518,6 +518,28 @@ install_keyd() {
   fi
 }
 
+# Hosts that run Tailscale SSH (`tailscale set --ssh`), so other tailnet
+# machines can `herdr --remote <host>` into them - auth is the tailnet
+# identity, no sshd or authorized_keys involved (which is why shakti, with
+# ~/.ssh excluded in .chezmoiignore, can still be a target). Only shakti
+# for now: aditya -> shakti is the one direction wanted so far.
+TAILSCALE_SSH_HOSTS=(shakti)
+
+enable_tailscale_ssh() {
+  local this_host
+  this_host=$(hostname)
+  [[ " ${TAILSCALE_SSH_HOSTS[*]} " == *" $this_host "* ]] || return 0
+
+  if tailscale debug prefs 2>/dev/null | jq -e '.RunSSH' >/dev/null; then
+    log "Tailscale SSH already enabled on $this_host"
+  # Needs root - the operator perms Omarchy's installer grants don't cover --ssh
+  elif sudo tailscale set --ssh; then
+    log "Tailscale SSH enabled on $this_host ('herdr --remote $this_host' from another tailnet machine)"
+  else
+    fail "Tailscale SSH - 'sudo tailscale set --ssh' failed on $this_host"
+  fi
+}
+
 install_tailscale() {
   log "Tailscale (mesh VPN, via Omarchy's own installer)"
 
@@ -527,6 +549,7 @@ install_tailscale() {
   fi
   if omarchy-installed-service-tailscale >/dev/null 2>&1; then
     log "Tailscale already installed and running"
+    enable_tailscale_ssh
     return
   fi
 
@@ -543,6 +566,7 @@ install_tailscale() {
   # `omarchy update` hook pass won't re-trigger the login prompt.
   if omarchy-install-service-tailscale; then
     log "Tailscale installed"
+    enable_tailscale_ssh
   else
     fail "Tailscale - omarchy-install-service-tailscale failed"
   fi
