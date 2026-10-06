@@ -1,0 +1,20 @@
+-- Extra autostart processes.
+-- o.launch_on_start("my-service")
+
+{{- /* shakti is the Sunshine/Moonlight remote-desktop host (aditya is the
+client side, moonlight-qt already installed there, no reason to also run
+Sunshine on it). omarchy-install-service-sunshine would normally add this
+line itself (enable_hyprland_autostart()), but its systemctl --user enable
+--now sunshine call failed outright before reaching that point - the
+actual unit shipped by the sunshine package is named
+app-dev.lizardbyte.app.Sunshine.service, not "sunshine" (worth reporting
+upstream - systemctl enable on that real name DOES register a "sunshine"
+alias symlink via the unit's own [Install] Alias=, but only after the
+first enable, so the script's assumption only works on a second run).
+Added by hand on 2026-10-05 for that reason - not actually needed, since
+systemd itself already relaunches the user service via
+graphical-session.target.wants on every login, this is just for parity
+with what the stock installer would have done. */}}
+{{- if eq .chezmoi.hostname "shakti" }}
+o.launch_on_start("sunshine")
+{{- end }}
