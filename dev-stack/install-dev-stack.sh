@@ -203,8 +203,22 @@ load_registry() {
   fi
   rm -f "$yq_err_file"
 
+  # Per-host software selection lives entirely in the registry's skip_hosts
+  # field (data), but *applying* it needs the current hostname, which only
+  # bash knows here - this loop is the one and only place that reads it.
+  # Once a record clears this check, it's trimmed back down to the
+  # original 5 fields and pushed onto REGISTRY - run_install/print_status
+  # stay completely host-agnostic, same as before skip_hosts existed.
+  local this_host
+  this_host=$(hostname)
+  local record name method spec status_pkg note skip_hosts
   while IFS= read -r -d $'\0' record; do
-    REGISTRY+=("$record")
+    IFS=$'\x1f' read -r name method spec status_pkg note skip_hosts <<<"$record"
+    if [[ ,"$skip_hosts", == *,"$this_host",* ]]; then
+      log "Skipping '$name' - excluded on this host ($this_host) via skip_hosts in $REGISTRY_FILE"
+      continue
+    fi
+    REGISTRY+=("$(printf '%s\x1f%s\x1f%s\x1f%s\x1f%s' "$name" "$method" "$spec" "$status_pkg" "$note")")
   done < <(python3 -c '
 import json, sys
 data = json.loads(sys.stdin.read() or "{}")
@@ -799,14 +813,9 @@ dispatch_custom() {
 # that has to change if a genuinely new *method* is ever needed; adding new
 # *software* never touches this function - see dev-stack-software.toml.
 run_install() {
-  local this_host entry name method spec status_pkg note skip_hosts
-  this_host=$(hostname)
+  local entry name method spec status_pkg note
   for entry in "${REGISTRY[@]}"; do
-    IFS=$'\x1f' read -r name method spec status_pkg note skip_hosts <<<"$entry"
-    if [[ ,"$skip_hosts", == *,"$this_host",* ]]; then
-      log "Skipping '$name' - excluded on this host ($this_host) via skip_hosts in $REGISTRY_FILE"
-      continue
-    fi
+    IFS=$'\x1f' read -r name method spec status_pkg note <<<"$entry"
     case "$method" in
       pacman)
         # spec may be multiple space-separated package names (e.g. "zathura
@@ -895,14 +904,9 @@ print_status() {
   printf "\n%-20s %-12s %-14s %-14s %s\n" "SOFTWARE" "METHOD" "INSTALLED" "LATEST" "STATUS"
   printf '%s\n' "----------------------------------------------------------------------------------"
 
-  local this_host entry name method spec status_pkg skip_hosts
-  this_host=$(hostname)
+  local entry name method spec status_pkg
   for entry in "${REGISTRY[@]}"; do
-    IFS=$'\x1f' read -r name method spec status_pkg _ skip_hosts <<<"$entry"
-    if [[ ,"$skip_hosts", == *,"$this_host",* ]]; then
-      printf "%-20s %-12s %-14s %-14s %s\n" "$name" "$method" "-" "-" "SKIPPED (excluded on $this_host)"
-      continue
-    fi
+    IFS=$'\x1f' read -r name method spec status_pkg _ <<<"$entry"
     local installed="" latest="" status=""
 
     case "$method" in
