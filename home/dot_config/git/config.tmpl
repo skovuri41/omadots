@@ -118,3 +118,17 @@
 [user]
   name = {{ .name }}
   email = {{ .email }}
+{{/* Pulled in from a live config that had this but source didn't (found
+via `chezmoi diff`, 2026-10-05) - `gh auth setup-git` writes this. Bare
+`gh`, not the literal mise-installs-path-with-version live actually had
+(.../mise/installs/gh/2.100.0/.../gh) - that path goes stale on every gh
+upgrade (already was: this machine's on 2.101.0, not 2.100.0, elsewhere in
+this session), whereas `gh` resolves through mise's own stable shim on
+$PATH regardless of version. Re-run `gh auth setup-git` if GitHub ever
+changes what it wants here - don't hand-edit out of sync with that. */}}
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential

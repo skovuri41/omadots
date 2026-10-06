@@ -512,16 +512,21 @@ directory — clean that up by hand if you actually want it gone.
   `~/.claude/settings.local.json` (Claude Code merges it automatically) and
   keep `settings.json.tmpl` scoped to just the plugin/marketplace
   declarations, so it stops drifting.
-- **General live-vs-source drift.** A `chezmoi diff` run the same day
-  surfaced several files that had been edited live and never synced back:
-  `.config/kitty/kitty.conf` (`allow_remote_control`), `.config/git/config`
-  (a `gh`-based credential helper), `.config/hypr/bindings.lua` (a "fathom"
-  Omarchy plugin block), `.config/chromium-flags.conf` (a feature flag),
-  `.claude/themes/omarchy.json` (color overrides) — none from this repo's
-  own tooling. There's currently no habit/mechanism that catches this
-  before it piles up. Worth deciding on something (a periodic `chezmoi
-  diff` review, a pre-commit/cron reminder, etc.) rather than discovering
-  it mid-unrelated-task like this time.
+- **General live-vs-source drift.** A `chezmoi diff` run surfaced several
+  files that had drifted between live and source, none from this repo's
+  own tooling: `.config/kitty/kitty.conf` (`allow_remote_control`),
+  `.config/git/config` (a `gh`-based credential helper),
+  `.config/hypr/bindings.lua` (a "fathom" Omarchy plugin block),
+  `.config/chromium-flags.conf` (a feature flag), `.claude/themes/
+  omarchy.json` (color overrides) — all reconciled as of 2026-10-05 (each
+  checked individually for *which* side was actually stale - two of these
+  turned out to be source ahead of a live that hadn't been re-applied, not
+  live ahead of source, so "pull into source" was the wrong fix for those
+  two; `chezmoi apply` was). What's still unresolved is the underlying
+  habit/mechanism: there's nothing that catches this before it piles up
+  again. Worth deciding on something (a periodic `chezmoi diff` review, a
+  pre-commit/cron reminder, etc.) rather than discovering it mid-unrelated-
+  task like this time.
 
 ## Multi-machine notes
 
