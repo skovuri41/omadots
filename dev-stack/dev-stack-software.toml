@@ -36,7 +36,7 @@
 #   status_pkg  the single package/tool name used to look up an installed/
 #               available version for the --status table (for custom
 #               entries, one of the fixed keys the script recognizes: doom,
-#               poly, bws, emacs-daemon, keyd, tailscale, tailscale-ssh)
+#               poly, bws, emacs-daemon, keyd, tailscale, tailscale-ssh, omaroll)
 #   note        freeform, shown nowhere but here - just for you. Omit the
 #               key entirely if there's nothing to say (don't write `note =
 #               ""` - same effect, just noisier).
@@ -304,6 +304,12 @@ method = "custom"
 status_pkg = "tailscale-ssh"
 only_hosts = ["shakti"]
 note = "'tailscale set --ssh' - lets other tailnet machines 'herdr --remote shakti' in, auth'd by tailnet identity rather than sshd/authorized_keys (which is why shakti, with ~/.ssh excluded in .chezmoiignore, can still be a target). Separate entry from Tailscale above rather than folded into install_tailscale() - this is a per-host policy choice (aditya -> shakti is the one direction wanted so far), not something every Tailscale install should do. See enable_tailscale_ssh() in install-dev-stack.sh."
+
+[[software]]
+name = "Omaroll"
+method = "custom"
+status_pkg = "omaroll"
+note = "media viewer/library (github.com/btsouth/omaroll) - not in pacman/AUR/mise, ships via the author's own signed pacman repo (pkgs.btso.dev). install_omaroll() runs dev-stack/vendor/btsouth-install.sh, a pinned reviewed-in-full copy of that repo's own bootstrap installer (not a live curl|bash - see that file's own header for why and its re-sync notes), to register the repo + trusted key once. After that one-time step, omaroll is a normal pacman package - updates arrive via 'omarchy update'/pacman -Syu like anything else, untouched by the vendored script from then on."
 
 [[software]]
 name = "slurp"

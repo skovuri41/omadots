@@ -564,7 +564,6 @@ install_tailscale() {
   fi
   if omarchy-installed-service-tailscale >/dev/null 2>&1; then
     log "Tailscale already installed and running"
-    enable_tailscale_ssh
     return
   fi
 
@@ -581,9 +580,48 @@ install_tailscale() {
   # `omarchy update` hook pass won't re-trigger the login prompt.
   if omarchy-install-service-tailscale; then
     log "Tailscale installed"
-    enable_tailscale_ssh
   else
     fail "Tailscale - omarchy-install-service-tailscale failed"
+  fi
+}
+
+install_omaroll() {
+  log "Omaroll (media viewer/library, via the btsouth package repo)"
+
+  if pacman -Qq omaroll >/dev/null 2>&1; then
+    log "Omaroll already installed"
+    return
+  fi
+
+  # dev-stack/vendor/btsouth-install.sh is a pinned, reviewed-in-full copy
+  # of pkgs.btso.dev/install.sh (see its own header) - run from the repo
+  # root via the same chezmoi source-path + git rev-parse resolution
+  # install_keyd() uses, not a live curl|bash. Idempotent on its own
+  # (checks for an existing [btsouth] repo.conf section, existing trusted
+  # key, and runs `pacman -S --needed` at the end) - the pacman -Qq check
+  # above just avoids the extra process once it's already in. Needs root;
+  # the script detects and sudo's internally.
+  local source_path repo_root installer
+  source_path=$(chezmoi source-path 2>/dev/null)
+  if [[ -z $source_path ]]; then
+    fail "Omaroll - 'chezmoi source-path' failed, is chezmoi initialized yet?"
+    return
+  fi
+  repo_root=$(git -C "$source_path" rev-parse --show-toplevel 2>/dev/null)
+  if [[ -z $repo_root ]]; then
+    fail "Omaroll - couldn't resolve the dotfiles repo root from $source_path (not a git checkout?)"
+    return
+  fi
+  installer="$repo_root/dev-stack/vendor/btsouth-install.sh"
+  if [[ ! -f $installer ]]; then
+    fail "Omaroll - vendored installer not found at $installer"
+    return
+  fi
+
+  if bash "$installer" omaroll; then
+    log "Omaroll installed - updates arrive with 'omarchy update'/pacman -Syu from here on"
+  else
+    fail "Omaroll - $installer failed"
   fi
 }
 
@@ -804,6 +842,7 @@ dispatch_custom() {
     keyd) install_keyd ;;
     tailscale) install_tailscale ;;
     tailscale-ssh) enable_tailscale_ssh ;;
+    omaroll) install_omaroll ;;
     *)
       fail "$desc - no custom install handler registered for status_pkg '$status_pkg' (add a case to dispatch_custom() in install-dev-stack.sh)"
       ;;
@@ -1022,6 +1061,23 @@ print_status() {
             else
               installed="disabled"
               status="ACTION NEEDED (sudo tailscale set --ssh)"
+            fi
+            ;;
+          omaroll)
+            installed=$(pacman -Q omaroll 2>/dev/null | awk '{print $2}')
+            if [[ -z $installed ]]; then
+              status="NOT INSTALLED"
+              latest="-"
+            else
+              local upline
+              upline=$(grep "^omaroll " <<<"$pac_updates")
+              if [[ -n $upline ]]; then
+                latest=$(awk '{print $NF}' <<<"$upline")
+                status="UPDATE AVAILABLE"
+              else
+                latest="$installed"
+                status="OK"
+              fi
             fi
             ;;
           keyd)
