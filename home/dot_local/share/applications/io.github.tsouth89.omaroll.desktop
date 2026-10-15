@@ -1,0 +1,17 @@
+# User override of the package-owned /usr/share/applications copy -
+# Exec= here bumps QT_FONT_DPI to 144 (Omaroll has no font-size setting of
+# its own, follows the system font/DPI). Keep the QT_FONT_DPI value in
+# sync with the omaroll alias in dot_bash_aliases - update both together.
+[Desktop Entry]
+Type=Application
+Name=Omaroll
+GenericName=Media Library
+Comment=A fast, beautiful image, video, and PDF viewer
+Exec=env QT_FONT_DPI=144 omaroll -- %F
+Icon=io.github.tsouth89.omaroll
+Terminal=false
+Categories=Graphics;Viewer;
+MimeType=image/png;image/jpeg;image/webp;image/gif;image/bmp;image/avif;image/heic;image/heif;image/tiff;image/svg+xml;image/svg+xml-compressed;image/vnd.microsoft.icon;image/jxl;image/jp2;image/x-jp2-codestream;image/qoi;image/vnd.adobe.photoshop;image/vnd.ms-dds;image/x-exr;image/x-tga;image/x-sony-arw;image/x-sony-sr2;image/x-sony-srf;image/x-canon-cr2;image/x-canon-cr3;image/x-canon-crw;image/x-adobe-dng;image/x-nikon-nef;image/x-nikon-nrw;image/x-fuji-raf;image/x-olympus-orf;image/x-panasonic-rw2;image/x-pentax-pef;image/x-samsung-srw;image/x-minolta-mrw;image/x-kodak-dcr;image/x-kodak-kdc;image/x-sigma-x3f;image/x-hasselblad-3fr;image/x-hasselblad-fff;image/x-phaseone-iiq;image/x-mamiya-mef;image/x-leaf-mos;image/x-epson-erf;video/mp4;video/x-m4v;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/x-ms-wmv;video/x-flv;video/mpeg;video/ogg;video/3gpp;video/3gpp2;video/mp2t;video/vnd.avi;application/vnd.ms-asf;video/x-ms-asf;video/x-ogm+ogg;application/pdf;inode/directory;
+Keywords=media;photo;video;pdf;document;screenshot;recording;capture;gallery;library;album;tag;
+StartupNotify=true
+StartupWMClass=io.github.tsouth89.omaroll

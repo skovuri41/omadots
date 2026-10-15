@@ -36,6 +36,12 @@ alias t="tmux attach || tmux new -s Work"
 alias mup='MISE_MINIMUM_RELEASE_AGE=0 mise up'
 alias a="omarchy-agent --inline"
 alias c="opencode --auto"
+# matches the DPI baked into ~/.local/share/applications'
+# io.github.tsouth89.omaroll.desktop override (home/dot_local/share/
+# applications in this repo) - Omaroll has no font-size setting of its
+# own, it follows the system font/DPI, so this is the actual "bigger text"
+# lever, kept in sync between the two launch paths (app grid vs terminal).
+alias omaroll="QT_FONT_DPI=144 omaroll"
 
 # ls, eza (icons, git status, dir grouping)
 alias ls='eza -lh --group-directories-first --icons=auto'
