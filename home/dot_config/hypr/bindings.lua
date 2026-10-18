@@ -1,3 +1,7 @@
+-- Omarchy Cleaner: disable removed apps before personal overrides.
+hl.unbind("SUPER + SHIFT + ALT + E")
+hl.unbind("SUPER + SHIFT + CTRL + G")
+
 -- Keep only your personal keybinding overrides here. Add new bindings or
 -- unbind defaults before replacing them.
 
