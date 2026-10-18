@@ -317,3 +317,10 @@ method = "pacman"
 spec = "slurp"
 status_pkg = "slurp"
 note = "official extra repo pkg (confirmed via archlinux.org, not AUR). Interactive region/point selector for Wayland (wlr-layer-shell based - Hyprland qualifies); no post-install step. It only selects a region, doesn't capture anything itself - pairs with grim to screenshot (grim -g \"$(slurp)\"); grim isn't tracked here."
+
+[[software]]
+name = "Strata"
+method = "pacman"
+spec = "strata"
+status_pkg = "strata"
+note = "keyboard-first file manager (github.com/lgse/strata), replacing Nautilus. Ships as a native package in Omarchy's own repo (pacman -Si strata -> repo 'omarchy'), not AUR - no curl|bash installer needed. Hyprland bindings are overridden in bindings.lua (SUPER+F and SUPER+ALT+SHIFT+F, both retargeted from Nautilus - see the comment there, keys differ from the README's suggested defaults since this setup already swapped SUPER+F/SUPER+SHIFT+F for fullscreen vs. file-manager). Two manual one-time steps after install, not scripted here (same class as 'tailscale up' needing an interactive login - no unattended equivalent): set the folder association with 'xdg-mime default io.github.lgse.Strata.desktop inode/directory', and register it as the 'Open file location' handler with 'install -Dm644 /usr/share/strata/io.github.lgse.Strata.FileManager1.service ~/.local/share/dbus-1/services/io.github.lgse.Strata.FileManager1.service' (per-user service overrides the system Nautilus one - remove it to revert to Nautilus for both). Encrypted-volume unlock (Settings -> General -> Desktop integration on Omarchy 3/4, or 'strata --install-udiskie-unlock') and Omarchy Quattro theme-following are optional, not enabled here."

@@ -46,8 +46,23 @@ o.bind("SUPER + SLASH", "Everything", "omarchy-shell shell toggle b.everything")
 hl.unbind("SUPER + F") -- previously: Full screen
 hl.unbind("SUPER + SHIFT + F") -- previously: File manager
 
-o.bind("SUPER + F", "File manager", { omarchy = "nautilus" })
+o.bind("SUPER + F", "File manager", { launch = "strata" })
 o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
+
+-- Strata replaces Nautilus as the file manager (see dev-stack-software.toml).
+-- Only the cwd variant needs a swap of its own: SUPER+F above already
+-- carries the plain "open file manager" binding (swapped from stock
+-- SUPER+SHIFT+F, see above), so only the stock SUPER+ALT+SHIFT+F
+-- "file manager at terminal's cwd" binding needed retargeting - it's
+-- untouched by the F/SHIFT+F swap and was still launching Nautilus.
+-- Lua snippet adapted from Strata's own README "Make Strata the Omarchy
+-- file manager" section - uwsm-app wrapper and quoting copied verbatim
+-- from there, only the key combo differs from their suggested default
+-- (theirs assumes stock SUPER+ALT+SHIFT+F is still free; here it's the
+-- existing cwd binding being retargeted, not a new one).
+hl.unbind("SUPER + ALT + SHIFT + F") -- previously: File manager (cwd), nautilus-cwd
+o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
+  "uwsm-app -- strata \"$(omarchy-cmd-terminal-cwd)\"")
 
 -- Close window: SUPER+Q instead of the default SUPER+W. Confirmed against
 -- literal source that plain SUPER+Q is free (only SUPER+CTRL+Q exists, bound
