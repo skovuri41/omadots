@@ -331,3 +331,10 @@ method = "pacman"
 spec = "pandoc-cli"
 status_pkg = "pandoc-cli"
 note = "official extra repo pkg (pacman -Si pandoc-cli - the package is 'pandoc-cli' on Arch, not 'pandoc'). Added 2026-10-18 so Doom's markdown-mode preview (markdown-command) has a renderer to shell out to - without one it just errors 'No markdown program could be found'. General-purpose doc converter too, not markdown-preview-specific."
+
+[[software]]
+name = "Worktrunk"
+method = "pacman"
+spec = "worktrunk"
+status_pkg = "worktrunk"
+note = "wt - git worktree manager for running multiple AI agents in parallel (worktrunk.dev / github.com/max-sixty/worktrunk), official extra repo pkg (pacman -Si worktrunk - confirmed, not AUR). Needs shell integration to let `wt switch`/`wt remove` cd the parent shell - NOT installed via the upstream-suggested 'wt config shell install' (that writes straight into ~/.bashrc, bypassing chezmoi and getting clobbered on the next apply/add). Instead the generated snippet is wired in statically: dot_bash_functions runs 'eval \"$(wt config shell init bash)\"' guarded by a command -v check, the same pattern Omarchy's own default bash/init uses for zoxide. Bash completions ship in the package itself (usr/share/bash-completion/completions/wt), nothing extra needed for those."

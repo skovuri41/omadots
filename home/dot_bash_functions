@@ -39,6 +39,22 @@ if command -v zoxide &>/dev/null; then
   }
 fi
 
+# Worktrunk (wt) - git worktree manager for parallel AI-agent workflows (see
+# dev-stack-software.toml). The `wt` binary alone can't change its parent
+# shell's directory, so `wt switch`/`wt remove` need a shell function wrapping
+# it - same reason zoxide needs the eval above instead of a plain binary call.
+# Deliberately using the dynamic `eval "$(wt config shell init bash)"` form
+# (wt's own documented manual-setup method) rather than `wt config shell
+# install`, which writes straight into ~/.bashrc - a chezmoi-managed file it
+# doesn't know about, so it would get silently reverted on the next `chezmoi
+# apply` (or, worse, get pulled back into source on a later `chezmoi add` -
+# see the bindings.lua/omarchy-cleaner.sh incident in git log for exactly this
+# failure mode). The dynamic form also means a future `wt` upgrade picks up
+# any shell-integration fix automatically, same as the zoxide eval above.
+if command -v wt &>/dev/null; then
+  eval "$(wt config shell init bash)"
+fi
+
 # Determine size of a file or total size of a directory
 function fs() {
   local arg=-sbh
