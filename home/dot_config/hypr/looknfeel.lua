@@ -63,4 +63,8 @@ end
 hl.on("monitor.focused", apply_column_width)
 hl.on("monitor.added", apply_column_width)
 hl.on("monitor.removed", apply_column_width)
+-- Also run once on every load/reload - the hooks above only catch future
+-- topology changes, so a reload while already docked would otherwise leave
+-- column_width at whatever it was until the next actual monitor event.
+apply_column_width()
 
