@@ -56,8 +56,15 @@ local NARROW_COLUMN_WIDTH = 1.0
 local WIDE_FULLSCREEN_ON_ONE_COLUMN = false
 local NARROW_FULLSCREEN_ON_ONE_COLUMN = true
 
-local function apply_scrolling_layout()
-  local mon = hl.get_active_monitor()
+-- Takes an explicit monitor rather than always calling hl.get_active_monitor()
+-- internally: confirmed live that hl.get_active_monitor() lags by one switch
+-- inside a monitor.focused callback (still returns the PREVIOUSLY focused
+-- monitor at the moment the event fires), which applied each monitor's
+-- settings one switch late - looking "reversed" when alternating between
+-- two monitors. monitor.focused's own event argument is the actually-correct
+-- newly-focused monitor, so callers pass that through instead.
+local function apply_scrolling_layout(mon)
+  mon = mon or hl.get_active_monitor()
   if not mon then return end
 
   local logical_width = mon.width / mon.scale
@@ -82,9 +89,14 @@ local function apply_scrolling_layout()
   })
 end
 
+-- monitor.focused passes the newly-focused monitor directly - see the
+-- comment on apply_scrolling_layout above for why that matters here.
 hl.on("monitor.focused", apply_scrolling_layout)
-hl.on("monitor.added", apply_scrolling_layout)
-hl.on("monitor.removed", apply_scrolling_layout)
+-- monitor.added/removed pass the monitor that was added/removed, not
+-- necessarily the one now focused - ignore that arg, fall back to
+-- hl.get_active_monitor() inside apply_scrolling_layout.
+hl.on("monitor.added", function() apply_scrolling_layout() end)
+hl.on("monitor.removed", function() apply_scrolling_layout() end)
 
 -- Also re-run on every full reload, via config.reloaded rather than a
 -- plain inline call. hyprland.lua requires hypr.looknfeel (this file)
