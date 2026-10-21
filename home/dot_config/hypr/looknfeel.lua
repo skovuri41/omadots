@@ -36,7 +36,10 @@ hl.config({
         single_window_aspect_ratio_tolerance = 0.0
     },
     scrolling = {
-        fullscreen_on_one_column = true,
+        -- false: a lone window sits at column_width's fraction instead of
+        -- filling the screen, so it keeps the same width whether it's the
+        -- only window or the first of several.
+        fullscreen_on_one_column = false,
         focus_fit_method = 0,
         column_width = 1,
     }
