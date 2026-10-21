@@ -36,38 +36,57 @@ hl.config({
         single_window_aspect_ratio_tolerance = 0.0
     },
     scrolling = {
-        -- false: a lone window sits at column_width's fraction instead of
-        -- filling the screen, so it keeps the same width whether it's the
-        -- only window or the first of several.
-        fullscreen_on_one_column = false,
         focus_fit_method = 0,
         column_width = 1,
     }
 })
 
--- column_width is global, not per-monitor (Hyprland has no native override),
--- so rederive it from the focused monitor's logical width on every monitor
--- change. Tune the two constants below to taste. `hyprctl keyword` doesn't
--- work on this Lua-native config - use hl.config() directly instead, which
--- works fine at runtime (confirmed via `hyprctl repl`), not just load time.
+-- column_width/fullscreen_on_one_column are global, not per-monitor
+-- (Hyprland has no native override), so rederive both from the focused
+-- monitor's logical width on every monitor change. Tune the constants
+-- below to taste. `hyprctl keyword` doesn't work on this Lua-native config
+-- - use hl.config() directly instead, which works fine at runtime
+-- (confirmed via `hyprctl repl`), not just load time.
 local WIDE_THRESHOLD = 1600 -- logical px; laptop panel is ~1440
 local WIDE_COLUMN_WIDTH = 0.65
 local NARROW_COLUMN_WIDTH = 1.0
+-- Laptop: a lone window fullscreens, same as upstream default. External:
+-- a lone window stays at column_width's fraction instead of jumping full
+-- width when a second window opens.
+local WIDE_FULLSCREEN_ON_ONE_COLUMN = false
+local NARROW_FULLSCREEN_ON_ONE_COLUMN = true
 
-local function apply_column_width()
+local function apply_scrolling_layout()
   local mon = hl.get_active_monitor()
   if not mon then return end
 
   local logical_width = mon.width / mon.scale
-  local width = (logical_width > WIDE_THRESHOLD) and WIDE_COLUMN_WIDTH or NARROW_COLUMN_WIDTH
-  hl.config({ scrolling = { column_width = width } })
+  local wide = logical_width > WIDE_THRESHOLD
+
+  -- NOT "wide and X or Y" - that idiom breaks when X is itself `false`
+  -- (as WIDE_FULLSCREEN_ON_ONE_COLUMN is here): Lua falls through to Y
+  -- regardless of `wide`. Confirmed hit this live - fullscreen_on_one_column
+  -- came back `true` while docked to the wide monitor.
+  local column_width, fullscreen_on_one_column
+  if wide then
+    column_width, fullscreen_on_one_column = WIDE_COLUMN_WIDTH, WIDE_FULLSCREEN_ON_ONE_COLUMN
+  else
+    column_width, fullscreen_on_one_column = NARROW_COLUMN_WIDTH, NARROW_FULLSCREEN_ON_ONE_COLUMN
+  end
+
+  hl.config({
+    scrolling = {
+      column_width = column_width,
+      fullscreen_on_one_column = fullscreen_on_one_column,
+    },
+  })
 end
 
-hl.on("monitor.focused", apply_column_width)
-hl.on("monitor.added", apply_column_width)
-hl.on("monitor.removed", apply_column_width)
+hl.on("monitor.focused", apply_scrolling_layout)
+hl.on("monitor.added", apply_scrolling_layout)
+hl.on("monitor.removed", apply_scrolling_layout)
 -- Also run once on every load/reload - the hooks above only catch future
 -- topology changes, so a reload while already docked would otherwise leave
--- column_width at whatever it was until the next actual monitor event.
-apply_column_width()
+-- these at whatever they were until the next actual monitor event.
+apply_scrolling_layout()
 
