@@ -85,8 +85,15 @@ end
 hl.on("monitor.focused", apply_scrolling_layout)
 hl.on("monitor.added", apply_scrolling_layout)
 hl.on("monitor.removed", apply_scrolling_layout)
--- Also run once on every load/reload - the hooks above only catch future
--- topology changes, so a reload while already docked would otherwise leave
--- these at whatever they were until the next actual monitor event.
-apply_scrolling_layout()
+
+-- Also re-run on every full reload, via config.reloaded rather than a
+-- plain inline call. hyprland.lua requires hypr.looknfeel (this file)
+-- BEFORE default.hypr.toggles, which is what disables the laptop panel
+-- while docked - so an inline call here would run before that toggle is
+-- re-applied, observing a transiently stale "active monitor" on each
+-- reload. Confirmed hit this live: fullscreen_on_one_column/column_width
+-- reverted to the laptop's values while docked to the external monitor.
+-- config.reloaded fires once the whole chain has settled.
+hl.on("config.reloaded", apply_scrolling_layout)
+apply_scrolling_layout() -- still run inline too, for the very first load
 
